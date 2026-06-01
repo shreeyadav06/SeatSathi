@@ -27,5 +27,8 @@
     "tailwindcss": "^4.3.0",
     "typescript": "^5.5.3",
     "vite": "^5.4.1"
+  },
+  "optionalDependencies": {
+    "ws": "^8.21.0"
   }
 }
