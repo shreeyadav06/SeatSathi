@@ -448,12 +448,42 @@ function extractCourseNames(text: string): string[] {
  * Normalize category to standard format
  */
 function normalizeCategory(cat: string): string {
-  const c = cat.toUpperCase().trim();
-  // Add 'G' suffix if not present (convert 1 -> 1G, 2A -> 2AG, etc.)
-  if (['1', '2A', '2B', '3A', '3B', 'GM', 'SC', 'ST'].includes(c)) {
-    return c + 'G';
-  }
-  return c;
+  const c = cat.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (c === 'gm' || c === 'generalmerit' || c === 'general' || c === 'gmk' || c === 'gmr') return c.toUpperCase();
+  
+  if (/^1ag$|^1a$|^1g$|^oneag$|^onea$|^oneg$|^category1$|^categoryone$|^1$/.test(c)) return '1G';
+  if (/^1ar$|^1r$|^onear$|^oner$/.test(c)) return '1R';
+  if (/^1ak$|^1k$|^oneak$|^onek$/.test(c)) return '1K';
+  
+  if (/^2ag$|^2a$|^twoag$|^twoa$/.test(c)) return '2AG';
+  if (/^2ar$|^twoar$/.test(c)) return '2AR';
+  if (/^2ak$|^twoak$/.test(c)) return '2AK';
+  
+  if (/^2bg$|^2b$|^twobg$|^twob$/.test(c)) return '2BG';
+  if (/^2br$|^twobr$/.test(c)) return '2BR';
+  if (/^2bk$|^twobk$/.test(c)) return '2BK';
+  
+  if (/^3ag$|^3a$|^threeag$|^threea$/.test(c)) return '3AG';
+  if (/^3ar$|^threear$/.test(c)) return '3AR';
+  if (/^3ak$|^threeak$/.test(c)) return '3AK';
+  
+  if (/^3bg$|^3b$|^threebg$|^threeb$/.test(c)) return '3BG';
+  if (/^3br$|^threebr$/.test(c)) return '3BR';
+  if (/^3bk$|^threebk$/.test(c)) return '3BK';
+  
+  if (/^sc$|^scg$/.test(c)) return 'SCG';
+  if (/^scr$/.test(c)) return 'SCR';
+  if (/^sck$/.test(c)) return 'SCK';
+  
+  if (/^st$|^stg$/.test(c)) return 'STG';
+  if (/^str$/.test(c)) return 'STR';
+  if (/^stk$/.test(c)) return 'STK';
+  
+  if (/^ews$|^ew$|^ewg$/.test(c)) return 'EWG';
+  if (/^ewk$/.test(c)) return 'EWK';
+  if (/^ewr$/.test(c)) return 'EWR';
+  
+  return cat.toUpperCase().trim();
 }
 
 // ============= Search Functions =============

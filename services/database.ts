@@ -213,14 +213,51 @@ export function normalizeBranchName(branchName: string): { normalized: string; c
  * Normalize category code
  */
 export function normalizeCategory(cat: string): string {
-  let c = cat.toUpperCase().trim();
-  // GM should stay as GM (not GMG) - it's already a valid category
-  if (c === 'GM') return 'GM';
-  // Default to General suffix if missing for numbered categories
-  if (['1', '2A', '2B', '3A', '3B', 'SC', 'ST'].includes(c)) {
-    return c + 'G';
-  }
-  return c;
+  const c = cat.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  if (c === 'gm' || c === 'generalmerit' || c === 'general' || c === 'gmk' || c === 'gmr') return c.toUpperCase();
+  
+  // Category 1 variants
+  if (/^1ag$|^1a$|^1g$|^oneag$|^onea$|^oneg$|^category1$|^categoryone$|^1$/.test(c)) return '1G';
+  if (/^1ar$|^1r$|^onear$|^oner$/.test(c)) return '1R';
+  if (/^1ak$|^1k$|^oneak$|^onek$/.test(c)) return '1K';
+  
+  // Category 2A variants
+  if (/^2ag$|^2a$|^twoag$|^twoa$/.test(c)) return '2AG';
+  if (/^2ar$|^twoar$/.test(c)) return '2AR';
+  if (/^2ak$|^twoak$/.test(c)) return '2AK';
+  
+  // Category 2B variants
+  if (/^2bg$|^2b$|^twobg$|^twob$/.test(c)) return '2BG';
+  if (/^2br$|^twobr$/.test(c)) return '2BR';
+  if (/^2bk$|^twobk$/.test(c)) return '2BK';
+  
+  // Category 3A variants
+  if (/^3ag$|^3a$|^threeag$|^threea$/.test(c)) return '3AG';
+  if (/^3ar$|^threear$/.test(c)) return '3AR';
+  if (/^3ak$|^threeak$/.test(c)) return '3AK';
+  
+  // Category 3B variants
+  if (/^3bg$|^3b$|^threebg$|^threeb$/.test(c)) return '3BG';
+  if (/^3br$|^threebr$/.test(c)) return '3BR';
+  if (/^3bk$|^threebk$/.test(c)) return '3BK';
+  
+  // SC/ST variants
+  if (/^sc$|^scg$/.test(c)) return 'SCG';
+  if (/^scr$/.test(c)) return 'SCR';
+  if (/^sck$/.test(c)) return 'SCK';
+  
+  if (/^st$|^stg$/.test(c)) return 'STG';
+  if (/^str$/.test(c)) return 'STR';
+  if (/^stk$/.test(c)) return 'STK';
+  
+  // EWS variants
+  if (/^ews$|^ew$|^ewg$/.test(c)) return 'EWG';
+  if (/^ewk$/.test(c)) return 'EWK';
+  if (/^ewr$/.test(c)) return 'EWR';
+  
+  // Fallback to returning uppercase original if no match
+  return cat.toUpperCase().trim();
 }
 
 /**

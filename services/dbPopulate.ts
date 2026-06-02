@@ -111,7 +111,7 @@ export async function populateDatabase(): Promise<{ success: boolean; stats: { c
 
 // Data version - increment this when KCET_DATA changes significantly
 // This forces a database repopulation on the client side
-const DATA_VERSION = 3; // Incremented again to force repopulate E285 2025 data
+const DATA_VERSION = 5; // Incremented: more robust category normalization using regexes
 const VERSION_KEY = 'kcet_data_version';
 
 /**

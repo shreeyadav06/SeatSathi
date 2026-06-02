@@ -60,7 +60,7 @@ export async function findMatchingCollegesFast(
   }>();
   
   cutoffs.forEach(record => {
-    const key = `${record.collegeName}|${record.branchNormalized}`;
+    const key = `${record.collegeCode}|${record.branchNormalized}`;
     
     if (!collegeMap.has(key)) {
       collegeMap.set(key, {

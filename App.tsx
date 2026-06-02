@@ -12,7 +12,7 @@ const loadGenAI = async (): Promise<GenAIModule> => {
     genAIModule = await import('@google/genai');
   }
   return genAIModule;
-};
+};          
 
 const loadPdfExport = () => import('./services/pdfExport');
 
@@ -962,7 +962,8 @@ export const App: React.FC = () => {
   }, [theme]);
   
   // Mute state for microphone
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const isMutedRef = useRef<boolean>(true);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   
   // Multiple lists feature - stored locally until refresh
@@ -1006,6 +1007,17 @@ export const App: React.FC = () => {
   const [aiThoughts, setAiThoughts] = useState<string[]>([]);
   const sessionEndedRef = useRef<boolean>(false); // Prevent duplicate session end messages
   const [sessionEndedWithResults, setSessionEndedWithResults] = useState(false); // Track if session ended after showing results
+  
+  // --- Auto-reconnect state ---
+  const conversationHistoryRef = useRef<{role: string; text: string}[]>([]); // Survives reconnects
+  const reconnectAttemptsRef = useRef<number>(0);
+  const MAX_RECONNECT_ATTEMPTS = 3;
+  const isReconnectingRef = useRef<boolean>(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  // Save detected params so they survive reconnect
+  const savedParamsRef = useRef<{rank: number|null; category: string|null; course: string|null; location: string|null}>({
+    rank: null, category: null, course: null, location: null
+  });
   
   const aiSpeechBufferRef = useRef<string>("");
   const lastSpeakingTimeRef = useRef<number>(0);
@@ -1124,7 +1136,7 @@ export const App: React.FC = () => {
         console.log("Speech recognition ended");
         setIsSpeechRecognitionActive(false);
         
-        if (!isSessionActive.current || isSpeechRecRestarting.current) {
+        if (!isSessionActive.current || isSpeechRecRestarting.current || isMutedRef.current) {
           return;
         }
         
@@ -1202,20 +1214,113 @@ export const App: React.FC = () => {
     
     // Extract category check from most specific to least
     const categoryPatterns = [
-      { pattern: /\b3bg\b/i, value: '3BG' },
-      { pattern: /\b3ag\b/i, value: '3AG' },
+      // 1 variants
+      { pattern: /\b(?:1|one)\s*a\s*g\b/i, value: '1G' },
+      { pattern: /\b(?:1|one)\s*a\s*r\b/i, value: '1R' },
+      { pattern: /\b(?:1|one)\s*a\s*k\b/i, value: '1K' },
+      { pattern: /\b(?:1|one)\s*ag\b/i, value: '1G' },
+      { pattern: /\b(?:1|one)\s*ar\b/i, value: '1R' },
+      { pattern: /\b(?:1|one)\s*ak\b/i, value: '1K' },
+      { pattern: /\b1ag\b/i, value: '1G' },
+      { pattern: /\b1ar\b/i, value: '1R' },
+      { pattern: /\b1ak\b/i, value: '1K' },
+      { pattern: /\b(?:1|one)\s*a\b/i, value: '1G' },
+      
+      // 2A variants
+      { pattern: /\b(?:2|two)\s*a\s*g\b/i, value: '2AG' },
+      { pattern: /\b(?:2|two)\s*a\s*k\b/i, value: '2AK' },
+      { pattern: /\b(?:2|two)\s*a\s*r\b/i, value: '2AR' },
+      { pattern: /\b(?:2|two)\s*ag\b/i, value: '2AG' },
+      { pattern: /\b(?:2|two)\s*ak\b/i, value: '2AK' },
+      { pattern: /\b(?:2|two)\s*ar\b/i, value: '2AR' },
       { pattern: /\b2ag\b/i, value: '2AG' },
+      { pattern: /\b2ak\b/i, value: '2AK' },
+      { pattern: /\b2ar\b/i, value: '2AR' },
+      { pattern: /\b(?:2|two)\s*a\b/i, value: '2AG' },
+      
+      // 2B variants
+      { pattern: /\b(?:2|two)\s*b\s*g\b/i, value: '2BG' },
+      { pattern: /\b(?:2|two)\s*b\s*k\b/i, value: '2BK' },
+      { pattern: /\b(?:2|two)\s*b\s*r\b/i, value: '2BR' },
+      { pattern: /\b(?:2|two)\s*bg\b/i, value: '2BG' },
+      { pattern: /\b(?:2|two)\s*bk\b/i, value: '2BK' },
+      { pattern: /\b(?:2|two)\s*br\b/i, value: '2BR' },
       { pattern: /\b2bg\b/i, value: '2BG' },
-      { pattern: /\b1g\b/i, value: '1G' },
-      { pattern: /\bgm\b/i, value: 'GM' },
+      { pattern: /\b2bk\b/i, value: '2BK' },
+      { pattern: /\b2br\b/i, value: '2BR' },
+      { pattern: /\b(?:2|two)\s*b\b/i, value: '2BG' },
+
+      // 3A variants
+      { pattern: /\b(?:3|three)\s*a\s*g\b/i, value: '3AG' },
+      { pattern: /\b(?:3|three)\s*a\s*k\b/i, value: '3AK' },
+      { pattern: /\b(?:3|three)\s*a\s*r\b/i, value: '3AR' },
+      { pattern: /\b(?:3|three)\s*ag\b/i, value: '3AG' },
+      { pattern: /\b(?:3|three)\s*ak\b/i, value: '3AK' },
+      { pattern: /\b(?:3|three)\s*ar\b/i, value: '3AR' },
+      { pattern: /\b3ag\b/i, value: '3AG' },
+      { pattern: /\b3ak\b/i, value: '3AK' },
+      { pattern: /\b3ar\b/i, value: '3AR' },
+      { pattern: /\b(?:3|three)\s*a\b/i, value: '3AG' },
+
+      // 3B variants
+      { pattern: /\b(?:3|three)\s*b\s*g\b/i, value: '3BG' },
+      { pattern: /\b(?:3|three)\s*b\s*k\b/i, value: '3BK' },
+      { pattern: /\b(?:3|three)\s*b\s*r\b/i, value: '3BR' },
+      { pattern: /\b(?:3|three)\s*bg\b/i, value: '3BG' },
+      { pattern: /\b(?:3|three)\s*bk\b/i, value: '3BK' },
+      { pattern: /\b(?:3|three)\s*br\b/i, value: '3BR' },
+      { pattern: /\b3bg\b/i, value: '3BG' },
+      { pattern: /\b3bk\b/i, value: '3BK' },
+      { pattern: /\b3br\b/i, value: '3BR' },
+      { pattern: /\b(?:3|three)\s*b\b/i, value: '3BG' },
+
+      // SC variants
+      { pattern: /\bs\s*c\s*g\b/i, value: 'SCG' },
+      { pattern: /\bs\s*c\s*k\b/i, value: 'SCK' },
+      { pattern: /\bs\s*c\s*r\b/i, value: 'SCR' },
       { pattern: /\bscg\b/i, value: 'SCG' },
-      { pattern: /\bstg\b/i, value: 'STG' },
-      { pattern: /\b3b\b/i, value: '3BG' },
-      { pattern: /\b3a\b/i, value: '3AG' },
-      { pattern: /\b2a\b/i, value: '2AG' },
-      { pattern: /\b2b\b/i, value: '2BG' },
+      { pattern: /\bsck\b/i, value: 'SCK' },
+      { pattern: /\bscr\b/i, value: 'SCR' },
+      { pattern: /\bs\s*c\b/i, value: 'SCG' },
       { pattern: /\bsc\b/i, value: 'SCG' },
+
+      // ST variants
+      { pattern: /\bs\s*t\s*g\b/i, value: 'STG' },
+      { pattern: /\bs\s*t\s*k\b/i, value: 'STK' },
+      { pattern: /\bs\s*t\s*r\b/i, value: 'STR' },
+      { pattern: /\bstg\b/i, value: 'STG' },
+      { pattern: /\bstk\b/i, value: 'STK' },
+      { pattern: /\bstr\b/i, value: 'STR' },
+      { pattern: /\bs\s*t\b/i, value: 'STG' },
       { pattern: /\bst\b/i, value: 'STG' },
+      
+      // GM variants
+      { pattern: /\bg\s*m\s*k\b/i, value: 'GMK' },
+      { pattern: /\bg\s*m\s*r\b/i, value: 'GMR' },
+      { pattern: /\bgmk\b/i, value: 'GMK' },
+      { pattern: /\bgmr\b/i, value: 'GMR' },
+      { pattern: /\bg\s*m\b/i, value: 'GM' },
+      { pattern: /\bgm\b/i, value: 'GM' },
+      { pattern: /\bgeneral\s*merit\b/i, value: 'GM' },
+      { pattern: /\bgeneral\b/i, value: 'GM' },
+
+      // EWS variants
+      { pattern: /\be\s*w\s*s\b/i, value: 'EWG' },
+      { pattern: /\bews\b/i, value: 'EWG' },
+      { pattern: /\be\s*w\s*g\b/i, value: 'EWG' },
+      { pattern: /\bewg\b/i, value: 'EWG' },
+      { pattern: /\be\s*w\s*k\b/i, value: 'EWK' },
+      { pattern: /\bewk\b/i, value: 'EWK' },
+      { pattern: /\be\s*w\s*r\b/i, value: 'EWR' },
+      { pattern: /\bewr\b/i, value: 'EWR' },
+      
+      // 1G/1K/1R shorthands
+      { pattern: /\b(?:1|one)\s*g\b/i, value: '1G' },
+      { pattern: /\b(?:1|one)\s*k\b/i, value: '1K' },
+      { pattern: /\b(?:1|one)\s*r\b/i, value: '1R' },
+      
+      // Category 1
+      { pattern: /\bcategory\s*(?:1|one)\b/i, value: '1G' },
     ];
     for (const { pattern, value } of categoryPatterns) {
       if (pattern.test(lowerText)) {
@@ -1253,16 +1358,51 @@ export const App: React.FC = () => {
       }
     }
     
-    // Extract location
+    // Extract location (comprehensive Karnataka cities + common voice misspellings)
     const locationPatterns = [
       { pattern: /\bbangalore\b/i, value: 'bangalore' },
       { pattern: /\bbengaluru\b/i, value: 'bangalore' },
       { pattern: /\bmysore\b/i, value: 'mysore' },
       { pattern: /\bmysuru\b/i, value: 'mysore' },
       { pattern: /\bmangalore\b/i, value: 'mangalore' },
+      { pattern: /\bmangaluru\b/i, value: 'mangalore' },
       { pattern: /\bhubli\b/i, value: 'hubli' },
+      { pattern: /\bdharwad\b/i, value: 'hubli' },
+      // Belgaum / Belagavi — common voice misrecognitions
+      { pattern: /\bbelgaum\b/i, value: 'belgaum' },
+      { pattern: /\bbelagavi\b/i, value: 'belgaum' },
+      { pattern: /\bbelgau\b/i, value: 'belgaum' },
+      { pattern: /\bbelgam\b/i, value: 'belgaum' },
+      { pattern: /\bbelgav\b/i, value: 'belgaum' },
+      { pattern: /\bbel\s*gaum\b/i, value: 'belgaum' },
+      { pattern: /\bbela\s*gavi\b/i, value: 'belgaum' },
+      // Other Karnataka cities
+      { pattern: /\bgulbarga\b/i, value: 'gulbarga' },
+      { pattern: /\bkalaburagi\b/i, value: 'gulbarga' },
+      { pattern: /\bdavangere\b/i, value: 'davangere' },
+      { pattern: /\bdavanagere\b/i, value: 'davangere' },
+      { pattern: /\bshimoga\b/i, value: 'shimoga' },
+      { pattern: /\bshivamogga\b/i, value: 'shimoga' },
+      { pattern: /\btumkur\b/i, value: 'tumkur' },
+      { pattern: /\btumakuru\b/i, value: 'tumkur' },
+      { pattern: /\bhassan\b/i, value: 'hassan' },
+      { pattern: /\bmandya\b/i, value: 'mandya' },
+      { pattern: /\braichur\b/i, value: 'raichur' },
+      { pattern: /\bbellary\b/i, value: 'bellary' },
+      { pattern: /\bballari\b/i, value: 'bellary' },
+      { pattern: /\bbidar\b/i, value: 'bidar' },
+      { pattern: /\bchitradurga\b/i, value: 'chitradurga' },
+      { pattern: /\bkolar\b/i, value: 'kolar' },
+      { pattern: /\budupi\b/i, value: 'udupi' },
+      { pattern: /\bchikmagalur\b/i, value: 'chikmagalur' },
+      { pattern: /\bbagalkot\b/i, value: 'bagalkot' },
+      { pattern: /\bbijapur\b/i, value: 'bijapur' },
+      { pattern: /\bgadag\b/i, value: 'gadag' },
+      { pattern: /\bhospet\b/i, value: 'hospet' },
       { pattern: /\banywhere\b/i, value: 'anywhere' },
       { pattern: /\bany\s*location\b/i, value: 'anywhere' },
+      { pattern: /\ball\s*(?:over|locations?|cities?)\b/i, value: 'anywhere' },
+      { pattern: /\bkarnataka\b/i, value: 'anywhere' },
     ];
     for (const { pattern, value } of locationPatterns) {
       if (pattern.test(lowerText)) {
@@ -1289,6 +1429,16 @@ export const App: React.FC = () => {
       setDetectedLocation(foundLocation);
     }
   }, []);
+
+  // Keep savedParamsRef in sync with latest detected values (for onclose callback which has stale closures)
+  useEffect(() => {
+    savedParamsRef.current = {
+      rank: detectedRank,
+      category: detectedCategory,
+      course: detectedCourse,
+      location: detectedLocation
+    };
+  }, [detectedRank, detectedCategory, detectedCourse, detectedLocation]);
 
   // Effect to run college matching when all parameters are detected
   useEffect(() => {
@@ -1360,7 +1510,8 @@ export const App: React.FC = () => {
     setLogs(prev => [...prev.slice(-14), { text, type, timestamp: new Date() }]);
   };
 
-  const cleanup = useCallback(() => {
+  // Cleanup without clearing conversation history (for reconnect)
+  const cleanupSession = useCallback((clearHistory: boolean = false) => {
      isSessionActive.current = false;
      if (processorRef.current) {
         processorRef.current.disconnect();
@@ -1393,26 +1544,40 @@ export const App: React.FC = () => {
     stopSpeechRecognition();
     
     setVisualizerState('idle');
+    
+    if (clearHistory) {
+      conversationHistoryRef.current = [];
+      reconnectAttemptsRef.current = 0;
+    }
   }, [stopSpeechRecognition]);
+
+  // Backward compat alias
+  const cleanup = cleanupSession;
 
   const handleDisconnect = useCallback(() => {
     if (sessionEndedRef.current) return; // Prevent duplicate messages
     sessionEndedRef.current = true;
-    cleanup();
+    isReconnectingRef.current = false;
+    setIsReconnecting(false);
+    cleanupSession(true); // Clear history on intentional disconnect
     setIsConnected(false);
     setIsMuted(false); 
     addLog("Session ended", 'system');
-  }, [cleanup]);
+  }, [cleanupSession]);
 
   // Mute/Unmute toggle handler
   const handleToggleMute = useCallback(() => {
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    isMutedRef.current = newMutedState;
+    
     if (mediaStreamRef.current) {
       const audioTracks = mediaStreamRef.current.getAudioTracks();
       audioTracks.forEach(track => {
-        track.enabled = isMuted; // Toggle: if muted, enable; if unmuted, disable
+        track.enabled = !newMutedState; 
       });
       
-      if (!isMuted) {
+      if (newMutedState) {
         if (speechRecognitionRef.current) {
           try {
             speechRecognitionRef.current.stop();
@@ -1424,8 +1589,7 @@ export const App: React.FC = () => {
         startSpeechRecognition();
       }
       
-      setIsMuted(!isMuted);
-      addLog(isMuted ? "Microphone unmuted" : "Microphone muted", 'system');
+      addLog(newMutedState ? "Microphone muted" : "Microphone unmuted", 'system');
     }
   }, [isMuted, startSpeechRecognition]);
 
@@ -1470,7 +1634,10 @@ export const App: React.FC = () => {
       nextStartTimeRef.current = 0;
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream; 
+      stream.getAudioTracks().forEach(track => {
+         track.enabled = !isMutedRef.current;
+      });
+      mediaStreamRef.current = stream;
       
       const fullSystemInstruction = SYSTEM_INSTRUCTION;
       
@@ -1486,6 +1653,8 @@ export const App: React.FC = () => {
         }
       };
 
+      const isReconnect = isReconnectingRef.current;
+      
       const sessionPromise = ai.live.connect({
         ...config,
         callbacks: {
@@ -1493,21 +1662,38 @@ export const App: React.FC = () => {
             isSessionActive.current = true;
             sessionEndedRef.current = false; // Reset for new session
             setIsConnected(true);
+            setIsReconnecting(false);
+            isReconnectingRef.current = false;
             setVisualizerState('processing');
-            addLog("Connected! Voice agent is starting...", 'system');
-            // Reset detection state on new connection
-            setDetectedRank(null);
+            
+            if (isReconnect) {
+              addLog("Reconnected! Restoring conversation...", 'system');
+              // Restore detected params from before disconnect
+              if (savedParamsRef.current.rank) setDetectedRank(savedParamsRef.current.rank);
+              if (savedParamsRef.current.category) setDetectedCategory(savedParamsRef.current.category);
+              if (savedParamsRef.current.course) setDetectedCourse(savedParamsRef.current.course);
+              if (savedParamsRef.current.location) setDetectedLocation(savedParamsRef.current.location);
+            } else {
+              addLog("Connected! Voice agent is starting...", 'system');
+              // Reset detection state only on fresh connection
+              setDetectedRank(null);
+              setDetectedCategory(null);
+              setDetectedCourse(null);
+              setDetectedLocation(null);
+              conversationHistoryRef.current = [];
+              reconnectAttemptsRef.current = 0;
+            }
+            
             setLiveCaption("");
             setUserSpeechCaption("");
             setAiThoughts([]);
-            setDetectedCategory(null);
-            setDetectedCourse(null);
-            setDetectedLocation(null);
             conversationTextRef.current = "";
             aiSpeechBufferRef.current = ""; // Reset AI speech buffer
             lastSpeakingTimeRef.current = 0;
             
-            startSpeechRecognition();
+            if (!isMutedRef.current) {
+              startSpeechRecognition();
+            }
           },
           onmessage: async (msg: LiveServerMessage) => {
             const modelParts = msg.serverContent?.modelTurn?.parts;
@@ -1549,6 +1735,12 @@ export const App: React.FC = () => {
                     
                     setLiveCaption(aiSpeechBufferRef.current);
                     
+                    // Track AI responses for reconnect context
+                    conversationHistoryRef.current.push({ role: 'model', text: text });
+                    if (conversationHistoryRef.current.length > 40) {
+                      conversationHistoryRef.current = conversationHistoryRef.current.slice(-30);
+                    }
+                    
                     // Only add significant messages to visible logs
                     if (text.toLowerCase().includes('found') || 
                         text.toLowerCase().includes('college') ||
@@ -1566,6 +1758,12 @@ export const App: React.FC = () => {
               extractInfoFromText(inputTranscript);
               setLiveCaption(inputTranscript);
               addLog(inputTranscript, 'user');
+              // Track conversation for reconnect context
+              conversationHistoryRef.current.push({ role: 'user', text: inputTranscript });
+              // Keep history manageable (last 20 exchanges)
+              if (conversationHistoryRef.current.length > 40) {
+                conversationHistoryRef.current = conversationHistoryRef.current.slice(-30);
+              }
             }
 
             const audioData = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
@@ -1625,7 +1823,7 @@ export const App: React.FC = () => {
                 console.log("Executing tool:", fc.name, fc.args);
                 
                 try {
-                    if (fc.name === 'find_matching_colleges') {
+                     if (fc.name === 'find_matching_colleges') {
                        const { rank, category, course, location } = fc.args as any;
                        const recs = await findMatchingColleges(Number(rank), String(category), String(course), String(location));
                        setRecommendations(recs);
@@ -1633,10 +1831,20 @@ export const App: React.FC = () => {
                        setActiveListIndex(-1); 
                        setHasSearched(true);
                        setShowAll(false);
-                       result = { found: recs.length, top_matches: recs.slice(0, 5) };
+                       result = { 
+                         found: recs.length, 
+                         message: "UI updated successfully. Tell the user to scroll down to view the full list.",
+                         top_matches: recs.slice(0, 3).map(r => r.collegeName) 
+                       };
                     } else if (fc.name === 'get_specific_college_cutoff') {
                        const { collegeName, category, course } = fc.args as any;
-                       result = await getSpecificCollegeCutoff(String(collegeName), String(category), String(course));
+                       const cutoffData = await getSpecificCollegeCutoff(String(collegeName), String(category), String(course));
+                       // Keep it small to avoid websocket limits
+                       if (cutoffData.data && Array.isArray(cutoffData.data)) {
+                         cutoffData.data = cutoffData.data.slice(0, 5); // Send top 5 branches only
+                         cutoffData.note = "More branches may be available on screen.";
+                       }
+                       result = cutoffData;
                     }
                 } catch(err) {
                     console.error("Error executing tool", fc.name, err);
@@ -1675,40 +1883,76 @@ export const App: React.FC = () => {
           },
           onclose: (e: any) => {
               console.log("Session closed event received:", e);
-              if (!sessionEndedRef.current) {
-                const reason = e?.message || e?.reason || '';
-                const code = e?.code;
+              isSessionActive.current = false;
+              
+              if (sessionEndedRef.current) return; // User intentionally ended
+              
+              const reason = e?.message || e?.reason || '';
+              const code = e?.code;
+              
+              const isKnownLimitation = reason.includes('not implemented') || 
+                                        reason.includes('not supported') || 
+                                        reason.includes('not enabled');
+              
+              // Determine if we should auto-reconnect
+              const shouldReconnect = !isKnownLimitation && 
+                                      reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS &&
+                                      conversationHistoryRef.current.length > 0;
+              
+              if (shouldReconnect) {
+                // Save current detected params before cleanup
+                savedParamsRef.current = {
+                  rank: detectedRank,
+                  category: detectedCategory,
+                  course: detectedCourse,
+                  location: detectedLocation
+                };
                 
-                const isKnownLimitation = reason.includes('not implemented') || 
-                                          reason.includes('not supported') || 
-                                          reason.includes('not enabled');
+                reconnectAttemptsRef.current++;
+                const attempt = reconnectAttemptsRef.current;
+                console.log(`Auto-reconnecting (attempt ${attempt}/${MAX_RECONNECT_ATTEMPTS})...`);
+                addLog(`Connection interrupted. Reconnecting (${attempt}/${MAX_RECONNECT_ATTEMPTS})...`, 'system');
+                setIsReconnecting(true);
+                isReconnectingRef.current = true;
+                setVisualizerState('processing');
                 
-                if (!reason && !code) {
-                  // Silent close - could be temporary, don't log scary messages
-                  console.log("Session closed silently - possibly reconnectable");
-                  handleDisconnect();
-                } else if (isKnownLimitation) {
-                  // Known API limitation - just log it, don't scare user
-                  console.log("Session ended due to known API limitation:", reason);
-                  addLog("Session ended - click Start to continue chatting!", 'system');
-                  setSessionEndedWithResults(true);
-                  sessionEndedRef.current = true;
-                  cleanup();
-                  setIsConnected(false);
+                // Cleanup session resources but NOT conversation history
+                cleanupSession(false);
+                setIsConnected(false);
+                
+                // Reconnect after a short delay (exponential backoff)
+                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+                setTimeout(() => {
+                  if (!sessionEndedRef.current) {
+                    handleConnect();
+                  }
+                }, delay);
+              } else if (isKnownLimitation) {
+                // Known API limitation - offer to continue
+                console.log("Session ended due to known API limitation:", reason);
+                addLog("Session ended - click Start to continue chatting!", 'system');
+                setSessionEndedWithResults(true);
+                sessionEndedRef.current = true;
+                cleanupSession(false); // Keep history so "Continue" works with context
+                setIsConnected(false);
+              } else {
+                // Max reconnect attempts reached or no history
+                if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+                  addLog("Connection lost. Click Start to begin a new session.", 'system');
                 } else if (reason) {
                   addLog(`Session closed: ${reason}`, 'system');
-                  handleDisconnect();
-                } else {
-                  handleDisconnect();
                 }
+                handleDisconnect();
               }
-              isSessionActive.current = false;
           },
           onerror: (e: any) => {
              console.error("Socket Error:", e);
              const errorMsg = e?.message || e?.error || JSON.stringify(e);
-             setError(`Connection error: ${errorMsg}`);
-             addLog(`Error: ${errorMsg}`, 'system');
+             // Don't show error during reconnect - onclose will handle it
+             if (!isReconnectingRef.current) {
+               setError(`Connection error: ${errorMsg}`);
+               addLog(`Error: ${errorMsg}`, 'system');
+             }
              isSessionActive.current = false;
           }
         }
@@ -1751,17 +1995,40 @@ export const App: React.FC = () => {
       source.connect(processor);
       processor.connect(inputCtx.destination);
       
-      // Send initial trigger to make the agent speak first
+      // Send initial trigger or replay conversation on reconnect
       setTimeout(() => {
         if (activeSessionRef.current && isSessionActive.current) {
           try {
-            activeSessionRef.current.sendClientContent({
-              turns: [{ role: "user", parts: [{ text: "Hello, please introduce yourself and tell me how you can help me." }] }],
-              turnComplete: true
-            });
-            console.log("Sent initial greeting trigger");
+            if (isReconnect && conversationHistoryRef.current.length > 0) {
+              // Replay conversation history as context
+              const contextSummary = conversationHistoryRef.current
+                .slice(-20) // Last 20 messages for context
+                .map(m => `${m.role === 'user' ? 'Student' : 'SeatSathi'}: ${m.text}`)
+                .join('\n');
+              
+              const reconnectPrompt = `[SYSTEM: The session was briefly interrupted. Here is the conversation so far - continue naturally without re-introducing yourself:]\n\n${contextSummary}\n\n[Continue the conversation from where we left off. The student's details: ${
+                savedParamsRef.current.rank ? `Rank ${savedParamsRef.current.rank}` : ''
+              }${savedParamsRef.current.category ? `, Category ${savedParamsRef.current.category}` : ''
+              }${savedParamsRef.current.course ? `, Course ${savedParamsRef.current.course}` : ''
+              }${savedParamsRef.current.location ? `, Location ${savedParamsRef.current.location}` : ''
+              }. Say something like "Sorry for the brief interruption, I'm back! Where were we?" and continue helping.]`;
+              
+              activeSessionRef.current.sendClientContent({
+                turns: [{ role: "user", parts: [{ text: reconnectPrompt }] }],
+                turnComplete: true
+              });
+              console.log("Sent reconnect context with", conversationHistoryRef.current.length, "messages");
+              reconnectAttemptsRef.current = 0; // Reset on successful reconnect
+            } else {
+              // Fresh session - normal greeting
+              activeSessionRef.current.sendClientContent({
+                turns: [{ role: "user", parts: [{ text: "Hello, please introduce yourself and tell me how you can help me." }] }],
+                turnComplete: true
+              });
+              console.log("Sent initial greeting trigger");
+            }
           } catch (e) {
-            console.error("Failed to send initial greeting", e);
+            console.error("Failed to send initial/reconnect message", e);
           }
         }
       }, 500);
@@ -2216,7 +2483,8 @@ export const App: React.FC = () => {
               {/* Status Text */}
               <div className="text-center mt-4 space-y-1">
                 <p className={`text-lg md:text-2xl font-light ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
-                    {visualizerState === 'idle' && isConnected && isMuted ? "Muted" :
+                    {isReconnecting ? "Reconnecting..." :
+                     visualizerState === 'idle' && isConnected && isMuted ? "Muted" :
                      visualizerState === 'idle' && isConnected ? "Listening..." : 
                      visualizerState === 'speaking' ? "Speaking..." : 
                      visualizerState === 'processing' ? "Thinking..." : 
