@@ -86,3 +86,5 @@ export const KCET_CATEGORIES = [
 ] as const;
 
 export type CategoryCode = typeof KCET_CATEGORIES[number];
+export type ThemeMode = 'light' | 'dark';
+
