@@ -1415,10 +1415,14 @@ export const App: React.FC = () => {
       // Proxy interceptor: route traffic through our secure Cloudflare Worker
       const OriginalWebSocket = window.WebSocket;
       window.WebSocket = function(url: string | URL, protocols?: string | string[]) {
-        const urlStr = url.toString();
-        if (urlStr.includes('generativelanguage.googleapis.com')) {
-          console.log("Proxying Gemini WebSocket connection...");
-          return new OriginalWebSocket('wss://seatsathi-proxy.seatsathi.workers.dev', protocols);
+        try {
+          const parsedUrl = new URL(url.toString(), window.location.href);
+          if (parsedUrl.hostname === 'generativelanguage.googleapis.com') {
+            console.log("Proxying Gemini WebSocket connection...");
+            return new OriginalWebSocket('wss://seatsathi-proxy.seatsathi.workers.dev', protocols);
+          }
+        } catch {
+          // If URL parsing fails, fall back to original behavior.
         }
         return new OriginalWebSocket(url, protocols);
       } as any;
