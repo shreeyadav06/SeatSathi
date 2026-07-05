@@ -162,7 +162,7 @@ seatsathi/
 2. **AI Processing**: Gemini AI processes the query and determines the appropriate action
 3. **Tool Execution**: Backend tools (`find_matching_colleges`, `get_specific_college_cutoff`) query the cutoff database
 4. **Smart Matching**: Algorithm matches student criteria against historical cutoff data
-5. **Response Generation**: AI generates personalized recommendations with probability scores
+5. **Response Generation**: The agent generates personalized recommendations with probability scores
 6. **Visual Display**: Results are displayed as interactive college cards
 
 ---
