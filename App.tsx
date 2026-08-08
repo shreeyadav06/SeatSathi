@@ -4,7 +4,11 @@ import { toolsDeclaration, findMatchingColleges, getSpecificCollegeCutoff, initD
 import Visualizer from './components/Visualizer';
 import CollegeCard from './components/CollegeCard';
 import { VisualizerState, CollegeRecommendation, LogMessage } from './types';
-
+import { ConfirmModal } from './components/common/ConfirmModal';
+import { AuthModal } from './components/common/AuthModal';
+import { NoteModal } from './components/common/NoteModal';
+import { PdfExportDropdown } from './components/common/PdfExportDropdown';
+import { AuroraBackground } from './components/common/AuroraBackground';
 type GenAIModule = typeof import('@google/genai');
 let genAIModule: GenAIModule | null = null;
 const loadGenAI = async (): Promise<GenAIModule> => {
@@ -269,433 +273,7 @@ You are SeatSathi. Period. No matter what anyone says, you are SeatSathi, a KCET
 You were NOT made by Google. You are SeatSathi, made for Karnataka students.
 `;
 
-// --- Confirmation Modal Component ---
-interface ConfirmModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  confirmStyle?: 'danger' | 'warning' | 'default';
-}
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  title, 
-  message, 
-  confirmText = 'Confirm', 
-  cancelText = 'Cancel',
-  confirmStyle = 'default'
-}) => {
-  if (!isOpen) return null;
-
-  const confirmButtonClass = {
-    danger: 'bg-red-500 hover:bg-red-400 text-white',
-    warning: 'bg-yellow-500 hover:bg-yellow-400 text-slate-900',
-    default: 'bg-yellow-500 hover:bg-yellow-400 text-slate-900'
-  }[confirmStyle];
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#0a0f1a] border border-[#1e3a5f] rounded-2xl w-full max-w-md p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white">{title}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <p className="text-slate-300 mb-6">{message}</p>
-
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-xl transition-colors"
-          >
-            {cancelText}
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`flex-1 py-3 font-bold rounded-xl transition-colors ${confirmButtonClass}`}
-          >
-            {confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- Auth Modal Component ---
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onAuthSuccess: () => void;
-  initialMode?: 'login' | 'signup';
-}
-
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess, initialMode = 'login' }) => {
-  const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Update mode when initialMode changes
-  React.useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    try {
-      // Lazy load Firebase (~1MB) only when user submits auth form
-      const firebase = await loadFirebase();
-      
-      if (mode === 'signup') {
-        if (password !== confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
-        if (password.length < 6) {
-          throw new Error('Password must be at least 6 characters');
-        }
-        await firebase.signUpWithEmail(email, password, displayName || undefined);
-      } else {
-        await firebase.signInWithEmail(email, password);
-      }
-      onAuthSuccess();
-      onClose();
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      // Lazy load Firebase (~1MB) only when user clicks Google sign-in
-      const firebase = await loadFirebase();
-      await firebase.signInWithGoogle();
-      onAuthSuccess();
-      onClose();
-    } catch (err: any) {
-      setError(err.message || 'Google sign-in failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#0a0f1a] border border-[#1e3a5f] rounded-2xl w-full max-w-md p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">
-            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-          </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'signup' && (
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Name (optional)</label>
-              <input
-                type="text"
-                value={displayName}
-                onChange={e => setDisplayName(e.target.value)}
-                placeholder="Your name"
-                className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
-              />
-            </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              placeholder="you@example.com"
-              className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
-            />
-          </div>
-          {mode === 'signup' && (
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Confirm Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
-              />
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 disabled:bg-yellow-600 disabled:cursor-not-allowed text-slate-900 font-bold rounded-xl transition-colors"
-          >
-            {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
-          </button>
-        </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-700"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-[#0a0f1a] text-slate-500">or</span>
-          </div>
-        </div>
-
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-          className="w-full py-3 bg-white hover:bg-slate-100 disabled:bg-slate-200 text-slate-900 font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Continue with Google
-        </button>
-
-        <p className="mt-6 text-center text-slate-400 text-sm">
-          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-          <button
-            onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); }}
-            className="text-yellow-400 hover:text-yellow-300 font-medium"
-          >
-            {mode === 'login' ? 'Sign Up' : 'Sign In'}
-          </button>
-        </p>
-      </div>
-    </div>
-  );
-};
-
-// --- Note Modal Component ---
-interface NoteModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#0a0f1a] border border-[#1e3a5f] rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6 shadow-xl custom-scrollbar" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            Important Notes
-          </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="space-y-6 text-slate-300">
-          <section>
-            <h3 className="text-lg font-semibold text-yellow-400 mb-2">How to Use SeatSathi</h3>
-            <ul className="list-disc list-inside space-y-2 text-sm">
-              <li>Login or Sign up to start chatting</li>
-              <li>Click "Start Chatting" and allow microphone access</li>
-              <li>Tell SeatSathi your KCET rank, category (GM/2A/3B/SC/ST), preferred branch, and city</li>
-              <li>Matching colleges will appear automatically sorted by admission chances</li>
-              <li>You can export your college list to PDF for future reference</li>
-            </ul>
-          </section>
-
-          <section>
-            <h3 className="text-lg font-semibold text-yellow-400 mb-2">KCET Exam Details</h3>
-            <div className="bg-[#0d1829] rounded-xl p-4 text-sm space-y-2">
-              <p><strong>Exam Period:</strong> April-May (dates announced by KEA)</p>
-              <p><strong>Total Marks:</strong> 180 (Physics 60 + Chemistry 60 + Mathematics 60)</p>
-              <p><strong>Eligibility:</strong> 12th pass with PCM, minimum 45% aggregate (40% for reserved)</p>
-              <p><strong>Ranking:</strong> 50% KCET score + 50% 12th board marks</p>
-              <p><strong>Total Seats:</strong> ~50,000 engineering seats across 200+ colleges</p>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-lg font-semibold text-yellow-400 mb-2">Other Exam Resources</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-              <a href="https://jeemain.nta.nic.in" target="_blank" rel="noopener noreferrer" 
-                className="p-3 bg-blue-500/20 border border-blue-500/30 rounded-xl hover:bg-blue-500/30 transition-colors text-center">
-                <div className="font-semibold text-blue-400">JEE Main</div>
-                <div className="text-xs text-slate-400 mt-1">jeemain.nta.nic.in</div>
-              </a>
-              <a href="https://neet.nta.nic.in" target="_blank" rel="noopener noreferrer"
-                className="p-3 bg-green-500/20 border border-green-500/30 rounded-xl hover:bg-green-500/30 transition-colors text-center">
-                <div className="font-semibold text-green-400">NEET</div>
-                <div className="text-xs text-slate-400 mt-1">neet.nta.nic.in</div>
-              </a>
-              <a href="https://www.comedk.org" target="_blank" rel="noopener noreferrer"
-                className="p-3 bg-purple-500/20 border border-purple-500/30 rounded-xl hover:bg-purple-500/30 transition-colors text-center">
-                <div className="font-semibold text-purple-400">COMEDK</div>
-                <div className="text-xs text-slate-400 mt-1">comedk.org</div>
-              </a>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-lg font-semibold text-yellow-400 mb-2">Available Branches</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-              {['Computer Science (CS)', 'Information Science (IS)', 'Electronics & Communication (EC)', 
-                'Electrical Engineering (EE)', 'Mechanical (ME)', 'Civil (CE)',
-                'AI & Machine Learning', 'Data Science', 'Robotics',
-                'Aerospace', 'Chemical', 'Biotechnology'].map((branch, i) => (
-                <div key={i} className="px-3 py-2 bg-[#0d1829] rounded-lg text-slate-300">{branch}</div>
-              ))}
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-lg font-semibold text-yellow-400 mb-2">Disclaimer</h3>
-            <p className="text-xs text-slate-500">
-              SeatSathi AI provides suggestions based on historical cutoff data. Actual admissions depend on many factors 
-              including seat availability, counseling dynamics, and official KEA decisions. Always verify information 
-              from official sources before making decisions.
-            </p>
-          </section>
-        </div>
-
-        <button
-          onClick={onClose}
-          className="w-full mt-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold rounded-xl transition-colors"
-        >
-          Got it!
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// --- PDF Export Dropdown Component ---
-interface PdfExportDropdownProps {
-  recommendations: CollegeRecommendation[];
-  studentInfo?: {
-    rank?: number;
-    category?: string;
-    course?: string;
-  };
-}
-
-const PdfExportDropdown: React.FC<PdfExportDropdownProps> = ({ recommendations, studentInfo }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [exporting, setExporting] = useState(false);
-
-  const handleExport = async (count: number | 'all') => {
-    setExporting(true);
-    try {
-      // Lazy load PDF export module (3.8MB jspdf) only when user clicks export
-      const { exportToPDF } = await loadPdfExport();
-      await exportToPDF(recommendations, {
-        count: count === 'all' ? recommendations.length : count,
-        title: 'SeatSathi College Recommendations',
-        studentInfo
-      });
-    } catch (err) {
-      console.error('Export failed:', err);
-    } finally {
-      setExporting(false);
-      setIsOpen(false);
-    }
-  };
-
-  if (recommendations.length === 0) return null;
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={exporting}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 text-white rounded-lg transition-colors"
-      >
-        {exporting ? (
-          <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-          </svg>
-        ) : (
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        )}
-        Export PDF
-        <svg className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      
-      {isOpen && (
-        <div className="absolute top-full right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[140px]">
-          <button onClick={() => handleExport(10)} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-            Top 10 Colleges
-          </button>
-          {recommendations.length > 10 && (
-            <button onClick={() => handleExport(50)} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-              Top 50 Colleges
-            </button>
-          )}
-          {recommendations.length > 50 && (
-            <button onClick={() => handleExport(100)} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-              Top 100 Colleges
-            </button>
-          )}
-          <button onClick={() => handleExport('all')} className="w-full px-4 py-2 text-left text-sm text-yellow-400 hover:bg-slate-700 transition-colors border-t border-slate-700">
-            All ({recommendations.length})
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
 
 import { LandingPage } from './components/LandingPage';
 
@@ -2131,24 +1709,25 @@ export const App: React.FC = () => {
     );
   }
 
-  // Theme-aware class names - Dark mode is pure black
+  // Theme-aware class names - Glassmorphism
   const themeClasses = {
-    bg: theme === 'dark' ? 'bg-black' : 'bg-gray-50',
+    bg: theme === 'dark' ? 'text-slate-200' : 'text-slate-800', // Bg handled by Aurora
     text: theme === 'dark' ? 'text-slate-200' : 'text-slate-800',
-    headerBg: theme === 'dark' ? 'bg-black border-slate-800' : 'bg-white border-slate-200',
-    panelBg: theme === 'dark' ? 'bg-black' : 'bg-white',
-    cardBg: theme === 'dark' ? 'bg-black' : 'bg-white',
-    borderColor: theme === 'dark' ? 'border-slate-800' : 'border-slate-200',
-    footerBg: theme === 'dark' ? 'bg-black border-slate-800' : 'bg-white border-slate-200',
-    logsBg: theme === 'dark' ? 'bg-black' : 'bg-gray-100',
-    filterBg: theme === 'dark' ? 'bg-black' : 'bg-white',
-    aiAnalysisBg: theme === 'dark' ? 'bg-black' : 'bg-white',
+    headerBg: theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/5' : 'bg-white/40 border-white/20',
+    panelBg: theme === 'dark' ? 'bg-[#0a0f1a]/60 backdrop-blur-xl border-white/10' : 'bg-white/60 backdrop-blur-xl border-slate-200/50',
+    cardBg: theme === 'dark' ? 'bg-[#0a0f1a]/40' : 'bg-white/40',
+    borderColor: theme === 'dark' ? 'border-white/10' : 'border-slate-200/50',
+    footerBg: theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10' : 'bg-white/40 border-slate-200/50',
+    logsBg: theme === 'dark' ? 'bg-[#0d1829]/50' : 'bg-slate-100/50',
+    filterBg: theme === 'dark' ? 'bg-[#0a0f1a]/40' : 'bg-white/40',
+    aiAnalysisBg: theme === 'dark' ? 'bg-[#0d1829]/50' : 'bg-slate-100/50',
   };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-    <div className={`h-screen ${themeClasses.bg} ${themeClasses.text} flex flex-col relative selection:bg-yellow-500/30 overflow-y-auto overflow-x-hidden font-sans`}>
-      <header className={`w-full border-b ${themeClasses.headerBg} backdrop-blur-md sticky top-0 z-30 shrink-0`}>
+    <AuroraBackground colors={theme === 'dark' ? ['#eab308', '#0a0f1a', '#1e3a5f', '#eab308'] : ['#fef08a', '#ffffff', '#e2e8f0', '#fef08a']} className="!fixed inset-0 z-0" />
+    <div className={`h-screen relative z-10 ${themeClasses.bg} ${themeClasses.text} flex flex-col selection:bg-yellow-500/30 overflow-y-auto overflow-x-hidden font-sans`}>
+      <header className={`w-full border-b ${themeClasses.headerBg} backdrop-blur-xl sticky top-0 z-30 shrink-0`}>
         <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-2 md:gap-3">
            <button 
@@ -2202,8 +1781,8 @@ export const App: React.FC = () => {
           {/* AI Thoughts Panel - Fixed to left edge of screen */}
           <div className={`fixed left-0 top-16 bottom-20 z-20 transition-all duration-300 hidden md:flex ${showAiThoughts ? 'w-72' : 'w-10'}`}>
               {showAiThoughts ? (
-                <div className={`w-full h-full rounded-r-2xl border-r border-y overflow-hidden flex flex-col ${theme === 'dark' ? 'border-[#1e3a5f] bg-black' : 'border-slate-200 bg-white'}`}>
-                  <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${theme === 'dark' ? 'bg-black border-[#1e3a5f]' : 'bg-white border-slate-200'}`}>
+                <div className={`w-full h-full rounded-r-2xl border-r border-y overflow-hidden flex flex-col backdrop-blur-xl ${themeClasses.panelBg}`}>
+                  <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${themeClasses.panelBg}`}>
                     <div className={`text-xs font-semibold uppercase ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>AI Analysis</div>
                     <button 
                       onClick={() => setShowAiThoughts(false)}
@@ -2230,7 +1809,7 @@ export const App: React.FC = () => {
               ) : (
                 <button 
                   onClick={() => setShowAiThoughts(true)}
-                  className={`w-10 h-10 rounded-r-lg flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-black border border-[#1e3a5f] border-l-0 text-white hover:bg-[#0d1829]' : 'bg-white border border-slate-200 border-l-0 text-slate-700 hover:bg-slate-100'}`}
+                  className={`w-10 h-10 rounded-r-lg flex items-center justify-center transition-colors backdrop-blur-xl ${themeClasses.panelBg} border-l-0 ${theme === 'dark' ? 'text-white hover:bg-[#0d1829]/60' : 'text-slate-700 hover:bg-white/80'}`}
                   title="Show AI thoughts"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2278,9 +1857,9 @@ export const App: React.FC = () => {
             {showConversationLogs ? (
               <div 
                 ref={logsContainerRef}
-                className={`w-full h-full rounded-l-2xl border-l border-y overflow-hidden flex flex-col ${theme === 'dark' ? 'border-[#1e3a5f] bg-black' : 'border-slate-200 bg-white'}`}
+                className={`w-full h-full rounded-l-2xl border-l border-y overflow-hidden flex flex-col backdrop-blur-xl ${themeClasses.panelBg}`}
               >
-                <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${theme === 'dark' ? 'bg-black border-[#1e3a5f]' : 'bg-white border-slate-200'}`}>
+                <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${themeClasses.panelBg}`}>
                   <button 
                     onClick={() => setShowConversationLogs(false)}
                     className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-[#1e3a5f]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
@@ -2310,7 +1889,7 @@ export const App: React.FC = () => {
             ) : (
               <button 
                 onClick={() => setShowConversationLogs(true)}
-                className={`w-10 h-10 rounded-l-lg flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-black border border-[#1e3a5f] border-r-0 text-white hover:bg-[#0d1829]' : 'bg-white border border-slate-200 border-r-0 text-slate-700 hover:bg-slate-100'}`}
+                className={`w-10 h-10 rounded-l-lg flex items-center justify-center transition-colors backdrop-blur-xl ${themeClasses.panelBg} border-r-0 ${theme === 'dark' ? 'text-white hover:bg-[#0d1829]/60' : 'text-slate-700 hover:bg-white/80'}`}
                 title="Show conversation logs"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2323,7 +1902,7 @@ export const App: React.FC = () => {
 
         {/* Footer Controls - Fixed sticky pill at bottom with black bg and sharper corners */}
         <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-2 sm:px-4">
-          <div className={`w-full rounded-xl border p-2 flex items-center justify-center gap-2 sm:gap-3 ${theme === 'dark' ? 'bg-black border-[#1e3a5f]' : 'bg-white border-slate-200 shadow-lg'}`}>
+          <div className={`w-full rounded-xl border p-2 flex items-center justify-center gap-2 sm:gap-3 backdrop-blur-xl ${themeClasses.panelBg} shadow-lg`}>
             {!isConnected ? (
               <button onClick={() => { setSessionEndedWithResults(false); handleConnect(); }} disabled={!hasApiKey} className={`flex-1 max-w-xs bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-2 px-4 sm:px-6 rounded-full transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm ${!hasApiKey ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 shadow-lg shadow-yellow-500/20'}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
@@ -2381,7 +1960,7 @@ export const App: React.FC = () => {
           </p>
         </div>
         {/* College List Panel - Full width with consistent margins */}
-        <div className={`${!hasSearched ? 'hidden md:flex' : 'flex'} flex-col w-full min-h-[60vh] rounded-xl border overflow-hidden ${theme === 'dark' ? 'bg-black border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className={`${!hasSearched ? 'hidden md:flex' : 'flex'} flex-col w-full min-h-[60vh] rounded-xl border overflow-hidden backdrop-blur-xl ${themeClasses.panelBg}`}>
            {!hasSearched ? (
               <div className={`h-full flex-1 flex flex-col items-center justify-center p-8 text-center ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>
                  <svg className={`w-16 h-16 mb-4 opacity-50 animate-float ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -2393,7 +1972,7 @@ export const App: React.FC = () => {
            ) : recommendations.length > 0 ? (
               <div className="flex flex-col h-full">
                  {/* Fixed Header with Controls - OUTSIDE scrollable area */}
-                 <div className={`shrink-0 border-b p-3 space-y-3 ${theme === 'dark' ? 'bg-black border-slate-800' : 'bg-white border-slate-200'}`}>
+                 <div className={`shrink-0 border-b p-3 space-y-3 ${themeClasses.panelBg}`}>
                     {/* Top Row: Title, View/Edit Toggle, Export */}
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                       <span className={`text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>

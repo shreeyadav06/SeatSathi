@@ -37,22 +37,15 @@ export const RankPredictor: React.FC = () => {
 
     for (const band of combinedToRankMap) {
       if (meritScore > band.minPct && meritScore <= band.maxPct) {
-        // Interpolate within the band
         const pctRange = band.maxPct - band.minPct;
         const rankRange = band.maxRank - band.minRank;
         
-        // Example: If merit=95.5 in band 94-97. 
-        // offset from top = maxPct - meritScore = 97 - 95.5 = 1.5
-        // rank ratio = 1.5 / 3 = 0.5
-        // exact rank = minRank + (0.5 * rankRange)
         const rankRatio = (band.maxPct - meritScore) / pctRange;
         const exactBaseRank = band.minRank + Math.floor(rankRatio * rankRange);
         
-        // We use the exact base rank, but add a 10-20% drift penalty for candidate inflation (2026+)
         const driftMultiplier = 1.15; 
         const driftedRank = Math.floor(exactBaseRank * driftMultiplier);
         
-        // Add ±500 error margin for board normalization
         baseMinRank = Math.max(1, driftedRank - 500);
         baseMaxRank = driftedRank + 500;
         break;
@@ -63,54 +56,67 @@ export const RankPredictor: React.FC = () => {
   };
 
   return (
-    <div className="rank-predictor-container" style={{ padding: '20px', background: '#1e1e1e', borderRadius: '12px', color: 'white' }}>
-      <h2 style={{ fontSize: '1.5rem', marginBottom: '16px' }}>KCET Rank Predictor</h2>
+    <div className="w-full max-w-xl mx-auto p-8 bg-[#0a0f1a] border border-[#1e3a5f] rounded-2xl shadow-xl font-sans text-slate-200">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-white tracking-tight font-display">Rank Predictor</h2>
+        <p className="text-slate-400 mt-2">Estimate your KCET rank based on board and CET performance.</p>
+      </div>
       
-      <div style={{ background: '#ff3b3020', border: '1px solid #ff3b30', padding: '12px', borderRadius: '8px', marginBottom: '20px' }}>
-        <strong>⚠️ Approximate Statistical Model</strong>
-        <p style={{ margin: '8px 0 0', fontSize: '0.9rem', opacity: 0.9 }}>
-          This predictor uses historical 50:50 normalization (KEA Formula) and applies a candidate-pool drift factor. 
-          Board marks are normalized by KEA across different boards. <b>Actual ranks will vary.</b>
-        </p>
+      <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl mb-8 flex gap-3 items-start">
+        <svg className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <strong className="text-amber-500 font-medium block mb-1">Approximate Statistical Model</strong>
+          <p className="text-sm text-amber-500/80 leading-relaxed">
+            This predictor uses historical 50:50 normalization and applies a candidate-pool drift factor. Board marks are normalized by KEA. Actual ranks will vary.
+          </p>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div className="space-y-6">
         <div>
-          <label style={{ display: 'block', marginBottom: '8px' }}>PUC PCM Total (out of 300)</label>
+          <label className="block text-sm font-medium text-slate-400 mb-2" htmlFor="pcm">
+            PUC PCM Total (out of 300)
+          </label>
           <input 
+            id="pcm"
             type="number" 
             value={pcmTotal}
             onChange={(e) => setPcmTotal(e.target.value)}
-            style={{ width: '100%', padding: '10px', borderRadius: '6px', background: '#2c2c2c', border: '1px solid #444', color: 'white' }}
+            className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-yellow-500 transition-colors"
             placeholder="e.g. 285"
           />
         </div>
         
         <div>
-          <label style={{ display: 'block', marginBottom: '8px' }}>KCET Score (out of 180)</label>
+          <label className="block text-sm font-medium text-slate-400 mb-2" htmlFor="kcet">
+            KCET Score (out of 180)
+          </label>
           <input 
+            id="kcet"
             type="number" 
             value={kcetTotal}
             onChange={(e) => setKcetTotal(e.target.value)}
-            style={{ width: '100%', padding: '10px', borderRadius: '6px', background: '#2c2c2c', border: '1px solid #444', color: 'white' }}
+            className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-yellow-500 transition-colors"
             placeholder="e.g. 135"
           />
         </div>
 
         <button 
           onClick={calculateRank}
-          style={{ padding: '12px', background: '#0a84ff', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+          className="w-full py-4 mt-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold rounded-xl transition-all active:scale-[0.98]"
         >
           Predict Approximate Rank
         </button>
 
         {predictedRank && (
-          <div style={{ marginTop: '20px', padding: '20px', background: '#2c2c2c', borderRadius: '8px', textAlign: 'center' }}>
-            <p style={{ fontSize: '1rem', color: '#888', margin: '0 0 8px' }}>Expected Rank Range</p>
-            <h3 style={{ fontSize: '2.5rem', margin: 0, color: '#0a84ff' }}>
-              {predictedRank.min.toLocaleString()} - {predictedRank.max.toLocaleString()}
+          <div className="mt-8 p-8 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-center transition-all animate-in fade-in zoom-in-95 duration-300">
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-widest mb-3">Expected Range</p>
+            <h3 className="text-4xl md:text-5xl font-bold text-yellow-500 tracking-tight">
+              {predictedRank.min.toLocaleString()} <span className="text-slate-600 font-normal mx-2">–</span> {predictedRank.max.toLocaleString()}
             </h3>
-            <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '10px' }}>*Includes ±500 board normalization margin</p>
+            <p className="text-xs text-slate-500 mt-4">Includes ±500 board normalization margin</p>
           </div>
         )}
       </div>

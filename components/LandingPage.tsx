@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ThemeMode } from '../types';
 import { RankPredictor } from './RankPredictor';
-
+import { AuroraBackground } from './common/AuroraBackground';
+import { ShinyText } from './common/ShinyText';
 interface LandingPageProps {
   onStart: () => void;
   user: any;
@@ -19,9 +20,9 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
   onStart, user, onLoginClick, onSignupClick, onLogout, theme, toggleTheme, onNoteClick 
 }) => {
   return (
-    <div className={`min-h-screen max-h-screen flex flex-col font-sans selection:bg-yellow-500/30 overflow-y-auto custom-scrollbar ${theme === 'dark' ? 'bg-[#0a0a0a] text-slate-100' : 'bg-gray-50 text-slate-900'}`}>
-      {/* Navbar */}
-      <nav className={`flex items-center justify-between px-6 py-5 max-w-7xl mx-auto w-full ${theme === 'light' ? 'bg-white/80 backdrop-blur-sm' : ''}`}>
+    <AuroraBackground colors={theme === 'dark' ? ['#eab308', '#0a0f1a', '#1e3a5f', '#eab308'] : ['#fef08a', '#ffffff', '#e2e8f0', '#fef08a']} className={`min-h-screen max-h-screen flex flex-col font-sans selection:bg-yellow-500/30 overflow-y-auto custom-scrollbar ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>
+      {/* Navbar - Glassmorphism */}
+      <nav className={`flex items-center justify-between px-6 py-5 max-w-7xl mx-auto w-full sticky top-0 z-50 ${theme === 'light' ? 'bg-white/40 backdrop-blur-xl border-b border-white/20' : 'bg-[#0a0f1a]/40 backdrop-blur-xl border-b border-white/5'}`}>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-yellow-500 flex items-center justify-center text-slate-900 font-bold">S</div>
           <span className={`text-xl font-bold tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Seat<span className="text-yellow-500">Sathi</span></span>
@@ -92,11 +93,9 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
       </nav>
 
       {/* Hero Section - Scrollable */}
-      <main className="flex-1 flex flex-col items-center text-center px-4 py-10 relative overflow-y-auto custom-scrollbar">
-        {/* Background Glow */}
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[120px] -z-10 ${theme === 'dark' ? 'bg-yellow-500/10' : 'bg-yellow-500/20'}`}></div>
+      <main className="flex-1 flex flex-col items-center text-center px-4 py-10 relative overflow-y-auto custom-scrollbar z-10 w-full">
 
-        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium text-yellow-500 mb-8 backdrop-blur-sm ${theme === 'dark' ? 'bg-[#0d1829]/90 border-[#1e3a5f]' : 'bg-white border-yellow-200'}`}>
+        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium text-yellow-500 mb-8 backdrop-blur-md ${theme === 'dark' ? 'bg-[#0d1829]/50 border-[#1e3a5f]/50' : 'bg-white/50 border-yellow-200/50'}`}>
           <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
           AI Admission Counselor
         </div>
@@ -104,9 +103,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight mb-4 md:mb-6 max-w-5xl leading-[1.1] px-2">
           <span className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>Seat</span><span className="text-yellow-500">Sathi</span><br />
           KCET Counselling. <br />
-          <span className="text-yellow-400">
-            Simplified.
-          </span>
+          <ShinyText text="Simplified." speed={3} className="text-yellow-400" />
         </h1>
 
         <p className={`text-base sm:text-lg md:text-xl max-w-2xl mb-6 md:mb-10 leading-relaxed px-4 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -145,7 +142,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
           {/* NOTE Button */}
           <button
             onClick={onNoteClick}
-            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium hover:text-yellow-500 rounded-full transition-colors ${theme === 'dark' ? 'text-slate-400 bg-[#0d1829] border border-[#1e3a5f] hover:border-yellow-500/50' : 'text-slate-600 border border-slate-300 hover:border-yellow-500'}`}
+            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium hover:text-yellow-500 rounded-full transition-colors backdrop-blur-md ${theme === 'dark' ? 'text-slate-300 bg-[#0d1829]/40 border border-white/10 hover:border-yellow-500/50' : 'text-slate-700 bg-white/40 border border-slate-300/50 hover:border-yellow-500'}`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -164,7 +161,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
              <div className="flip-card group cursor-pointer w-full">
                <div className="flip-card-inner">
                  {/* Front */}
-                 <div className={`flip-card-front p-6 rounded-2xl border transition-all duration-300 shadow-lg flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-[#0a0f1a] border-[#1e3a5f] hover:border-[#2a4a6f]' : 'bg-slate-100 border-slate-200 hover:border-slate-300'}`}>
+                 <div className={`flip-card-front p-6 rounded-2xl border transition-all duration-300 shadow-lg flex flex-col items-center justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10 hover:border-white/20' : 'bg-white/40 border-slate-200/50 hover:border-slate-300'}`}>
                    <div className="w-14 h-14 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-500 group-hover:scale-110 transition-transform duration-300">
                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                    </div>
@@ -172,7 +169,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
                    <p className={`text-xs mt-2 text-center ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hover to learn more</p>
                  </div>
                  {/* Back */}
-                 <div className={`flip-card-back p-6 rounded-2xl border flex flex-col justify-center ${theme === 'dark' ? 'bg-[#0a0f1a] border-[#1e3a5f]' : 'bg-white border-slate-200'}`}>
+                 <div className={`flip-card-back p-6 rounded-2xl border flex flex-col justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10' : 'bg-white/40 border-slate-200/50'}`}>
                    <h3 className={`font-bold text-lg mb-3 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>Real KCET Data</h3>
                    <ul className={`text-sm space-y-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
                      <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> 2024 & 2025 verified cutoffs</li>
@@ -188,7 +185,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
              <div className="flip-card group cursor-pointer w-full">
                <div className="flip-card-inner">
                  {/* Front */}
-                 <div className={`flip-card-front p-6 rounded-2xl border transition-all duration-300 shadow-lg flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-[#0a0f1a] border-[#1e3a5f] hover:border-[#2a4a6f]' : 'bg-slate-100 border-slate-200 hover:border-slate-300'}`}>
+                 <div className={`flip-card-front p-6 rounded-2xl border transition-all duration-300 shadow-lg flex flex-col items-center justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10 hover:border-white/20' : 'bg-white/40 border-slate-200/50 hover:border-slate-300'}`}>
                    <div className="w-14 h-14 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-500 group-hover:scale-110 transition-transform duration-300">
                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                    </div>
@@ -196,7 +193,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
                    <p className={`text-xs mt-2 text-center ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hover to learn more</p>
                  </div>
                  {/* Back */}
-                 <div className={`flip-card-back p-6 rounded-2xl border flex flex-col justify-center ${theme === 'dark' ? 'bg-[#0a0f1a] border-[#1e3a5f]' : 'bg-white border-slate-200'}`}>
+                 <div className={`flip-card-back p-6 rounded-2xl border flex flex-col justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10' : 'bg-white/40 border-slate-200/50'}`}>
                    <h3 className={`font-bold text-lg mb-3 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>Voice Interface</h3>
                    <ul className={`text-sm space-y-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
                      <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> Natural conversation</li>
@@ -212,7 +209,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
              <div className="flip-card group cursor-pointer w-full sm:col-span-2 lg:col-span-1">
                <div className="flip-card-inner">
                  {/* Front */}
-                 <div className={`flip-card-front p-6 rounded-2xl border transition-all duration-300 shadow-lg flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-[#0a0f1a] border-[#1e3a5f] hover:border-[#2a4a6f]' : 'bg-slate-100 border-slate-200 hover:border-slate-300'}`}>
+                 <div className={`flip-card-front p-6 rounded-2xl border transition-all duration-300 shadow-lg flex flex-col items-center justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10 hover:border-white/20' : 'bg-white/40 border-slate-200/50 hover:border-slate-300'}`}>
                    <div className="w-14 h-14 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-500 group-hover:scale-110 transition-transform duration-300">
                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                    </div>
@@ -220,7 +217,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
                    <p className={`text-xs mt-2 text-center ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hover to learn more</p>
                  </div>
                  {/* Back */}
-                 <div className={`flip-card-back p-6 rounded-2xl border flex flex-col justify-center ${theme === 'dark' ? 'bg-[#0a0f1a] border-[#1e3a5f]' : 'bg-white border-slate-200'}`}>
+                 <div className={`flip-card-back p-6 rounded-2xl border flex flex-col justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10' : 'bg-white/40 border-slate-200/50'}`}>
                    <h3 className={`font-bold text-lg mb-3 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>College Lists</h3>
                    <ul className={`text-sm space-y-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
                      <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> Create custom lists</li>
@@ -237,6 +234,6 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
             SeatSathi AI is currently under development. Responses are generated by AI and may vary; please verify important details from official sources.
         </div>
       </main>
-    </div>
+    </AuroraBackground>
   );
 };
