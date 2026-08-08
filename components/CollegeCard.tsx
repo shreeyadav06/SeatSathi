@@ -31,27 +31,27 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
   
   const getChanceColor = (chance: string) => {
     switch (chance) {
-      case 'High': return isDark ? 'border-green-500/50 bg-green-900/20' : 'border-green-400 bg-green-50';
-      case 'Medium': return isDark ? 'border-yellow-500/50 bg-yellow-900/20' : 'border-yellow-400 bg-yellow-50';
-      case 'Low': return isDark ? 'border-red-500/50 bg-red-900/20' : 'border-red-400 bg-red-50';
+      case 'Safe': return isDark ? 'border-green-500/50 bg-green-900/20' : 'border-green-400 bg-green-50';
+      case 'Moderate': return isDark ? 'border-yellow-500/50 bg-yellow-900/20' : 'border-yellow-400 bg-yellow-50';
+      case 'Reach': return isDark ? 'border-red-500/50 bg-red-900/20' : 'border-red-400 bg-red-50';
       default: return isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-300 bg-slate-100';
     }
   };
 
   const getChanceText = (chance: string) => {
      switch(chance) {
-         case 'High': return isDark ? 'text-green-400' : 'text-green-600';
-         case 'Medium': return isDark ? 'text-yellow-400' : 'text-yellow-600';
-         case 'Low': return isDark ? 'text-red-400' : 'text-red-600';
+         case 'Safe': return isDark ? 'text-green-400' : 'text-green-600';
+         case 'Moderate': return isDark ? 'text-yellow-400' : 'text-yellow-600';
+         case 'Reach': return isDark ? 'text-red-400' : 'text-red-600';
          default: return isDark ? 'text-slate-400' : 'text-slate-600';
      }
-  };
+  }
 
   const getChanceBadgeBg = (chance: string) => {
     switch(chance) {
-      case 'High': return isDark ? 'bg-green-500/20' : 'bg-green-100';
-      case 'Medium': return isDark ? 'bg-yellow-500/20' : 'bg-yellow-100';
-      case 'Low': return isDark ? 'bg-red-500/20' : 'bg-red-100';
+      case 'Safe': return isDark ? 'bg-green-500/20' : 'bg-green-100';
+      case 'Moderate': return isDark ? 'bg-yellow-500/20' : 'bg-yellow-100';
+      case 'Reach': return isDark ? 'bg-red-500/20' : 'bg-red-100';
       default: return isDark ? 'bg-slate-500/20' : 'bg-slate-100';
     }
   };
@@ -62,7 +62,7 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
         {/* Left side - College info */}
         <div className="flex-1 min-w-0">
           <h3 className={`font-bold text-sm md:text-base leading-tight ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
-            {index + 1}. {data.collegeName}
+            {index + 1}. {data.collegeName} {data.collegeCode && <span className="text-xs text-yellow-500/80 font-mono ml-1 px-1.5 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/20">[{data.collegeCode}]</span>}
           </h3>
           {/* Course and Location boxes */}
           <div className="flex flex-wrap gap-1.5 mt-2">

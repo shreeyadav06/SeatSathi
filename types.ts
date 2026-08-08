@@ -4,7 +4,7 @@ export interface CollegeRecommendation {
   branch: string;
   cutoff2025: string; // Changed to string to support ranges (e.g., "12000 - 15000")
   cutoff2024: string; // Changed to string
-  chance: 'High' | 'Medium' | 'Low';
+  chance: 'Safe' | 'Moderate' | 'Reach';
   location: string;
   // Optional fields for multi-search tracking
   searchCourse?: string;

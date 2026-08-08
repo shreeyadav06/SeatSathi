@@ -371,7 +371,9 @@ const findMatchingCollegesLegacy = async (
   const seenColleges = new Map<string, CollegeRecommendation>(); // Track unique college+branch combos
   const data = await getKCETData();
 
-  Object.values(data.colleges).forEach((college) => {
+  Object.values(data.colleges || {}).forEach((college) => {
+    if (!college || !college.name) return;
+
     // Location Filter
     if (normLoc && normLoc !== 'karnataka' && normLoc !== 'anywhere') {
         if (!college.name.toLowerCase().includes(normLoc)) return;
@@ -380,7 +382,7 @@ const findMatchingCollegesLegacy = async (
     // Group branches by normalized name to merge same courses
     const branchGroups = new Map<string, { branchData: any, originalName: string }[]>();
     
-    Object.entries(college.branches).forEach(([branchName, branchData]) => {
+    Object.entries(college.branches || {}).forEach(([branchName, branchData]) => {
         if (!isBranchMatch(branchName, course)) return;
         
         const normalizedBranch = normalizeBranchName(branchName);
@@ -423,23 +425,22 @@ const findMatchingCollegesLegacy = async (
         // refCutoff is the college's cutoff rank (lower is better/harder)
         // rank is the user's rank
         const diff = refCutoff - rank; // positive means college cutoff > user rank (easier to get)
-        
-        let chance: 'High' | 'Medium' | 'Low' = 'Low';
-        
-        // High: if college cutoff is 1000+ higher than user's rank (user has better rank than needed)
-        // Example: user rank 15000, college cutoff 16000+ -> High chance
+        let chance: 'Safe' | 'Moderate' | 'Reach' = 'Reach';
+  
+        // Safe: if college cutoff is 1000+ higher than user's rank (user has better rank than needed)
+        // Example: user rank 15000, college cutoff 16000+ -> Safe chance
         if (diff >= 1000) {
-          chance = 'High';
+          chance = 'Safe';
         }
-        // Medium: if college cutoff is within 1000 above to 1000 below user's rank
-        // Example: user rank 10000, college cutoff 9000-11000 -> Medium chance
+        // Moderate: if college cutoff is within 1000 above to 1000 below user's rank
+        // Example: user rank 10000, college cutoff 9000-11000 -> Moderate chance
         else if (diff >= -1000 && diff < 1000) {
-          chance = 'Medium';
+          chance = 'Moderate';
         }
-        // Low: if college cutoff is more than 1000 lower than user's rank
-        // Example: user rank 10000, college cutoff < 9000 -> Low chance (college is too competitive)
+        // Reach: if college cutoff is more than 1000 lower than user's rank
+        // Example: user rank 10000, college cutoff < 9000 -> Reach chance (college is too competitive)
         else {
-          chance = 'Low';
+          chance = 'Reach';
         }
         
         // Check if this is a pure branch
@@ -479,7 +480,7 @@ const findMatchingCollegesLegacy = async (
      if (aIsPure !== bIsPure) return bIsPure - aIsPure; // Pure first
      
      // Priority 2: Higher chance first
-     const chanceOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+     const chanceOrder = { 'Safe': 0, 'Moderate': 1, 'Reach': 2 };
      const chanceDiff = chanceOrder[a.chance] - chanceOrder[b.chance];
      if (chanceDiff !== 0) return chanceDiff;
 

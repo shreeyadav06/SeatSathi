@@ -276,12 +276,12 @@ You were NOT made by Google. You are SeatSathi, made for Karnataka students.
 
 
 import { LandingPage } from './components/LandingPage';
-
 // --- Main Application ---
 export const App: React.FC = () => {
   const [view, setView] = useState<'landing' | 'app'>('landing');
   const [isConnected, setIsConnected] = useState(false);
   const [visualizerState, setVisualizerState] = useState<VisualizerState>('idle');
+  const [textInput, setTextInput] = useState('');
   const [logs, setLogs] = useState<LogMessage[]>([]);
   const [recommendations, setRecommendations] = useState<CollegeRecommendation[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
@@ -942,6 +942,30 @@ export const App: React.FC = () => {
     return JSON.parse(JSON.stringify(data, (key, value) => value === undefined ? null : value));
   };
 
+  const handleSendTextMessage = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!textInput.trim() || !isConnected || !activeSessionRef.current) return;
+    
+    // Log user text message
+    setLogs(prev => [...prev, {
+      id: Date.now().toString(),
+      type: 'user',
+      content: textInput,
+      timestamp: new Date()
+    }]);
+
+    // Send to Gemini Live API
+    try {
+      activeSessionRef.current.sendClientContent({
+        turns: [{ role: "user", parts: [{ text: textInput }] }],
+        turnComplete: true
+      });
+      setTextInput('');
+    } catch (err) {
+      console.error("Failed to send text message:", err);
+    }
+  };
+
   const handleConnect = async () => {
     if (isConnected) return;
 
@@ -1386,14 +1410,19 @@ export const App: React.FC = () => {
 
     } catch (err: any) {
       console.error("Init Error:", err);
-      setError(err.message || "Session initialization failed.");
+      const errorMsg = String(err?.message || err).toLowerCase();
+      if (errorMsg.includes("429") || errorMsg.includes("rate limit") || errorMsg.includes("exceeded")) {
+        setError("Queue is full! The AI is currently assisting too many users. Please try connecting again in a few minutes.");
+      } else {
+        setError(err.message || "Session initialization failed.");
+      }
       setVisualizerState('idle');
       handleDisconnect();
     }
   };
 
   
-  // DEFAULT now shows: first 10 Medium, then High, then Low 
+  // DEFAULT now shows: first 10 Moderate, then Safe, then Reach 
   const getSortedRecommendations = () => {
     let sorted = [...recommendations];
     
@@ -1402,22 +1431,22 @@ export const App: React.FC = () => {
     }
     
     if (sortOrder === 'default' || sortOrder === 'medium-first') {
-      const medium = sorted.filter(r => r.chance === 'Medium');
-      const high = sorted.filter(r => r.chance === 'High');
-      const low = sorted.filter(r => r.chance === 'Low');
+      const medium = sorted.filter(r => r.chance === 'Moderate');
+      const high = sorted.filter(r => r.chance === 'Safe');
+      const low = sorted.filter(r => r.chance === 'Reach');
       
       const first10Medium = medium.slice(0, 10);
       const remainingMedium = medium.slice(10);
       sorted = [...first10Medium, ...high, ...remainingMedium, ...low];
     } else if (sortOrder === 'high-first') {
       sorted.sort((a, b) => {
-        const order = { 'High': 0, 'Medium': 1, 'Low': 2 };
-        return order[a.chance] - order[b.chance];
+        const order = { 'Safe': 0, 'Moderate': 1, 'Reach': 2 };
+        return order[a.chance as any] - order[b.chance as any];
       });
     } else if (sortOrder === 'low-first') {
       sorted.sort((a, b) => {
-        const order = { 'Low': 0, 'Medium': 1, 'High': 2 };
-        return order[a.chance] - order[b.chance];
+        const order = { 'Reach': 0, 'Moderate': 1, 'Safe': 2 };
+        return order[a.chance as any] - order[b.chance as any];
       });
     }
     return sorted;
@@ -1831,6 +1860,33 @@ export const App: React.FC = () => {
                 aiAudioLevel={aiAudioLevel}
                 userAudioLevel={userAudioLevel}
               />
+              
+              {/* Text Input (Dual-Mode) */}
+              <form onSubmit={handleSendTextMessage} className="w-full max-w-sm mt-6 relative z-10">
+                <input
+                  type="text"
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  disabled={!isConnected}
+                  placeholder={isConnected ? "Type a message..." : "Connect to chat..."}
+                  className={`w-full px-4 py-3 pr-12 rounded-full border backdrop-blur-xl outline-none transition-all ${
+                    theme === 'dark' 
+                      ? 'bg-[#0a0f1a]/60 border-white/10 text-white placeholder-slate-400 focus:border-yellow-500/50 focus:bg-[#0a0f1a]/80 shadow-[0_0_15px_rgba(234,179,8,0.1)]' 
+                      : 'bg-white/60 border-slate-200/50 text-slate-800 placeholder-slate-500 focus:border-yellow-500/50 focus:bg-white/80 shadow-[0_0_15px_rgba(234,179,8,0.1)]'
+                  }`}
+                />
+                <button
+                  type="submit"
+                  disabled={!isConnected || !textInput.trim()}
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${
+                    !isConnected || !textInput.trim()
+                      ? 'text-slate-500 opacity-50 cursor-not-allowed'
+                      : 'text-yellow-500 hover:bg-yellow-500/20 active:scale-95'
+                  }`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                </button>
+              </form>
               
               {/* Status Text */}
               <div className="text-center mt-4 space-y-1">
