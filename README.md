@@ -31,11 +31,12 @@ Every year, thousands of Karnataka students struggle with:
 
 ## Features
 
-### Voice-First Interface
-- Natural conversation with AI using voice input
+### Dual-Mode Interface (Voice + Text)
+- Natural conversation with AI using voice input or text chat
+- Seamlessly switch between speaking and typing during the same session
 - Supports **English**, **Hinglish**, and **Kannada** for better accessibility
 - Real-time audio visualization for engaging interactions
-- Powered by **Google Gemini 2.0 Flash** AI
+- Powered by **Google Gemini 2.0 Flash Live API**
 
 ### Real KCET Data
 - Verified cutoff data from **2024 & 2025** counselling rounds
@@ -49,7 +50,8 @@ Every year, thousands of Karnataka students struggle with:
   - **Category** (GM, 1G, 2AG, 2BG, 3AG, 3BG, SCG, STG, etc.)
   - **Course Preference** (CS, EC, Mechanical, Civil, AI/ML, Data Science, etc.)
   - **Location** (Bangalore, Mysore, or Anywhere)
-- Probability-based recommendations (High/Medium/Low chance)
+- Probability-based recommendations (**Safe / Moderate / Reach**) based on a ±1000 rank tolerance logic
+- Displays official KCET college codes (e.g. `[E001]`) directly in the UI
 
 ### PDF Analysis & Export
 - Upload official KCET/COMEDK cutoff PDFs
@@ -63,9 +65,10 @@ Every year, thousands of Karnataka students struggle with:
 - Cloud sync capabilities via Firestore
 
 ### Modern UI/UX
+- Premium **Glassmorphism** design utilizing ReactBits components (AuroraBackground, ShinyText, StarBorder)
 - Clean, responsive design with **dark and light theme toggle**
-- Visual college recommendation cards with flip animations
-- Real-time transcription display
+- Visual college recommendation cards with KCET codes and chance tags
+- Real-time transcription display and interactive chat box
 - Mobile-friendly responsive layout
 
 ---
@@ -122,12 +125,15 @@ npm run preview
 | **React 18** | Frontend UI framework |
 | **TypeScript** | Type-safe development |
 | **Vite** | Fast build tool & dev server |
-| **Google Gemini 2.5-flash-native-audio-dialog** | Conversational AI & voice processing |
+| **Google Gemini Live API** | Conversational AI & voice/text streaming |
+| **Cloudflare Workers** | Secure WebSocket proxy & connection management |
+| **Cloudflare D1** | Rate limiting (max 50 sessions/hour per IP) to prevent abuse |
 | **Firebase** | Authentication (Email/Google) & Firestore |
-| **IndexedDB (Dexie.js)** | Local database for cutoff data |
+| **IndexedDB (Dexie.js)** | Local database for extremely fast offline cutoff data lookups |
 | **PDF.js** | PDF parsing and text extraction |
 | **jsPDF** | PDF export for recommendations |
-| **Tailwind CSS** | Utility-first styling |
+| **Tailwind CSS** | Utility-first styling & glassmorphism effects |
+| **ReactBits** | Advanced animated UI components |
 
 ---
 
@@ -139,8 +145,10 @@ seatsathi/
 ├── index.tsx               # Application entry point
 ├── types.ts                # TypeScript type definitions
 ├── components/
-│   ├── CollegeCard.tsx     # College recommendation card
-│   └── Visualizer.tsx      # Audio visualization component
+│   ├── common/             # Reusable UI components (Modals, Dropdowns)
+│   ├── college/            # College recommendation cards
+│   ├── landing/            # Landing page components & ReactBits
+│   ├── agent/              # Voice visualizer and chat input components
 ├── services/
 │   ├── audioUtils.ts       # Audio processing utilities
 │   ├── toolService.ts      # AI tool implementations
@@ -148,6 +156,9 @@ seatsathi/
 │   ├── database.ts         # IndexedDB schema (Dexie.js)
 │   ├── dbPopulate.ts       # Database population scripts
 │   └── pdfExport.ts        # PDF export functionality
+├── gemini-proxy/
+│   ├── src/index.ts        # Cloudflare worker WebSocket proxy with D1 rate limiting
+│   └── wrangler.toml       # Cloudflare worker configuration
 ├── KCETcutoffdata/
 │   ├── collegeData.ts      # Main data aggregator
 │   └── colleges[1-116].ts  # Individual college data files
