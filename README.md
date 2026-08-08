@@ -31,20 +31,16 @@ Every year, thousands of Karnataka students struggle with:
 
 ## Features
 
-### Dual-Mode Interface (Voice + Text)
+### v2.0 (New Updates)
+
+#### Dual-Mode Interface (Voice + Text)
 - Natural conversation with AI using voice input or text chat
 - Seamlessly switch between speaking and typing during the same session
 - Supports **English**, **Hinglish**, and **Kannada** for better accessibility
 - Real-time audio visualization for engaging interactions
 - Powered by **Google Gemini 2.0 Flash Live API**
 
-### Real KCET Data
-- Verified cutoff data from **2024 & 2025** counselling rounds
-- Comprehensive database covering **250+ colleges** across Karnataka
-- Multi-round data (R1, R2, R3) for accurate predictions
-- Supports KCET and COMEDK PDF analysis
-
-### Smart College Matching
+#### Smart College Matching (Upgraded)
 - Intelligent filtering based on:
   - **Rank** (e.g., 5000, 12000)
   - **Category** (GM, 1G, 2AG, 2BG, 3AG, 3BG, SCG, STG, etc.)
@@ -53,23 +49,33 @@ Every year, thousands of Karnataka students struggle with:
 - Probability-based recommendations (**Safe / Moderate / Reach**) based on a ±1000 rank tolerance logic
 - Displays official KCET college codes (e.g. `[E001]`) directly in the UI
 
-### PDF Analysis & Export
-- Upload official KCET/COMEDK cutoff PDFs
-- AI parses thousands of rows automatically
-- Extract specific college/branch cutoffs from documents
-- **Export college recommendations to PDF** for offline reference
-
-### User Authentication
-- **Firebase Authentication** with Email/Password and Google Sign-In
-- Secure user accounts for personalized experience
-- Cloud sync capabilities via Firestore
-
-### Modern UI/UX
+#### Modern UI/UX
 - Premium **Glassmorphism** design utilizing ReactBits components (AuroraBackground, ShinyText, StarBorder)
 - Clean, responsive design with **dark and light theme toggle**
 - Visual college recommendation cards with KCET codes and chance tags
 - Real-time transcription display and interactive chat box
 - Mobile-friendly responsive layout
+
+---
+
+### v1.0 (Core Features)
+
+#### Real KCET Data
+- Verified cutoff data from **2024 & 2025** counselling rounds
+- Comprehensive database covering **250+ colleges** across Karnataka
+- Multi-round data (R1, R2, R3) for accurate predictions
+- Supports KCET and COMEDK PDF analysis
+
+#### PDF Analysis & Export
+- Upload official KCET/COMEDK cutoff PDFs
+- AI parses thousands of rows automatically
+- Extract specific college/branch cutoffs from documents
+- **Export college recommendations to PDF** for offline reference
+
+#### User Authentication
+- **Firebase Authentication** with Email/Password and Google Sign-In
+- Secure user accounts for personalized experience
+- Cloud sync capabilities via Firestore
 
 ---
 
