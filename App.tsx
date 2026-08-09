@@ -1975,7 +1975,7 @@ export const App: React.FC = () => {
         <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-2 sm:px-4">
           <div className={`w-full rounded-xl border p-2 flex items-center justify-center gap-2 sm:gap-3 backdrop-blur-xl ${themeClasses.panelBg} shadow-lg`}>
             {!isConnected ? (
-              <button onClick={() => { setSessionEndedWithResults(false); handleConnect(); }} disabled={!hasApiKey} className={`flex-1 max-w-xs bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-2 px-4 sm:px-6 rounded-full transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm ${!hasApiKey ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 shadow-lg shadow-yellow-500/20'}`}>
+              <button onClick={() => { setSessionEndedWithResults(false); handleConnect(); }} disabled={!hasApiKey} className={`flex-1 max-w-xs bg-[#007AFF] hover:bg-[#007AFF]/90 text-white font-medium py-2 px-4 sm:px-6 rounded-full transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm ${!hasApiKey ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 shadow-lg shadow-[#007AFF]/20'}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
                 <span>{sessionEndedWithResults ? 'Continue' : 'Start'}</span>
               </button>
