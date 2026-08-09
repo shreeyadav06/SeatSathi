@@ -948,12 +948,7 @@ export const App: React.FC = () => {
     if (!textInput.trim() || !isConnected || !activeSessionRef.current) return;
     
     // Log user text message
-    setLogs(prev => [...prev, {
-      id: Date.now().toString(),
-      type: 'user',
-      text: textInput,
-      timestamp: new Date()
-    }]);
+    addLog(textInput, 'user');
 
     // Send to Gemini Live API
     try {
