@@ -175,21 +175,21 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
              <div className="flip-card group cursor-pointer w-full">
                <div className="flip-card-inner">
                  {/* Front */}
-                 <div className={`flip-card-front p-6 rounded-2xl border transition-all duration-300 shadow-lg flex flex-col items-center justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10 hover:border-white/20' : 'bg-white/40 border-slate-200/50 hover:border-slate-300'}`}>
-                   <div className="w-14 h-14 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-500 group-hover:scale-110 transition-transform duration-300">
+                 <div className={`flip-card-front p-6 rounded-3xl border transition-all duration-300 shadow-xl flex flex-col items-center justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#1C1C1E]/60 border-[#2C2C2E] hover:border-[#3A3A3C]' : 'bg-white/60 border-slate-200/50 hover:border-slate-300'}`}>
+                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 ${theme === 'dark' ? 'bg-[#0A84FF]/20 text-[#0A84FF]' : 'bg-[#007AFF]/10 text-[#007AFF]'}`}>
                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                    </div>
                    <h3 className={`font-bold text-lg text-center ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>Real KCET Data</h3>
                    <p className={`text-xs mt-2 text-center ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hover to learn more</p>
                  </div>
                  {/* Back */}
-                 <div className={`flip-card-back p-6 rounded-2xl border flex flex-col justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10' : 'bg-white/40 border-slate-200/50'}`}>
-                   <h3 className={`font-bold text-lg mb-3 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>Real KCET Data</h3>
+                 <div className={`flip-card-back p-6 rounded-3xl border flex flex-col justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#1C1C1E]/60 border-[#2C2C2E]' : 'bg-white/60 border-slate-200/50'}`}>
+                   <h3 className={`font-bold text-lg mb-3 ${theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>Real KCET Data</h3>
                    <ul className={`text-sm space-y-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> 2024 & 2025 verified cutoffs</li>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> 250+ colleges covered</li>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> All rounds (R1, R2, R3)</li>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> All categories supported</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> 2024 & 2025 verified cutoffs</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> 250+ colleges covered</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> All rounds (R1, R2, R3)</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> All categories supported</li>
                    </ul>
                  </div>
                </div>
@@ -199,21 +199,21 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
              <div className="flip-card group cursor-pointer w-full">
                <div className="flip-card-inner">
                  {/* Front */}
-                 <div className={`flip-card-front p-6 rounded-2xl border transition-all duration-300 shadow-lg flex flex-col items-center justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10 hover:border-white/20' : 'bg-white/40 border-slate-200/50 hover:border-slate-300'}`}>
-                   <div className="w-14 h-14 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-500 group-hover:scale-110 transition-transform duration-300">
+                 <div className={`flip-card-front p-6 rounded-3xl border transition-all duration-300 shadow-xl flex flex-col items-center justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#1C1C1E]/60 border-[#2C2C2E] hover:border-[#3A3A3C]' : 'bg-white/60 border-slate-200/50 hover:border-slate-300'}`}>
+                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 ${theme === 'dark' ? 'bg-[#0A84FF]/20 text-[#0A84FF]' : 'bg-[#007AFF]/10 text-[#007AFF]'}`}>
                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                    </div>
                    <h3 className={`font-bold text-lg text-center ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>Voice Interface</h3>
                    <p className={`text-xs mt-2 text-center ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hover to learn more</p>
                  </div>
                  {/* Back */}
-                 <div className={`flip-card-back p-6 rounded-2xl border flex flex-col justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10' : 'bg-white/40 border-slate-200/50'}`}>
-                   <h3 className={`font-bold text-lg mb-3 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>Voice Interface</h3>
+                 <div className={`flip-card-back p-6 rounded-3xl border flex flex-col justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#1C1C1E]/60 border-[#2C2C2E]' : 'bg-white/60 border-slate-200/50'}`}>
+                   <h3 className={`font-bold text-lg mb-3 ${theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>Voice Interface</h3>
                    <ul className={`text-sm space-y-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> Natural conversation</li>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> English, Hinglish & Kannada</li>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> Instant responses</li>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> Powered by Gemini AI</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> Natural conversation</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> English, Hinglish & Kannada</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> Instant responses</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> Powered by Gemini AI</li>
                    </ul>
                  </div>
                </div>
@@ -223,21 +223,21 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
              <div className="flip-card group cursor-pointer w-full sm:col-span-2 lg:col-span-1">
                <div className="flip-card-inner">
                  {/* Front */}
-                 <div className={`flip-card-front p-6 rounded-2xl border transition-all duration-300 shadow-lg flex flex-col items-center justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10 hover:border-white/20' : 'bg-white/40 border-slate-200/50 hover:border-slate-300'}`}>
-                   <div className="w-14 h-14 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-4 text-yellow-500 group-hover:scale-110 transition-transform duration-300">
+                 <div className={`flip-card-front p-6 rounded-3xl border transition-all duration-300 shadow-xl flex flex-col items-center justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#1C1C1E]/60 border-[#2C2C2E] hover:border-[#3A3A3C]' : 'bg-white/60 border-slate-200/50 hover:border-slate-300'}`}>
+                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 ${theme === 'dark' ? 'bg-[#0A84FF]/20 text-[#0A84FF]' : 'bg-[#007AFF]/10 text-[#007AFF]'}`}>
                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                    </div>
                    <h3 className={`font-bold text-lg text-center ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>College Lists</h3>
                    <p className={`text-xs mt-2 text-center ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>Hover to learn more</p>
                  </div>
                  {/* Back */}
-                 <div className={`flip-card-back p-6 rounded-2xl border flex flex-col justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10' : 'bg-white/40 border-slate-200/50'}`}>
-                   <h3 className={`font-bold text-lg mb-3 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>College Lists</h3>
+                 <div className={`flip-card-back p-6 rounded-3xl border flex flex-col justify-center backdrop-blur-xl ${theme === 'dark' ? 'bg-[#1C1C1E]/60 border-[#2C2C2E]' : 'bg-white/60 border-slate-200/50'}`}>
+                   <h3 className={`font-bold text-lg mb-3 ${theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>College Lists</h3>
                    <ul className={`text-sm space-y-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> Create custom lists</li>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> Drag & drop to reorder</li>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> Sort by admission chances</li>
-                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}>•</span> Export to PDF</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> Create custom lists</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> Drag & drop to reorder</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> Sort by admission chances</li>
+                     <li className="flex items-start gap-2"><span className={theme === 'dark' ? 'text-[#0A84FF]' : 'text-[#007AFF]'}>•</span> Export to PDF</li>
                    </ul>
                  </div>
                </div>
