@@ -37,7 +37,7 @@ Every year, thousands of Karnataka students struggle with:
 ```mermaid
 graph LR
     subgraph v1.0 [SeatSathi v1.0]
-        A1[Text-only Chat]
+        A1[Voice-only Chat]
         A2[Basic DB Matching]
         A3[Browser IndexedDB]
         A4[Standard UI]
@@ -100,7 +100,7 @@ graph TD
 #### Architecture (Browser DB / IndexedDB based)
 ```mermaid
 graph TD
-    A[User] -->|Text| B(React Frontend)
+    A[User] -->|Voice| B(React Frontend)
     B -->|Fetch| C[collegeData.json]
     C -->|Populate| D[(IndexedDB)]
     B -->|Chat Request| E{Gemini API}
