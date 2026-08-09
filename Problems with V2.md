@@ -25,3 +25,6 @@ Revert to the IndexedDB (`dbQuery.ts`) approach. The only downside is a one-time
 
 4. **Node.js Environment Fetch limitations (Development/Testing):**
    If you ever run the college search logic outside the browser (e.g., in a Node script using `vite-node`), the legacy fallback fails with `TypeError: Invalid URL` because it uses a relative URL `fetch('/collegeData.json')`. This is perfectly fine in the browser but breaks server-side scripts since Node's `fetch` requires absolute URLs.
+
+
+5. PDF upload and analysis for other exams like Comedk, JEE, NEET is still missing. (this is a future update aspect keep this aside for now, will be patched in v3)
