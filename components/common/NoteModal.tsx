@@ -18,7 +18,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, theme = '
         className={`w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 md:p-8 rounded-3xl shadow-2xl custom-scrollbar transition-all transform duration-300 ${isDark ? 'bg-[#1C1C1E]/90 border border-[#2C2C2E] shadow-black/50' : 'bg-white/90 border border-white shadow-slate-200/50'}`} 
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-8 sticky top-0 bg-transparent z-10 backdrop-blur-xl -mx-6 md:-mx-8 px-6 md:px-8 py-2 -mt-6">
+        <div className={`flex justify-between items-center mb-6 sticky top-0 z-10 backdrop-blur-xl -mx-6 md:-mx-8 px-6 md:px-8 pt-6 md:pt-8 pb-4 -mt-6 md:-mt-8 ${isDark ? 'bg-[#1C1C1E]/95 border-b border-[#2C2C2E]' : 'bg-white/95 border-b border-[#E5E5EA]'}`}>
           <h2 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[#1C1C1E]'}`}>
             Important Notes & Info
           </h2>
