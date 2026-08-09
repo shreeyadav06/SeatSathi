@@ -33,6 +33,29 @@ Every year, thousands of Karnataka students struggle with:
 
 ### v2.0 (New Updates)
 
+#### v1 to v2 Feature Evolution
+```mermaid
+graph LR
+    subgraph v1.0 [SeatSathi v1.0]
+        A1[Text-only Chat]
+        A2[Basic DB Matching]
+        A3[Browser IndexedDB]
+        A4[Standard UI]
+    end
+    
+    subgraph v2.0 [SeatSathi v2.0 Updates]
+        B1[Voice + Text + Multilingual Chat]
+        B2[Smart Matching: Safe/Moderate/Reach]
+        B3[Cloudflare D1 Backend]
+        B4[Premium Glassmorphism UI]
+    end
+    
+    A1 ==> B1
+    A2 ==> B2
+    A3 ==> B3
+    A4 ==> B4
+```
+
 #### Architecture (Cloudflare D1 based)
 ```mermaid
 graph TD
