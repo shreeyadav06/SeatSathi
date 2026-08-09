@@ -28,8 +28,9 @@ export default {
             .catch(e => console.error('Cleanup error:', e))
         );
         
-        // Count recent requests from this IP
-        const { results } = await env.DB.prepare('SELECT COUNT(*) as count FROM rate_limits WHERE ip = ?').bind(clientIP).all();
+        // Count requests from this IP in the last hour
+        const { results } = await env.DB.prepare('SELECT COUNT(*) as count FROM rate_limits WHERE ip = ? AND timestamp >= ?')
+          .bind(clientIP, now - ONE_HOUR).all();
         const count = (results[0] as any)?.count || 0;
         
         if (count >= MAX_REQUESTS) {
