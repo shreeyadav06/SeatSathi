@@ -36,26 +36,26 @@
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #1e293b; 
+  background: transparent; 
 }
 ::-webkit-scrollbar-thumb {
-  background: #475569; 
+  background: #3A3A3C; 
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b; 
+  background: #48484A; 
 }
 
-/* Light theme scrollbar - yellow/amber accent */
+/* Light theme scrollbar */
 html.light ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 html.light ::-webkit-scrollbar-thumb {
-  background: #eab308;
+  background: #D1D1D6;
   border-radius: 4px;
 }
 html.light ::-webkit-scrollbar-thumb:hover {
-  background: #ca8a04;
+  background: #C7C7CC;
 }
 
 /* Float animation for empty state */
