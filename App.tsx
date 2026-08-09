@@ -8,7 +8,7 @@ import { ConfirmModal } from './components/common/ConfirmModal';
 import { AuthModal } from './components/common/AuthModal';
 import { NoteModal } from './components/common/NoteModal';
 import { PdfExportDropdown } from './components/common/PdfExportDropdown';
-import { AuroraBackground } from './components/common/AuroraBackground';
+import { motion, AnimatePresence } from 'framer-motion';
 type GenAIModule = typeof import('@google/genai');
 let genAIModule: GenAIModule | null = null;
 const loadGenAI = async (): Promise<GenAIModule> => {
@@ -336,6 +336,7 @@ export const App: React.FC = () => {
   // Confirmation modal states
   const [showEndCallConfirm, setShowEndCallConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
 
   // State for local keyword extraction
   const [detectedRank, setDetectedRank] = useState<number | null>(null);
@@ -1713,6 +1714,7 @@ export const App: React.FC = () => {
           onLogout={() => setShowLogoutConfirm(true)}
           theme={theme}
           toggleTheme={toggleTheme}
+          onNoteClick={() => setShowNoteModal(true)}
         />
         <AuthModal 
           isOpen={showAuthModal} 
@@ -1734,49 +1736,55 @@ export const App: React.FC = () => {
           cancelText="Cancel"
           confirmStyle="warning"
         />
+        <NoteModal 
+          isOpen={showNoteModal} 
+          onClose={() => setShowNoteModal(false)}
+          theme={theme}
+        />
       </>
     );
   }
 
   // Theme-aware class names - Glassmorphism
   const themeClasses = {
-    bg: theme === 'dark' ? 'text-slate-200' : 'text-slate-800', // Bg handled by Aurora
-    text: theme === 'dark' ? 'text-slate-200' : 'text-slate-800',
-    headerBg: theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/5' : 'bg-white/40 border-white/20',
-    panelBg: theme === 'dark' ? 'bg-[#0a0f1a]/60 backdrop-blur-xl border-white/10' : 'bg-white/60 backdrop-blur-xl border-slate-200/50',
-    cardBg: theme === 'dark' ? 'bg-[#0a0f1a]/40' : 'bg-white/40',
-    borderColor: theme === 'dark' ? 'border-white/10' : 'border-slate-200/50',
-    footerBg: theme === 'dark' ? 'bg-[#0a0f1a]/40 border-white/10' : 'bg-white/40 border-slate-200/50',
-    logsBg: theme === 'dark' ? 'bg-[#0d1829]/50' : 'bg-slate-100/50',
-    filterBg: theme === 'dark' ? 'bg-[#0a0f1a]/40' : 'bg-white/40',
-    aiAnalysisBg: theme === 'dark' ? 'bg-[#0d1829]/50' : 'bg-slate-100/50',
+    bg: theme === 'dark' ? 'bg-black text-[#F2F2F7]' : 'bg-[#F2F2F7] text-[#1C1C1E]',
+    text: theme === 'dark' ? 'text-[#F2F2F7]' : 'text-[#1C1C1E]',
+    headerBg: theme === 'dark' ? 'bg-black/70 border-[#2C2C2E]' : 'bg-[#F2F2F7]/70 border-[#E5E5EA]',
+    panelBg: theme === 'dark' ? 'bg-[#1C1C1E]/80 backdrop-blur-xl border-[#2C2C2E]' : 'bg-white/80 backdrop-blur-xl border-[#E5E5EA]',
+    cardBg: theme === 'dark' ? 'bg-[#1C1C1E]' : 'bg-white',
+    borderColor: theme === 'dark' ? 'border-[#2C2C2E]' : 'border-[#E5E5EA]',
+    footerBg: theme === 'dark' ? 'bg-[#1C1C1E]/80 border-[#2C2C2E]' : 'bg-white/80 border-[#E5E5EA]',
+    logsBg: theme === 'dark' ? 'bg-[#2C2C2E]/50' : 'bg-[#E5E5EA]/50',
+    filterBg: theme === 'dark' ? 'bg-[#1C1C1E]' : 'bg-white',
+    aiAnalysisBg: theme === 'dark' ? 'bg-[#2C2C2E]/50' : 'bg-[#E5E5EA]/50',
   };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-    <AuroraBackground colors={theme === 'dark' ? ['#eab308', '#0a0f1a', '#1e3a5f', '#eab308'] : ['#fef08a', '#ffffff', '#e2e8f0', '#fef08a']} className="!fixed inset-0 z-0" />
-    <div className={`h-screen relative z-10 ${themeClasses.bg} ${themeClasses.text} flex flex-col selection:bg-yellow-500/30 overflow-y-auto overflow-x-hidden font-sans`}>
+    <div className={`h-screen relative z-10 ${themeClasses.bg} ${themeClasses.text} flex flex-col selection:bg-[#007AFF]/30 overflow-y-auto overflow-x-hidden font-sans`}>
       <header className={`w-full border-b ${themeClasses.headerBg} backdrop-blur-xl sticky top-0 z-30 shrink-0`}>
-        <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto w-full">
+        <div className="flex justify-between items-center px-4 sm:px-6 py-4 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-2 md:gap-3">
            <button 
              onClick={handleBackToLanding}
-             className={`p-1.5 md:p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-slate-800 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'} transition-colors`}
+             className={`p-1.5 md:p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-[#2C2C2E] text-[#8E8E93] hover:text-[#FFFFFF]' : 'hover:bg-[#E5E5EA] text-[#8E8E93] hover:text-[#1C1C1E]'} transition-colors`}
              aria-label="Back to Home"
            >
              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
            </button>
-           <div className="flex items-center gap-2 cursor-pointer" onClick={handleBackToLanding}>
-             <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-yellow-500 flex items-center justify-center text-slate-900 font-bold text-sm md:text-base">S</div>
-             <h1 className={`font-bold text-lg md:text-xl tracking-tight ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Seat<span className="text-yellow-500">Sathi</span></h1>
-           </div>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={handleBackToLanding}>
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-[#007AFF] flex items-center justify-center text-white font-bold text-sm md:text-base shadow-sm">S</div>
+              <h1 className={`font-semibold text-lg md:text-xl tracking-tight ${theme === 'dark' ? 'text-white' : 'text-[#1C1C1E]'}`}>Seat<span className="text-[#007AFF]">Sathi</span></h1>
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-[10px] md:text-xs font-medium text-slate-400 uppercase tracking-wide">Gemini Live</div>
+            <div className="text-[10px] md:text-xs font-medium text-[#8E8E93] uppercase tracking-wide">Live Mode</div>
             {/* Theme Toggle Button in Header */}
-            <button
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
               onClick={toggleTheme}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${theme === 'dark' ? 'text-white bg-[#0d1829] hover:bg-[#152238] border border-[#1e3a5f]' : 'text-slate-700 bg-slate-200 hover:bg-slate-300 border border-slate-300'}`}
+              className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'bg-[#2C2C2E] text-[#0A84FF] hover:bg-[#3A3A3C]' : 'bg-[#E5E5EA] text-[#007AFF] hover:bg-[#D1D1D6]'}`}
               title={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
             >
               {theme === 'dark' ? (
@@ -1796,7 +1804,7 @@ export const App: React.FC = () => {
                   <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
                 </svg>
               )}
-            </button>
+            </motion.button>
           </div>
         </div>
       </header>
@@ -1824,15 +1832,24 @@ export const App: React.FC = () => {
                     </button>
                   </div>
                   <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-                    {aiThoughts.length === 0 ? (
-                      <p className={`text-center text-xs italic mt-6 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>AI thoughts will appear here...</p>
-                    ) : (
-                      aiThoughts.map((thought, i) => (
-                        <div key={i} className={`text-xs md:text-sm px-4 py-2.5 rounded-2xl border ${theme === 'dark' ? 'text-slate-300 bg-[#0d1829] border-[#1e3a5f]' : 'text-slate-600 bg-slate-100 border-slate-200'}`}>
-                          {thought}
-                        </div>
-                      ))
-                    )}
+                    <AnimatePresence>
+                      {aiThoughts.length === 0 ? (
+                        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`text-center text-xs mt-6 ${theme === 'dark' ? 'text-[#8E8E93]' : 'text-[#8E8E93]'}`}>AI thoughts will appear here...</motion.p>
+                      ) : (
+                        aiThoughts.map((thought, i) => (
+                          <motion.div 
+                            key={i} 
+                            layout
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                            className={`text-xs md:text-sm px-4 py-2.5 rounded-2xl ${theme === 'dark' ? 'text-white bg-[#2C2C2E]' : 'text-[#1C1C1E] bg-[#E5E5EA]'}`}
+                          >
+                            {thought}
+                          </motion.div>
+                        ))
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               ) : (
@@ -1868,24 +1885,26 @@ export const App: React.FC = () => {
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   disabled={!isConnected}
-                  placeholder={isConnected ? "Type a message..." : "Connect to chat..."}
+                  placeholder={isConnected ? "Message..." : "Connect to chat..."}
                   className={`w-full px-4 py-3 pr-12 rounded-full border backdrop-blur-xl outline-none transition-all ${
                     theme === 'dark' 
-                      ? 'bg-[#0a0f1a]/60 border-white/10 text-white placeholder-slate-400 focus:border-yellow-500/50 focus:bg-[#0a0f1a]/80 shadow-[0_0_15px_rgba(234,179,8,0.1)]' 
-                      : 'bg-white/60 border-slate-200/50 text-slate-800 placeholder-slate-500 focus:border-yellow-500/50 focus:bg-white/80 shadow-[0_0_15px_rgba(234,179,8,0.1)]'
+                      ? 'bg-[#1C1C1E]/80 border-[#2C2C2E] text-white placeholder-[#8E8E93] focus:border-[#0A84FF]/50 focus:bg-[#1C1C1E]' 
+                      : 'bg-white/80 border-[#E5E5EA] text-[#1C1C1E] placeholder-[#8E8E93] focus:border-[#007AFF]/50 focus:bg-white'
                   }`}
                 />
-                <button
+                <motion.button
+                  whileTap={isConnected && textInput.trim() ? { scale: 0.9 } : undefined}
+                  transition={{ type: "spring", bounce: 0, duration: 0.3 }}
                   type="submit"
                   disabled={!isConnected || !textInput.trim()}
                   className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${
                     !isConnected || !textInput.trim()
-                      ? 'text-slate-500 opacity-50 cursor-not-allowed'
-                      : 'text-yellow-500 hover:bg-yellow-500/20 active:scale-95'
+                      ? 'text-[#8E8E93] opacity-50 cursor-not-allowed'
+                      : 'text-white bg-[#007AFF] hover:bg-[#007AFF]/90'
                   }`}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                </button>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </motion.button>
               </form>
               
               {/* Status Text */}

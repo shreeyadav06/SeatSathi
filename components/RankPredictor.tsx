@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-
-// The reference data from 2025
+import { ThemeMode } from '../types';// The reference data from 2025
 const combinedToRankMap = [
   { minPct: 97, maxPct: 100, minRank: 1, maxRank: 120 },
   { minPct: 94, maxPct: 97, minRank: 120, maxRank: 500 },
@@ -14,7 +13,11 @@ const combinedToRankMap = [
   { minPct: 0, maxPct: 60, minRank: 50000, maxRank: 150000 },
 ];
 
-export const RankPredictor: React.FC = () => {
+interface RankPredictorProps {
+  theme?: ThemeMode;
+}
+
+export const RankPredictor: React.FC<RankPredictorProps> = ({ theme = 'dark' }) => {
   const [pcmTotal, setPcmTotal] = useState<string>('');
   const [kcetTotal, setKcetTotal] = useState<string>('');
   const [predictedRank, setPredictedRank] = useState<{ min: number; max: number } | null>(null);
@@ -56,10 +59,10 @@ export const RankPredictor: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto p-8 bg-[#0a0f1a] border border-[#1e3a5f] rounded-2xl shadow-xl font-sans text-slate-200">
+    <div className={`w-full max-w-xl mx-auto p-8 border rounded-2xl shadow-xl font-sans ${theme === 'dark' ? 'bg-[#0a0f1a] border-[#1e3a5f] text-slate-200' : 'bg-white border-slate-200 text-slate-800'}`}>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white tracking-tight font-display">Rank Predictor</h2>
-        <p className="text-slate-400 mt-2">Estimate your KCET rank based on board and CET performance.</p>
+        <h2 className={`text-3xl font-bold tracking-tight font-display ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Rank Predictor</h2>
+        <p className={`mt-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Estimate your KCET rank based on board and CET performance.</p>
       </div>
       
       <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl mb-8 flex gap-3 items-start">
@@ -76,7 +79,7 @@ export const RankPredictor: React.FC = () => {
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-slate-400 mb-2" htmlFor="pcm">
+          <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`} htmlFor="pcm">
             PUC PCM Total (out of 300)
           </label>
           <input 
@@ -84,13 +87,13 @@ export const RankPredictor: React.FC = () => {
             type="number" 
             value={pcmTotal}
             onChange={(e) => setPcmTotal(e.target.value)}
-            className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-yellow-500 transition-colors"
+            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-[#007AFF] transition-colors ${theme === 'dark' ? 'bg-[#0d1829] border-[#1e3a5f] text-white placeholder-slate-600' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'}`}
             placeholder="e.g. 285"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-slate-400 mb-2" htmlFor="kcet">
+          <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`} htmlFor="kcet">
             KCET Score (out of 180)
           </label>
           <input 
@@ -98,23 +101,23 @@ export const RankPredictor: React.FC = () => {
             type="number" 
             value={kcetTotal}
             onChange={(e) => setKcetTotal(e.target.value)}
-            className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-yellow-500 transition-colors"
+            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-[#007AFF] transition-colors ${theme === 'dark' ? 'bg-[#0d1829] border-[#1e3a5f] text-white placeholder-slate-600' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'}`}
             placeholder="e.g. 135"
           />
         </div>
 
         <button 
           onClick={calculateRank}
-          className="w-full py-4 mt-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold rounded-xl transition-all active:scale-[0.98]"
+          className="w-full py-4 mt-2 bg-[#007AFF] hover:bg-[#007AFF]/90 text-white font-bold rounded-xl transition-all active:scale-[0.98]"
         >
           Predict Approximate Rank
         </button>
 
         {predictedRank && (
-          <div className="mt-8 p-8 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-center transition-all animate-in fade-in zoom-in-95 duration-300">
+          <div className={`mt-8 p-8 border rounded-xl text-center transition-all animate-in fade-in zoom-in-95 duration-300 ${theme === 'dark' ? 'bg-[#0d1829] border-[#1e3a5f]' : 'bg-slate-50 border-slate-200'}`}>
             <p className="text-sm font-medium text-slate-500 uppercase tracking-widest mb-3">Expected Range</p>
-            <h3 className="text-4xl md:text-5xl font-bold text-yellow-500 tracking-tight">
-              {predictedRank.min.toLocaleString()} <span className="text-slate-600 font-normal mx-2">–</span> {predictedRank.max.toLocaleString()}
+            <h3 className="text-4xl md:text-5xl font-bold text-[#007AFF] tracking-tight">
+              {predictedRank.min.toLocaleString()} <span className={`font-normal mx-2 ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>–</span> {predictedRank.max.toLocaleString()}
             </h3>
             <p className="text-xs text-slate-500 mt-4">Includes ±500 board normalization margin</p>
           </div>
