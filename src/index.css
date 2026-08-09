@@ -36,26 +36,26 @@
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #1e293b; 
+  background: transparent; 
 }
 ::-webkit-scrollbar-thumb {
-  background: #475569; 
+  background: #3A3A3C; 
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b; 
+  background: #48484A; 
 }
 
-/* Light theme scrollbar - yellow/amber accent */
+/* Light theme scrollbar */
 html.light ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 html.light ::-webkit-scrollbar-thumb {
-  background: #eab308;
+  background: #D1D1D6;
   border-radius: 4px;
 }
 html.light ::-webkit-scrollbar-thumb:hover {
-  background: #ca8a04;
+  background: #C7C7CC;
 }
 
 /* Float animation for empty state */
@@ -72,6 +72,44 @@ html.light ::-webkit-scrollbar-thumb:hover {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
 .animate-slide-down {
   animation: slide-down 0.3s ease-out;
+}
+
+/* ReactBits Animations */
+@keyframes shine {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+@keyframes aurora-border {
+  0%, 100% { border-radius: 37% 29% 27% 27% / 28% 25% 41% 37%; }
+  25% { border-radius: 47% 29% 39% 49% / 61% 19% 66% 26%; }
+  50% { border-radius: 57% 23% 47% 72% / 63% 17% 66% 33%; }
+  75% { border-radius: 28% 49% 29% 100% / 93% 20% 64% 25%; }
+}
+
+@keyframes aurora-1 {
+  0%, 100% { top: 0; right: 0; }
+  50% { top: 100%; right: 75%; }
+  75% { top: 100%; right: 25%; }
+}
+
+@keyframes aurora-2 {
+  0%, 100% { top: 0; left: 0; }
+  60% { top: 100%; left: 75%; }
+  80% { top: 100%; left: 25%; }
+}
+
+@keyframes aurora-3 {
+  0%, 100% { bottom: 0; left: 0; }
+  40% { bottom: 100%; left: 75%; }
+  65% { bottom: 100%; left: 25%; }
+}
+
+@keyframes aurora-4 {
+  0%, 100% { bottom: 0; right: 0; }
+  50% { bottom: 100%; right: 45%; }
+  70% { bottom: 100%; right: 25%; }
 }

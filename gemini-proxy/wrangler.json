@@ -5,5 +5,12 @@
   "compatibility_date": "2024-10-22",
   "observability": {
     "enabled": true
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "seatsathi-db",
+      "database_id": "483cf0dd-4eac-4fdf-b9c3-5684560b754c"
+    }
+  ]
 }

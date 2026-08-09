@@ -31,42 +31,102 @@ Every year, thousands of Karnataka students struggle with:
 
 ## Features
 
-### Voice-First Interface
-- Natural conversation with AI using voice input
+### v2.0 (New Updates)
+
+#### v1 to v2 Feature Evolution
+```mermaid
+graph LR
+    subgraph v1.0 [SeatSathi v1.0]
+        A1[Voice-only Chat]
+        A2[Basic DB Matching]
+        A3[Browser IndexedDB]
+        A4[Standard UI]
+    end
+    
+    subgraph v2.0 [SeatSathi v2.0 Updates]
+        B1[Voice + Text + Multilingual Chat]
+        B2[Smart Matching: Safe/Moderate/Reach]
+        B3[Cloudflare D1 Backend]
+        B4[Premium Glassmorphism UI]
+    end
+    
+    A1 ==> B1
+    A2 ==> B2
+    A3 ==> B3
+    A4 ==> B4
+```
+
+#### Architecture (Cloudflare D1 based)
+```mermaid
+graph TD
+    A[User] -->|Voice/Text| B(React Frontend)
+    B -->|WebSocket| C{Gemini Live API}
+    C -->|Function Call| D[Tool Service]
+    D -->|HTTP Request| E[Cloudflare Worker]
+    E -->|SQL Query| F[(Cloudflare D1)]
+    F -.->|Results| E
+    E -.->|JSON Response| D
+    D -.->|Tool Response| C
+    C -.->|Audio/Text Answer| B
+```
+
+#### Dual-Mode Interface (Voice + Text)
+- Natural conversation with AI using voice input or text chat
+- Seamlessly switch between speaking and typing during the same session
 - Supports **English**, **Hinglish**, and **Kannada** for better accessibility
 - Real-time audio visualization for engaging interactions
-- Powered by **Google Gemini 2.0 Flash** AI
+- Powered by **Google Gemini 2.0 Flash Live API**
 
-### Real KCET Data
-- Verified cutoff data from **2024 & 2025** counselling rounds
-- Comprehensive database covering **250+ colleges** across Karnataka
-- Multi-round data (R1, R2, R3) for accurate predictions
-- Supports KCET and COMEDK PDF analysis
-
-### Smart College Matching
+#### Smart College Matching (Upgraded)
 - Intelligent filtering based on:
   - **Rank** (e.g., 5000, 12000)
   - **Category** (GM, 1G, 2AG, 2BG, 3AG, 3BG, SCG, STG, etc.)
   - **Course Preference** (CS, EC, Mechanical, Civil, AI/ML, Data Science, etc.)
   - **Location** (Bangalore, Mysore, or Anywhere)
-- Probability-based recommendations (High/Medium/Low chance)
+- Probability-based recommendations (**Safe / Moderate / Reach**) based on a ±1000 rank tolerance logic
+- Displays official KCET college codes (e.g. `[E001]`) directly in the UI
 
-### PDF Analysis & Export
+#### Modern UI/UX
+- Premium **Glassmorphism** design utilizing ReactBits components (AuroraBackground, ShinyText, StarBorder)
+- Clean, responsive design with **dark and light theme toggle**
+- Visual college recommendation cards with KCET codes and chance tags
+- Real-time transcription display and interactive chat box
+- Mobile-friendly responsive layout
+
+---
+
+### v1.0 (Core Features)
+
+#### Architecture (Browser DB / IndexedDB based)
+```mermaid
+graph TD
+    A[User] -->|Voice| B(React Frontend)
+    B -->|Fetch| C[collegeData.json]
+    C -->|Populate| D[(IndexedDB)]
+    B -->|Chat Request| E{Gemini API}
+    E -->|Function Call| F[Local DB Query]
+    F -->|Query| D
+    D -.->|Results| F
+    F -.->|Tool Response| E
+    E -.->|Response| B
+```
+
+#### Real KCET Data
+- Verified cutoff data from **2024 & 2025** counselling rounds
+- Comprehensive database covering **250+ colleges** across Karnataka
+- Multi-round data (R1, R2, R3) for accurate predictions
+- Supports KCET and COMEDK PDF analysis
+
+#### PDF Analysis & Export
 - Upload official KCET/COMEDK cutoff PDFs
 - AI parses thousands of rows automatically
 - Extract specific college/branch cutoffs from documents
 - **Export college recommendations to PDF** for offline reference
 
-### User Authentication
+#### User Authentication
 - **Firebase Authentication** with Email/Password and Google Sign-In
 - Secure user accounts for personalized experience
 - Cloud sync capabilities via Firestore
-
-### Modern UI/UX
-- Clean, responsive design with **dark and light theme toggle**
-- Visual college recommendation cards with flip animations
-- Real-time transcription display
-- Mobile-friendly responsive layout
 
 ---
 
@@ -122,12 +182,15 @@ npm run preview
 | **React 18** | Frontend UI framework |
 | **TypeScript** | Type-safe development |
 | **Vite** | Fast build tool & dev server |
-| **Google Gemini 2.5-flash-native-audio-dialog** | Conversational AI & voice processing |
+| **Google Gemini Live API** | Conversational AI & voice/text streaming |
+| **Cloudflare Workers** | Secure WebSocket proxy & connection management |
+| **Cloudflare D1** | Rate limiting (max 50 sessions/hour per IP) to prevent abuse |
 | **Firebase** | Authentication (Email/Google) & Firestore |
-| **IndexedDB (Dexie.js)** | Local database for cutoff data |
+| **IndexedDB (Dexie.js)** | Local database for extremely fast offline cutoff data lookups |
 | **PDF.js** | PDF parsing and text extraction |
 | **jsPDF** | PDF export for recommendations |
-| **Tailwind CSS** | Utility-first styling |
+| **Tailwind CSS** | Utility-first styling & glassmorphism effects |
+| **ReactBits** | Advanced animated UI components |
 
 ---
 
@@ -139,8 +202,10 @@ seatsathi/
 ├── index.tsx               # Application entry point
 ├── types.ts                # TypeScript type definitions
 ├── components/
-│   ├── CollegeCard.tsx     # College recommendation card
-│   └── Visualizer.tsx      # Audio visualization component
+│   ├── common/             # Reusable UI components (Modals, Dropdowns)
+│   ├── college/            # College recommendation cards
+│   ├── landing/            # Landing page components & ReactBits
+│   ├── agent/              # Voice visualizer and chat input components
 ├── services/
 │   ├── audioUtils.ts       # Audio processing utilities
 │   ├── toolService.ts      # AI tool implementations
@@ -148,6 +213,9 @@ seatsathi/
 │   ├── database.ts         # IndexedDB schema (Dexie.js)
 │   ├── dbPopulate.ts       # Database population scripts
 │   └── pdfExport.ts        # PDF export functionality
+├── gemini-proxy/
+│   ├── src/index.ts        # Cloudflare worker WebSocket proxy with D1 rate limiting
+│   └── wrangler.toml       # Cloudflare worker configuration
 ├── KCETcutoffdata/
 │   ├── collegeData.ts      # Main data aggregator
 │   └── colleges[1-116].ts  # Individual college data files

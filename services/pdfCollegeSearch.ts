@@ -552,14 +552,14 @@ export function searchPdfColleges(
     
     // Calculate chance based on rank vs cutoff
     const diff = lowestCutoff - rank;
-    let chance: 'High' | 'Medium' | 'Low' = 'Low';
+    let chance: 'Safe' | 'Moderate' | 'Reach' = 'Reach';
     
     if (diff >= 5000) {
-      chance = 'High';  // Cutoff is 5000+ higher than rank - very safe
+      chance = 'Safe';  // Cutoff is 5000+ higher than rank - very safe
     } else if (diff >= 0) {
-      chance = 'Medium'; // Cutoff is higher but close
+      chance = 'Moderate'; // Cutoff is higher but close
     } else if (diff >= -3000) {
-      chance = 'Low';   // Rank is higher than cutoff - risky
+      chance = 'Reach';   // Rank is higher than cutoff - risky
     }
     
     results.push({
@@ -573,9 +573,9 @@ export function searchPdfColleges(
     });
   });
   
-  // Sort by chance: Medium first, then High, then Low (default sort)
+  // Sort by chance: Moderate first, then Safe, then Reach (default sort)
   return results.sort((a, b) => {
-    const order = { 'Medium': 0, 'High': 1, 'Low': 2 };
+    const order: Record<string, number> = { 'Moderate': 0, 'Safe': 1, 'Reach': 2 };
     return order[a.chance] - order[b.chance];
   });
 }
@@ -638,7 +638,7 @@ export function searchPdfByCollegeName(
         branch: 'Computer Science',
         cutoff2025: 'Upload PDF for cutoffs',
         cutoff2024: 'N/A',
-        chance: 'Medium',
+        chance: 'Moderate',
         location: extractLocation(COLLEGE_CODES[code] || ''),
       });
     });
@@ -658,7 +658,7 @@ export function searchPdfByCollegeName(
       branch: entry.branch,
       cutoff2025: String(entry.cutoffRank),
       cutoff2024: 'N/A',
-      chance: 'Medium',
+      chance: 'Moderate',
       location: extractLocation(entry.name),
     });
   });

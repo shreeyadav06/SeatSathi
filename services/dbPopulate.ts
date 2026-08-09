@@ -37,7 +37,7 @@ export async function populateDatabase(): Promise<{ success: boolean; stats: { c
       });
       
       // Process each branch
-      Object.entries(college.branches).forEach(([branchName, branchData]) => {
+      Object.entries(college?.branches || {}).forEach(([branchName, branchData]) => {
         const { normalized, category, isPure } = normalizeBranchName(branchName);
         
         // Add branch record

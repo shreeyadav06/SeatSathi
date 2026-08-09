@@ -17,6 +17,6 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["*.ts", "*.tsx", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "dist", "vite.config.ts", "index-1.tsx", "types-1.ts", "exportData.ts", "gemini-proxy"],
+  "exclude": ["node_modules", "dist", "vite.config.ts", "index-1.tsx", "types-1.ts", "exportData.ts", "gemini-proxy", "graphify_repo"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

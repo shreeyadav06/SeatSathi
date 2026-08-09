@@ -106,12 +106,11 @@ export async function findMatchingCollegesFast(
     // Calculate chance
     const refCutoff = cutoff2025.sortValue !== 999999 ? cutoff2025.sortValue : cutoff2024.sortValue;
     const diff = refCutoff - rank;
-    
-    let chance: 'High' | 'Medium' | 'Low' = 'Low';
+    let chance: 'Safe' | 'Moderate' | 'Reach' = 'Reach';
     if (diff >= 1000) {
-      chance = 'High';
+      chance = 'Safe';
     } else if (diff >= -1000 && diff < 1000) {
-      chance = 'Medium';
+      chance = 'Moderate';
     }
     
     // Derive location display
@@ -125,7 +124,8 @@ export async function findMatchingCollegesFast(
       cutoff2024: cutoff2024.range,
       chance,
       location: locationDisplay,
-      isPure: data.isPure
+      isPure: data.isPure,
+      collegeCode: data.collegeName.match(/\((E\d+)\)/)?.[1] || undefined
     });
   });
   
@@ -137,7 +137,7 @@ export async function findMatchingCollegesFast(
     if (aIsPure !== bIsPure) return bIsPure - aIsPure;
     
     // Priority 2: Higher chance first
-    const chanceOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+    const chanceOrder = { 'Safe': 0, 'Moderate': 1, 'Reach': 2 };
     const chanceDiff = chanceOrder[a.chance] - chanceOrder[b.chance];
     if (chanceDiff !== 0) return chanceDiff;
     
