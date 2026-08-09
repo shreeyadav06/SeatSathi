@@ -15,10 +15,11 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, theme = '
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div 
-        className={`w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 md:p-8 rounded-3xl shadow-2xl custom-scrollbar transition-all transform duration-300 ${isDark ? 'bg-[#1C1C1E]/90 border border-[#2C2C2E] shadow-black/50' : 'bg-white/90 border border-white shadow-slate-200/50'}`} 
+        className={`w-full max-w-2xl max-h-[85vh] flex flex-col rounded-3xl shadow-2xl transition-all transform duration-300 ${isDark ? 'bg-[#1C1C1E]/90 border border-[#2C2C2E] shadow-black/50' : 'bg-white/90 border border-white shadow-slate-200/50'}`} 
         onClick={e => e.stopPropagation()}
       >
-        <div className={`flex justify-between items-center mb-6 sticky top-0 z-10 backdrop-blur-xl -mx-6 md:-mx-8 px-6 md:px-8 pt-6 md:pt-8 pb-4 -mt-6 md:-mt-8 ${isDark ? 'bg-[#1C1C1E]/95 border-b border-[#2C2C2E]' : 'bg-white/95 border-b border-[#E5E5EA]'}`}>
+        {/* Fixed Header */}
+        <div className={`shrink-0 flex justify-between items-center px-6 md:px-8 py-5 md:py-6 border-b z-10 rounded-t-3xl backdrop-blur-xl ${isDark ? 'bg-[#1C1C1E]/95 border-[#2C2C2E]' : 'bg-white/95 border-[#E5E5EA]'}`}>
           <h2 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[#1C1C1E]'}`}>
             Important Notes & Info
           </h2>
@@ -32,7 +33,9 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, theme = '
           </button>
         </div>
 
-        <div className={`space-y-8 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto p-6 md:p-8 custom-scrollbar">
+          <div className={`space-y-8 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
           <section>
             <h3 className={`text-lg font-semibold mb-3 ${isDark ? 'text-[#0A84FF]' : 'text-[#007AFF]'}`}>How to Use SeatSathi</h3>
             <ul className="list-disc list-inside space-y-2 text-sm md:text-base leading-relaxed">
@@ -98,14 +101,15 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, theme = '
               from official sources before making decisions.
             </p>
           </section>
-        </div>
+          </div>
 
-        <button
-          onClick={onClose}
-          className={`w-full mt-2 py-4 font-bold rounded-2xl transition-transform active:scale-[0.98] ${isDark ? 'bg-[#007AFF] text-white hover:bg-[#007AFF]/90' : 'bg-[#007AFF] text-white hover:bg-[#007AFF]/90'}`}
-        >
-          Got it!
-        </button>
+          <button
+            onClick={onClose}
+            className={`w-full mt-8 py-4 font-bold rounded-2xl transition-transform active:scale-[0.98] ${isDark ? 'bg-[#007AFF] text-white hover:bg-[#007AFF]/90' : 'bg-[#007AFF] text-white hover:bg-[#007AFF]/90'}`}
+          >
+            Got it!
+          </button>
+        </div>
       </div>
     </div>
   );
