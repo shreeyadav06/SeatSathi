@@ -338,7 +338,7 @@ export const findMatchingColleges = async (
     if (aIsPure !== bIsPure) return bIsPure - aIsPure;
     
     // Higher chance first
-    const chanceOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+    const chanceOrder: Record<string, number> = { 'Safe': 0, 'Moderate': 1, 'Reach': 2 };
     const chanceDiff = chanceOrder[a.chance] - chanceOrder[b.chance];
     if (chanceDiff !== 0) return chanceDiff;
 

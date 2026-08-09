@@ -950,7 +950,7 @@ export const App: React.FC = () => {
     setLogs(prev => [...prev, {
       id: Date.now().toString(),
       type: 'user',
-      content: textInput,
+      text: textInput,
       timestamp: new Date()
     }]);
 
@@ -1440,13 +1440,13 @@ export const App: React.FC = () => {
       sorted = [...first10Medium, ...high, ...remainingMedium, ...low];
     } else if (sortOrder === 'high-first') {
       sorted.sort((a, b) => {
-        const order = { 'Safe': 0, 'Moderate': 1, 'Reach': 2 };
-        return order[a.chance as any] - order[b.chance as any];
+        const order: Record<string, number> = { 'Safe': 0, 'Moderate': 1, 'Reach': 2 };
+        return order[a.chance] - order[b.chance];
       });
     } else if (sortOrder === 'low-first') {
       sorted.sort((a, b) => {
-        const order = { 'Reach': 0, 'Moderate': 1, 'Safe': 2 };
-        return order[a.chance as any] - order[b.chance as any];
+        const order: Record<string, number> = { 'Reach': 0, 'Moderate': 1, 'Safe': 2 };
+        return order[a.chance] - order[b.chance];
       });
     }
     return sorted;
