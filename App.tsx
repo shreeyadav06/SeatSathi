@@ -1716,6 +1716,7 @@ export const App: React.FC = () => {
           onClose={() => setShowAuthModal(false)}
           onAuthSuccess={() => setShowAuthModal(false)}
           initialMode={authModalMode}
+          theme={theme}
         />
         {/* Logout Confirmation Modal */}
         <ConfirmModal
