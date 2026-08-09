@@ -1731,6 +1731,7 @@ export const App: React.FC = () => {
           confirmText="Logout"
           cancelText="Cancel"
           confirmStyle="warning"
+          theme={theme}
         />
         <NoteModal 
           isOpen={showNoteModal} 
@@ -2327,6 +2328,7 @@ export const App: React.FC = () => {
         confirmText="End Call"
         cancelText="Continue"
         confirmStyle="danger"
+        theme={theme}
       />
     </div>
     </ThemeContext.Provider>
