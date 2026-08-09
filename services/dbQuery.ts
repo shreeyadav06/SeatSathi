@@ -126,7 +126,7 @@ export async function findMatchingCollegesFast(
       location: locationDisplay,
       isPure: data.isPure,
       collegeCode: data.collegeName.match(/\((E\d+)\)/)?.[1] || undefined
-    } as CollegeRecommendation);
+    });
   });
   
   // Sort: Pure branches first, then by chance
