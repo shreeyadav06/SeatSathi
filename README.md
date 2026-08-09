@@ -33,6 +33,20 @@ Every year, thousands of Karnataka students struggle with:
 
 ### v2.0 (New Updates)
 
+#### Architecture (Cloudflare D1 based)
+```mermaid
+graph TD
+    A[User] -->|Voice/Text| B(React Frontend)
+    B -->|WebSocket| C{Gemini Live API}
+    C -->|Function Call| D[Tool Service]
+    D -->|HTTP Request| E[Cloudflare Worker]
+    E -->|SQL Query| F[(Cloudflare D1)]
+    F -.->|Results| E
+    E -.->|JSON Response| D
+    D -.->|Tool Response| C
+    C -.->|Audio/Text Answer| B
+```
+
 #### Dual-Mode Interface (Voice + Text)
 - Natural conversation with AI using voice input or text chat
 - Seamlessly switch between speaking and typing during the same session
@@ -59,6 +73,20 @@ Every year, thousands of Karnataka students struggle with:
 ---
 
 ### v1.0 (Core Features)
+
+#### Architecture (Browser DB / IndexedDB based)
+```mermaid
+graph TD
+    A[User] -->|Text| B(React Frontend)
+    B -->|Fetch| C[collegeData.json]
+    C -->|Populate| D[(IndexedDB)]
+    B -->|Chat Request| E{Gemini API}
+    E -->|Function Call| F[Local DB Query]
+    F -->|Query| D
+    D -.->|Results| F
+    F -.->|Tool Response| E
+    E -.->|Response| B
+```
 
 #### Real KCET Data
 - Verified cutoff data from **2024 & 2025** counselling rounds
