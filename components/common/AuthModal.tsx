@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ThemeMode } from '../../types';
 
 // Lazy loading the firebase module to improve initial load time
 type FirebaseModule = typeof import('../../services/firebase');
@@ -15,9 +16,10 @@ interface AuthModalProps {
   onClose: () => void;
   onAuthSuccess: () => void;
   initialMode?: 'login' | 'signup';
+  theme?: ThemeMode;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess, initialMode = 'login' }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess, initialMode = 'login', theme = 'dark' }) => {
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -76,16 +78,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
 
   if (!isOpen) return null;
 
+  const isDark = theme === 'dark';
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#0a0f1a] border border-[#1e3a5f] rounded-2xl w-full max-w-md p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className={`w-full max-w-md p-6 md:p-8 rounded-3xl shadow-2xl transition-all transform duration-300 ${isDark ? 'bg-[#1C1C1E]/90 border border-[#2C2C2E] shadow-black/50' : 'bg-white/90 border border-white shadow-slate-200/50'}`} onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">
+          <h2 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[#1C1C1E]'}`}>
             {mode === 'login' ? 'Welcome Back' : 'Create Account'}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={onClose} className={`p-2 rounded-full transition-colors ${isDark ? 'text-[#8E8E93] hover:text-white hover:bg-[#2C2C2E]' : 'text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-[#E5E5EA]'}`}>
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
@@ -99,48 +103,48 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Name (optional)</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Name (optional)</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={e => setDisplayName(e.target.value)}
                 placeholder="Your name"
-                className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
+                className={`w-full px-4 py-3 rounded-xl transition-colors focus:outline-none ${isDark ? 'bg-[#2C2C2E]/50 border border-[#3A3A3C] text-white placeholder-slate-500 focus:border-[#0A84FF]' : 'bg-[#F2F2F7] border border-[#E5E5EA] text-[#1C1C1E] placeholder-slate-400 focus:border-[#007AFF]'}`}
               />
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Email</label>
+            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Email</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
               placeholder="you@example.com"
-              className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
+              className={`w-full px-4 py-3 rounded-xl transition-colors focus:outline-none ${isDark ? 'bg-[#2C2C2E]/50 border border-[#3A3A3C] text-white placeholder-slate-500 focus:border-[#0A84FF]' : 'bg-[#F2F2F7] border border-[#E5E5EA] text-[#1C1C1E] placeholder-slate-400 focus:border-[#007AFF]'}`}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-1">Password</label>
+            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Password</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
               placeholder="••••••••"
-              className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
+              className={`w-full px-4 py-3 rounded-xl transition-colors focus:outline-none ${isDark ? 'bg-[#2C2C2E]/50 border border-[#3A3A3C] text-white placeholder-slate-500 focus:border-[#0A84FF]' : 'bg-[#F2F2F7] border border-[#E5E5EA] text-[#1C1C1E] placeholder-slate-400 focus:border-[#007AFF]'}`}
             />
           </div>
           {mode === 'signup' && (
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-1">Confirm Password</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Confirm Password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                className="w-full px-4 py-3 bg-[#0d1829] border border-[#1e3a5f] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
+                className={`w-full px-4 py-3 rounded-xl transition-colors focus:outline-none ${isDark ? 'bg-[#2C2C2E]/50 border border-[#3A3A3C] text-white placeholder-slate-500 focus:border-[#0A84FF]' : 'bg-[#F2F2F7] border border-[#E5E5EA] text-[#1C1C1E] placeholder-slate-400 focus:border-[#007AFF]'}`}
               />
             </div>
           )}
@@ -148,7 +152,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 disabled:bg-yellow-600 disabled:cursor-not-allowed text-slate-900 font-bold rounded-xl transition-colors"
+            className={`w-full py-4 mt-2 font-bold rounded-2xl transition-transform active:scale-[0.98] ${isDark ? 'bg-[#007AFF] text-white hover:bg-[#007AFF]/90' : 'bg-[#007AFF] text-white hover:bg-[#007AFF]/90'} disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
@@ -156,17 +160,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-700"></div>
+            <div className={`w-full border-t ${isDark ? 'border-[#3A3A3C]' : 'border-[#E5E5EA]'}`}></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-[#0a0f1a] text-slate-500">or</span>
+            <span className={`px-2 ${isDark ? 'bg-[#1C1C1E] text-slate-500' : 'bg-white text-slate-400'}`}>or</span>
           </div>
         </div>
 
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full py-3 bg-white hover:bg-slate-100 disabled:bg-slate-200 text-slate-900 font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+          className={`w-full py-3.5 font-medium rounded-2xl transition-all flex items-center justify-center gap-2 border ${isDark ? 'bg-[#2C2C2E]/50 border-[#3A3A3C] text-white hover:bg-[#3A3A3C] disabled:opacity-50' : 'bg-[#F2F2F7] border-[#E5E5EA] text-[#1C1C1E] hover:bg-[#E5E5EA] disabled:opacity-50'}`}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -177,11 +181,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
           Continue with Google
         </button>
 
-        <p className="mt-6 text-center text-slate-400 text-sm">
+        <p className={`mt-6 text-center text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
           {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
           <button
             onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); }}
-            className="text-yellow-400 hover:text-yellow-300 font-medium"
+            className={`font-medium transition-colors ${isDark ? 'text-[#0A84FF] hover:text-[#007AFF]' : 'text-[#007AFF] hover:text-[#0056B3]'}`}
           >
             {mode === 'login' ? 'Sign Up' : 'Sign In'}
           </button>
