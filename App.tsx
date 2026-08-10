@@ -16,7 +16,7 @@ const loadGenAI = async (): Promise<GenAIModule> => {
     genAIModule = await import('@google/genai');
   }
   return genAIModule;
-};          
+};
 
 const loadPdfExport = () => import('./services/pdfExport');
 
@@ -44,7 +44,7 @@ interface ThemeContextType {
   theme: ThemeMode;
   toggleTheme: () => void;
 }
-const ThemeContext = createContext<ThemeContextType>({ theme: 'dark', toggleTheme: () => {} });
+const ThemeContext = createContext<ThemeContextType>({ theme: 'dark', toggleTheme: () => { } });
 
 type LiveServerMessage = any;
 
@@ -291,11 +291,11 @@ export const App: React.FC = () => {
   // PDF upload functionality removed
   const [hasApiKey, setHasApiKey] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Theme state (dark/light mode)
   const [theme, setTheme] = useState<ThemeMode>('dark');
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  
+
   // Apply theme class to html element for scrollbar styling
   useEffect(() => {
     if (theme === 'light') {
@@ -306,26 +306,26 @@ export const App: React.FC = () => {
       document.documentElement.classList.remove('light');
     }
   }, [theme]);
-  
+
   // Mute state for microphone
   const [isMuted, setIsMuted] = useState(true);
   const isMutedRef = useRef<boolean>(true);
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  
+
   // Multiple lists feature - stored locally until refresh
   const [savedLists, setSavedLists] = useState<{ name: string; data: CollegeRecommendation[] }[]>([]);
   const [activeListIndex, setActiveListIndex] = useState<number>(-1); // -1 = current/new list
   const [sortOrder, setSortOrder] = useState<'default' | 'high-first' | 'medium-first' | 'low-first'>('medium-first');
   // Store original AI-suggested list separately so "Current" tab always shows it
   const [originalAiRecommendations, setOriginalAiRecommendations] = useState<CollegeRecommendation[]>([]);
-  
+
   // List mode: 'view' (default) or 'edit' - NOTE: saved lists are always editable now
   const [listMode, setListMode] = useState<'view' | 'edit'>('view');
-  
+
   // Course and Location filter states (for multi-course/location searches)
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
-  
+
   // Drag and drop state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -346,7 +346,7 @@ export const App: React.FC = () => {
   const [detectedCourse, setDetectedCourse] = useState<string | null>(null);
   const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
   const conversationTextRef = useRef<string>("");
-  
+
   // Live captions state
   const [liveCaption, setLiveCaption] = useState<string>("");
   const [showAiThoughts, setShowAiThoughts] = useState(false);
@@ -354,21 +354,21 @@ export const App: React.FC = () => {
   const [aiThoughts, setAiThoughts] = useState<string[]>([]);
   const sessionEndedRef = useRef<boolean>(false); // Prevent duplicate session end messages
   const [sessionEndedWithResults, setSessionEndedWithResults] = useState(false); // Track if session ended after showing results
-  
+
   // --- Auto-reconnect state ---
-  const conversationHistoryRef = useRef<{role: string; text: string}[]>([]); // Survives reconnects
+  const conversationHistoryRef = useRef<{ role: string; text: string }[]>([]); // Survives reconnects
   const reconnectAttemptsRef = useRef<number>(0);
   const MAX_RECONNECT_ATTEMPTS = 3;
   const isReconnectingRef = useRef<boolean>(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   // Save detected params so they survive reconnect
-  const savedParamsRef = useRef<{rank: number|null; category: string|null; course: string|null; location: string|null}>({
+  const savedParamsRef = useRef<{ rank: number | null; category: string | null; course: string | null; location: string | null }>({
     rank: null, category: null, course: null, location: null
   });
-  
+
   const aiSpeechBufferRef = useRef<string>("");
   const lastSpeakingTimeRef = useRef<number>(0);
-  
+
   const [userSpeechCaption, setUserSpeechCaption] = useState<string>("");
   const speechRecognitionRef = useRef<any>(null);
   const [isSpeechRecognitionActive, setIsSpeechRecognitionActive] = useState(false);
@@ -378,70 +378,70 @@ export const App: React.FC = () => {
   const nextStartTimeRef = useRef<number>(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const logsContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Audio level tracking for visualizer sync
   const [aiAudioLevel, setAiAudioLevel] = useState<number>(0);
   const [userAudioLevel, setUserAudioLevel] = useState<number>(0);
   const aiAnalyserRef = useRef<AnalyserNode | null>(null);
   const userAnalyserRef = useRef<AnalyserNode | null>(null);
   const audioLevelIntervalRef = useRef<number | null>(null);
-  
+
   const activeSessionRef = useRef<any>(null);
   const isSessionActive = useRef<boolean>(false);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
 
 
   const [detectedLanguage, setDetectedLanguage] = useState<string>('en-IN');
-  
+
   const speechRecRestartAttempts = useRef<number>(0);
   const speechRecRestartTimeout = useRef<NodeJS.Timeout | null>(null);
   const isSpeechRecRestarting = useRef<boolean>(false);
   const MAX_RESTART_ATTEMPTS = 3;
-  
+
   const startSpeechRecognition = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       console.warn("Web Speech API not supported in this browser");
       return;
     }
-    
+
     // Clear any pending restart
     if (speechRecRestartTimeout.current) {
       clearTimeout(speechRecRestartTimeout.current);
       speechRecRestartTimeout.current = null;
     }
-    
+
     if (isSpeechRecRestarting.current) {
       return;
     }
-    
+
     try {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = detectedLanguage;
-      recognition.maxAlternatives = 3; 
-      
+      recognition.maxAlternatives = 3;
+
       recognition.onstart = () => {
         console.log("Speech recognition started with language:", detectedLanguage);
         setIsSpeechRecognitionActive(true);
-        speechRecRestartAttempts.current = 0; 
+        speechRecRestartAttempts.current = 0;
         isSpeechRecRestarting.current = false;
       };
-      
+
       recognition.onresult = (event: any) => {
         let interimTranscript = '';
         let finalTranscript = '';
-        
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             finalTranscript += transcript + ' ';
-            
+
             const hasDevanagari = /[\u0900-\u097F]/.test(transcript);
             const hasKannada = /[\u0C80-\u0CFF]/.test(transcript);
             const hasHindiWords = /\b(kya|hai|mera|meri|aur|ka|ki|ke|se|ko|main|hum|tum|aap|yeh|woh|kaise|kahan|kaun|kitna|bahut|accha|theek|nahi|haan|ji|bhai|didi)\b/i.test(transcript);
-            
+
             let newLang = detectedLanguage;
             if (hasKannada) {
               newLang = 'kn-IN'; // Kannada
@@ -450,56 +450,56 @@ export const App: React.FC = () => {
             } else {
               newLang = 'en-IN'; // English
             }
-            
+
             if (newLang !== detectedLanguage) {
               console.log('Language detected:', newLang);
               setDetectedLanguage(newLang);
               try {
                 recognition.stop();
-              } catch (e) {}
+              } catch (e) { }
             }
           } else {
             interimTranscript += transcript;
           }
         }
-        
+
         const displayText = finalTranscript || interimTranscript;
         if (displayText.trim()) {
           setUserSpeechCaption(displayText);
-          
+
           if (finalTranscript.trim()) {
             extractInfoFromText(finalTranscript);
           }
         }
       };
-      
+
       recognition.onerror = (event: any) => {
         console.warn("Speech recognition error:", event.error);
         // Don't restart on errors - let onend handle it
         // Only log the error, the onend event will fire after this
       };
-      
+
       recognition.onend = () => {
         console.log("Speech recognition ended");
         setIsSpeechRecognitionActive(false);
-        
+
         if (!isSessionActive.current || isSpeechRecRestarting.current || isMutedRef.current) {
           return;
         }
-        
+
         // Limit restart attempts to prevent infinite loop
         if (speechRecRestartAttempts.current >= MAX_RESTART_ATTEMPTS) {
           console.log("Max speech recognition restart attempts reached, stopping");
           return;
         }
-        
+
         isSpeechRecRestarting.current = true;
         speechRecRestartAttempts.current++;
-        
+
         if (speechRecRestartTimeout.current) {
           clearTimeout(speechRecRestartTimeout.current);
         }
-        
+
         speechRecRestartTimeout.current = setTimeout(() => {
           isSpeechRecRestarting.current = false;
           if (isSessionActive.current) {
@@ -512,7 +512,7 @@ export const App: React.FC = () => {
           }
         }, 1000); //1sec delay
       };
-      
+
       recognition.start();
       speechRecognitionRef.current = recognition;
     } catch (err) {
@@ -520,7 +520,7 @@ export const App: React.FC = () => {
       isSpeechRecRestarting.current = false;
     }
   }, []);
-  
+
   const stopSpeechRecognition = useCallback(() => {
     if (speechRecRestartTimeout.current) {
       clearTimeout(speechRecRestartTimeout.current);
@@ -528,7 +528,7 @@ export const App: React.FC = () => {
     }
     isSpeechRecRestarting.current = false;
     speechRecRestartAttempts.current = 0;
-    
+
     if (speechRecognitionRef.current) {
       try {
         speechRecognitionRef.current.stop();
@@ -548,17 +548,17 @@ export const App: React.FC = () => {
     let foundCategory: string | null = null;
     let foundCourse: string | null = null;
     let foundLocation: string | null = null;
-    
-    const rankMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{4,6})/i) || 
-                      text.match(/(\d{4,6})\s*rank/i) ||
-                      text.match(/\b(\d{4,6})\b/);
+
+    const rankMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{4,6})/i) ||
+      text.match(/(\d{4,6})\s*rank/i) ||
+      text.match(/\b(\d{4,6})\b/);
     if (rankMatch) {
       const rank = parseInt(rankMatch[1]);
       if (rank >= 1000 && rank <= 200000) {
         foundRank = rank;
       }
     }
-    
+
     // Extract category check from most specific to least
     const categoryPatterns = [
       // 1 variants
@@ -572,7 +572,7 @@ export const App: React.FC = () => {
       { pattern: /\b1ar\b/i, value: '1R' },
       { pattern: /\b1ak\b/i, value: '1K' },
       { pattern: /\b(?:1|one)\s*a\b/i, value: '1G' },
-      
+
       // 2A variants
       { pattern: /\b(?:2|two)\s*a\s*g\b/i, value: '2AG' },
       { pattern: /\b(?:2|two)\s*a\s*k\b/i, value: '2AK' },
@@ -584,7 +584,7 @@ export const App: React.FC = () => {
       { pattern: /\b2ak\b/i, value: '2AK' },
       { pattern: /\b2ar\b/i, value: '2AR' },
       { pattern: /\b(?:2|two)\s*a\b/i, value: '2AG' },
-      
+
       // 2B variants
       { pattern: /\b(?:2|two)\s*b\s*g\b/i, value: '2BG' },
       { pattern: /\b(?:2|two)\s*b\s*k\b/i, value: '2BK' },
@@ -640,7 +640,7 @@ export const App: React.FC = () => {
       { pattern: /\bstr\b/i, value: 'STR' },
       { pattern: /\bs\s*t\b/i, value: 'STG' },
       { pattern: /\bst\b/i, value: 'STG' },
-      
+
       // GM variants
       { pattern: /\bg\s*m\s*k\b/i, value: 'GMK' },
       { pattern: /\bg\s*m\s*r\b/i, value: 'GMR' },
@@ -660,12 +660,12 @@ export const App: React.FC = () => {
       { pattern: /\bewk\b/i, value: 'EWK' },
       { pattern: /\be\s*w\s*r\b/i, value: 'EWR' },
       { pattern: /\bewr\b/i, value: 'EWR' },
-      
+
       // 1G/1K/1R shorthands
       { pattern: /\b(?:1|one)\s*g\b/i, value: '1G' },
       { pattern: /\b(?:1|one)\s*k\b/i, value: '1K' },
       { pattern: /\b(?:1|one)\s*r\b/i, value: '1R' },
-      
+
       // Category 1
       { pattern: /\bcategory\s*(?:1|one)\b/i, value: '1G' },
     ];
@@ -675,7 +675,7 @@ export const App: React.FC = () => {
         break;
       }
     }
-    
+
     // Extract course
     const coursePatterns = [
       { pattern: /\bcomputer\s*science\b/i, value: 'CS' },
@@ -704,7 +704,7 @@ export const App: React.FC = () => {
         break;
       }
     }
-    
+
     // Extract location (comprehensive Karnataka cities + common voice misspellings)
     const locationPatterns = [
       { pattern: /\bbangalore\b/i, value: 'bangalore' },
@@ -757,7 +757,7 @@ export const App: React.FC = () => {
         break;
       }
     }
-    
+
     // Only update state if we found new values in THIS message
     if (foundRank !== null) {
       console.log("Detected new rank:", foundRank);
@@ -791,7 +791,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (detectedRank && detectedCategory && detectedCourse && detectedLocation) {
       console.log("Auto-matching colleges:", { detectedRank, detectedCategory, detectedCourse, detectedLocation });
-      
+
       // Use async IIFE since useEffect callback can't be async
       (async () => {
         try {
@@ -815,22 +815,22 @@ export const App: React.FC = () => {
 
   // API key check removed because we now securely proxy through Cloudflare Worker
   useEffect(() => {
-      setHasApiKey(true);
+    setHasApiKey(true);
   }, []);
 
   // Auth state listener - lazy load Firebase
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
-    
+
     loadFirebase().then(firebase => {
       unsubscribe = firebase.onAuthChange((authUser) => {
         setUser(authUser);
       });
     });
-    
+
     // Preload GenAI module in the background so it's ready when user clicks Start
     loadGenAI().catch(e => console.error("Failed to preload GenAI module", e));
-    
+
     return () => {
       if (unsubscribe) unsubscribe();
     };
@@ -856,39 +856,39 @@ export const App: React.FC = () => {
 
   // Cleanup without clearing conversation history (for reconnect)
   const cleanupSession = useCallback((clearHistory: boolean = false) => {
-     isSessionActive.current = false;
-     if (processorRef.current) {
-        processorRef.current.disconnect();
-        processorRef.current.onaudioprocess = null;
-        processorRef.current = null;
-    }
-    
-    if (activeSessionRef.current) {
-        try {
-           activeSessionRef.current.close();
-        } catch(e) { console.warn("Error closing session", e); }
-        activeSessionRef.current = null;
+    isSessionActive.current = false;
+    if (processorRef.current) {
+      processorRef.current.disconnect();
+      processorRef.current.onaudioprocess = null;
+      processorRef.current = null;
     }
 
-    if (audioContextRef.current) { 
-        try { audioContextRef.current.close(); } catch(e) {}
-        audioContextRef.current = null; 
+    if (activeSessionRef.current) {
+      try {
+        activeSessionRef.current.close();
+      } catch (e) { console.warn("Error closing session", e); }
+      activeSessionRef.current = null;
     }
-    if (inputContextRef.current) { 
-        try { inputContextRef.current.close(); } catch(e) {}
-        inputContextRef.current = null; 
+
+    if (audioContextRef.current) {
+      try { audioContextRef.current.close(); } catch (e) { }
+      audioContextRef.current = null;
     }
-    
+    if (inputContextRef.current) {
+      try { inputContextRef.current.close(); } catch (e) { }
+      inputContextRef.current = null;
+    }
+
     // Cleanup audio analysers
     aiAnalyserRef.current = null;
     userAnalyserRef.current = null;
     setAiAudioLevel(0);
     setUserAudioLevel(0);
-    
+
     stopSpeechRecognition();
-    
+
     setVisualizerState('idle');
-    
+
     if (clearHistory) {
       conversationHistoryRef.current = [];
       reconnectAttemptsRef.current = 0;
@@ -905,7 +905,7 @@ export const App: React.FC = () => {
     setIsReconnecting(false);
     cleanupSession(true); // Clear history on intentional disconnect
     setIsConnected(false);
-    setIsMuted(false); 
+    setIsMuted(false);
     addLog("Session ended", 'system');
   }, [cleanupSession]);
 
@@ -914,32 +914,32 @@ export const App: React.FC = () => {
     const newMutedState = !isMuted;
     setIsMuted(newMutedState);
     isMutedRef.current = newMutedState;
-    
+
     if (mediaStreamRef.current) {
       const audioTracks = mediaStreamRef.current.getAudioTracks();
       audioTracks.forEach(track => {
-        track.enabled = !newMutedState; 
+        track.enabled = !newMutedState;
       });
-      
+
       if (newMutedState) {
         if (speechRecognitionRef.current) {
           try {
             speechRecognitionRef.current.stop();
-          } catch (e) {}
+          } catch (e) { }
         }
-        setUserSpeechCaption(""); 
+        setUserSpeechCaption("");
         setIsSpeechRecognitionActive(false);
       } else {
         startSpeechRecognition();
       }
-      
+
       addLog(newMutedState ? "Microphone muted" : "Microphone unmuted", 'system');
     }
   }, [isMuted, startSpeechRecognition]);
 
   const handleBackToLanding = useCallback(() => {
     if (isConnected) {
-        handleDisconnect();
+      handleDisconnect();
     }
     setView('landing');
   }, [isConnected, handleDisconnect]);
@@ -951,7 +951,7 @@ export const App: React.FC = () => {
   const handleSendTextMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!textInput.trim() || !isConnected || !activeSessionRef.current) return;
-    
+
     // Log user text message
     addLog(textInput, 'user');
 
@@ -973,17 +973,17 @@ export const App: React.FC = () => {
     try {
       setError(null);
       setVisualizerState('processing');
-      
+
       addLog("Loading AI module...", 'system');
       const { GoogleGenAI, Modality } = await loadGenAI();
-      
+
       // We pass a dummy key because the actual API key is safely stored in our Cloudflare proxy
       const ai = new GoogleGenAI({ apiKey: 'proxy-enabled' });
-      
+
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const inputCtx = new AudioContextClass();
       const outputCtx = new AudioContextClass();
-      
+
       if (inputCtx.state === 'suspended') await inputCtx.resume();
 
       const inputSampleRate = inputCtx.sampleRate;
@@ -995,29 +995,29 @@ export const App: React.FC = () => {
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getAudioTracks().forEach(track => {
-         track.enabled = !isMutedRef.current;
+        track.enabled = !isMutedRef.current;
       });
       mediaStreamRef.current = stream;
-      
+
       const fullSystemInstruction = SYSTEM_INSTRUCTION;
-      
+
       const config = {
         model: 'gemini-2.5-flash-native-audio-preview-12-2025',
         config: {
           systemInstruction: fullSystemInstruction,
           responseModalities: [Modality.AUDIO],
           speechConfig: {
-             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } }
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } }
           },
           tools: toolsDeclaration
         }
       };
 
       const isReconnect = isReconnectingRef.current;
-      
+
       // Proxy interceptor: route traffic through our secure Cloudflare Worker
       const OriginalWebSocket = window.WebSocket;
-      window.WebSocket = function(url: string | URL, protocols?: string | string[]) {
+      window.WebSocket = function (url: string | URL, protocols?: string | string[]) {
         try {
           const parsedUrl = new URL(url.toString(), window.location.href);
           if (parsedUrl.hostname === 'generativelanguage.googleapis.com') {
@@ -1029,7 +1029,7 @@ export const App: React.FC = () => {
         }
         return new OriginalWebSocket(url, protocols);
       } as any;
-      
+
       const sessionPromise = ai.live.connect({
         ...config,
         callbacks: {
@@ -1040,7 +1040,7 @@ export const App: React.FC = () => {
             setIsReconnecting(false);
             isReconnectingRef.current = false;
             setVisualizerState('processing');
-            
+
             if (isReconnect) {
               addLog("Reconnected! Restoring conversation...", 'system');
               // Restore detected params from before disconnect
@@ -1058,14 +1058,14 @@ export const App: React.FC = () => {
               conversationHistoryRef.current = [];
               reconnectAttemptsRef.current = 0;
             }
-            
+
             setLiveCaption("");
             setUserSpeechCaption("");
             setAiThoughts([]);
             conversationTextRef.current = "";
             aiSpeechBufferRef.current = ""; // Reset AI speech buffer
             lastSpeakingTimeRef.current = 0;
-            
+
             if (!isMutedRef.current) {
               startSpeechRecognition();
             }
@@ -1077,23 +1077,23 @@ export const App: React.FC = () => {
                 if (part.text) {
                   let text = part.text;
                   extractInfoFromText(text);
-                  
-                  const isAiThought = text.startsWith('**') || 
-                                      text.includes('Verifying') || 
-                                      text.includes('Analyzing') || 
-                                      text.includes('Assessing') ||
-                                      text.includes('Confirming') ||
-                                      text.includes('Addressing') ||
-                                      text.includes('Pinpointing') ||
-                                      text.includes('Refining') ||
-                                      text.includes('Clarifying') ||
-                                      text.includes('Adjusting');
-                  
+
+                  const isAiThought = text.startsWith('**') ||
+                    text.includes('Verifying') ||
+                    text.includes('Analyzing') ||
+                    text.includes('Assessing') ||
+                    text.includes('Confirming') ||
+                    text.includes('Addressing') ||
+                    text.includes('Pinpointing') ||
+                    text.includes('Refining') ||
+                    text.includes('Clarifying') ||
+                    text.includes('Adjusting');
+
                   if (isAiThought) {
                     const cleanedText = text
-                      .replace(/\*\*/g, '') 
-                      .replace(/^\s*/, ''); 
-                    
+                      .replace(/\*\*/g, '')
+                      .replace(/^\s*/, '');
+
                     setAiThoughts(prev => [...prev.slice(-20), cleanedText]);
                   } else {
                     const now = Date.now();
@@ -1101,26 +1101,26 @@ export const App: React.FC = () => {
                       aiSpeechBufferRef.current = '';
                     }
                     lastSpeakingTimeRef.current = now;
-                    
+
                     aiSpeechBufferRef.current += (aiSpeechBufferRef.current ? ' ' : '') + text;
-                    
+
                     if (aiSpeechBufferRef.current.length > 200) {
                       aiSpeechBufferRef.current = '...' + aiSpeechBufferRef.current.slice(-150);
                     }
-                    
+
                     setLiveCaption(aiSpeechBufferRef.current);
-                    
+
                     // Track AI responses for reconnect context
                     conversationHistoryRef.current.push({ role: 'model', text: text });
                     if (conversationHistoryRef.current.length > 40) {
                       conversationHistoryRef.current = conversationHistoryRef.current.slice(-30);
                     }
-                    
+
                     // Only add significant messages to visible logs
-                    if (text.toLowerCase().includes('found') || 
-                        text.toLowerCase().includes('college') ||
-                        text.toLowerCase().includes('rank') ||
-                        text.toLowerCase().includes('session')) {
+                    if (text.toLowerCase().includes('found') ||
+                      text.toLowerCase().includes('college') ||
+                      text.toLowerCase().includes('rank') ||
+                      text.toLowerCase().includes('session')) {
                       addLog(text, 'agent');
                     }
                   }
@@ -1145,30 +1145,30 @@ export const App: React.FC = () => {
             if (audioData) {
               setVisualizerState('speaking');
               if (outputCtx.state === 'suspended') await outputCtx.resume();
-              
+
               if (!aiAnalyserRef.current) {
                 const aiAnalyser = outputCtx.createAnalyser();
                 aiAnalyser.fftSize = 256;
                 aiAnalyserRef.current = aiAnalyser;
                 aiAnalyser.connect(outputCtx.destination);
               }
-              
+
               nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputCtx.currentTime);
               const audioBuffer = await decodeAudioData(decode(audioData), outputCtx, 24000, 1);
               const source = outputCtx.createBufferSource();
               source.buffer = audioBuffer;
-              
+
               if (aiAnalyserRef.current) {
                 source.connect(aiAnalyserRef.current);
               } else {
                 source.connect(outputCtx.destination);
               }
-              
+
               // Calculate AI audio level from buffer for visualizer
               const channelData = audioBuffer.getChannelData(0);
               const rms = Math.sqrt(channelData.slice(0, 1024).reduce((s, x) => s + x * x, 0) / 1024);
               setAiAudioLevel(Math.min(1, rms * 3));
-              
+
               source.onended = () => {
                 sourcesRef.current.delete(source);
                 if (sourcesRef.current.size === 0) {
@@ -1183,7 +1183,7 @@ export const App: React.FC = () => {
 
             // Interruption handling,;
             if (msg.serverContent?.interrupted) {
-              sourcesRef.current.forEach(s => { try { s.stop(); } catch(e) {} });
+              sourcesRef.current.forEach(s => { try { s.stop(); } catch (e) { } });
               sourcesRef.current.clear();
               nextStartTimeRef.current = 0;
               setVisualizerState('idle');
@@ -1192,143 +1192,143 @@ export const App: React.FC = () => {
             if (msg.toolCall) {
               setVisualizerState('processing');
               const functionResponses = [];
-              
+
               for (const fc of msg.toolCall.functionCalls) {
                 let result: any = {};
                 console.log("Executing tool:", fc.name, fc.args);
-                
+
                 try {
-                     if (fc.name === 'find_matching_colleges') {
-                       const { rank, category, course, location } = fc.args as any;
-                       const recs = await findMatchingColleges(Number(rank), String(category), String(course), String(location));
-                       setRecommendations(recs);
-                       setOriginalAiRecommendations(recs); 
-                       setActiveListIndex(-1); 
-                       setHasSearched(true);
-                       setShowAll(false);
-                       result = { 
-                         found: recs.length, 
-                         message: "UI updated successfully. Tell the user to scroll down to view the full list.",
-                         top_matches: recs.slice(0, 3).map(r => r.collegeName) 
-                       };
-                    } else if (fc.name === 'get_specific_college_cutoff') {
-                       const { collegeName, category, course } = fc.args as any;
-                       const cutoffData = await getSpecificCollegeCutoff(String(collegeName), String(category), String(course));
-                       // Keep it small to avoid websocket limits
-                       if (cutoffData.data && Array.isArray(cutoffData.data)) {
-                         cutoffData.data = cutoffData.data.slice(0, 5); // Send top 5 branches only
-                         cutoffData.note = "More branches may be available on screen.";
-                       }
-                       result = cutoffData;
+                  if (fc.name === 'find_matching_colleges') {
+                    const { rank, category, course, location } = fc.args as any;
+                    const recs = await findMatchingColleges(Number(rank), String(category), String(course), String(location));
+                    setRecommendations(recs);
+                    setOriginalAiRecommendations(recs);
+                    setActiveListIndex(-1);
+                    setHasSearched(true);
+                    setShowAll(false);
+                    result = {
+                      found: recs.length,
+                      message: "UI updated successfully. Tell the user to scroll down to view the full list.",
+                      top_matches: recs.slice(0, 3).map(r => r.collegeName)
+                    };
+                  } else if (fc.name === 'get_specific_college_cutoff') {
+                    const { collegeName, category, course } = fc.args as any;
+                    const cutoffData = await getSpecificCollegeCutoff(String(collegeName), String(category), String(course));
+                    // Keep it small to avoid websocket limits
+                    if (cutoffData.data && Array.isArray(cutoffData.data)) {
+                      cutoffData.data = cutoffData.data.slice(0, 5); // Send top 5 branches only
+                      cutoffData.note = "More branches may be available on screen.";
                     }
-                } catch(err) {
-                    console.error("Error executing tool", fc.name, err);
-                    result = { error: "Failed to process request." };
+                    result = cutoffData;
+                  }
+                } catch (err) {
+                  console.error("Error executing tool", fc.name, err);
+                  result = { error: "Failed to process request." };
                 }
 
                 functionResponses.push({
-                    id: fc.id,
-                    name: fc.name,
-                    response: { result: cleanData(result) } 
+                  id: fc.id,
+                  name: fc.name,
+                  response: { result: cleanData(result) }
                 });
               }
 
               if (activeSessionRef.current) {
-                  try {
-                    // Note: We use the activeSessionRef here because onmessage is an async callback 
-                    // that might run after session is established.
-                    activeSessionRef.current.sendToolResponse({
-                        functionResponses: functionResponses
-                    });
-                    // Add success feedback to logs
-                    const toolName = functionResponses[0]?.name || 'tool';
-                    if (toolName === 'find_matching_colleges') {
-                      const count = (functionResponses[0]?.response as any)?.result?.found || 0;
-                      addLog(`Found ${count} matching colleges - scroll down to view!`, 'system');
-                    }
-                  } catch(e: any) {
-                      console.error("Failed to send tool response", e);
-                      const errorMsg = e?.message || String(e);
-                      if (errorMsg.includes('not implemented') || errorMsg.includes('not supported') || errorMsg.includes('not enabled')) {
-                        addLog("Results ready! Click Start to continue chatting.", 'system');
-                      }
+                try {
+                  // Note: We use the activeSessionRef here because onmessage is an async callback 
+                  // that might run after session is established.
+                  activeSessionRef.current.sendToolResponse({
+                    functionResponses: functionResponses
+                  });
+                  // Add success feedback to logs
+                  const toolName = functionResponses[0]?.name || 'tool';
+                  if (toolName === 'find_matching_colleges') {
+                    const count = (functionResponses[0]?.response as any)?.result?.found || 0;
+                    addLog(`Found ${count} matching colleges - scroll down to view!`, 'system');
                   }
+                } catch (e: any) {
+                  console.error("Failed to send tool response", e);
+                  const errorMsg = e?.message || String(e);
+                  if (errorMsg.includes('not implemented') || errorMsg.includes('not supported') || errorMsg.includes('not enabled')) {
+                    addLog("Results ready! Click Start to continue chatting.", 'system');
+                  }
+                }
               }
             }
           },
           onclose: (e: any) => {
-              console.log("Session closed event received:", e);
-              isSessionActive.current = false;
-              
-              if (sessionEndedRef.current) return; // User intentionally ended
-              
-              const reason = e?.message || e?.reason || '';
-              const code = e?.code;
-              
-              const isKnownLimitation = reason.includes('not implemented') || 
-                                        reason.includes('not supported') || 
-                                        reason.includes('not enabled');
-              
-              // Determine if we should auto-reconnect
-              const shouldReconnect = !isKnownLimitation && 
-                                      reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS &&
-                                      conversationHistoryRef.current.length > 0;
-              
-              if (shouldReconnect) {
-                // Save current detected params before cleanup
-                savedParamsRef.current = {
-                  rank: detectedRank,
-                  category: detectedCategory,
-                  course: detectedCourse,
-                  location: detectedLocation
-                };
-                
-                reconnectAttemptsRef.current++;
-                const attempt = reconnectAttemptsRef.current;
-                console.log(`Auto-reconnecting (attempt ${attempt}/${MAX_RECONNECT_ATTEMPTS})...`);
-                addLog(`Connection interrupted. Reconnecting (${attempt}/${MAX_RECONNECT_ATTEMPTS})...`, 'system');
-                setIsReconnecting(true);
-                isReconnectingRef.current = true;
-                setVisualizerState('processing');
-                
-                // Cleanup session resources but NOT conversation history
-                cleanupSession(false);
-                setIsConnected(false);
-                
-                // Reconnect after a short delay (exponential backoff)
-                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-                setTimeout(() => {
-                  if (!sessionEndedRef.current) {
-                    handleConnect();
-                  }
-                }, delay);
-              } else if (isKnownLimitation) {
-                // Known API limitation - offer to continue
-                console.log("Session ended due to known API limitation:", reason);
-                addLog("Session ended - click Start to continue chatting!", 'system');
-                setSessionEndedWithResults(true);
-                sessionEndedRef.current = true;
-                cleanupSession(false); // Keep history so "Continue" works with context
-                setIsConnected(false);
-              } else {
-                // Max reconnect attempts reached or no history
-                if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
-                  addLog("Connection lost. Click Start to begin a new session.", 'system');
-                } else if (reason) {
-                  addLog(`Session closed: ${reason}`, 'system');
+            console.log("Session closed event received:", e);
+            isSessionActive.current = false;
+
+            if (sessionEndedRef.current) return; // User intentionally ended
+
+            const reason = e?.message || e?.reason || '';
+            const code = e?.code;
+
+            const isKnownLimitation = reason.includes('not implemented') ||
+              reason.includes('not supported') ||
+              reason.includes('not enabled');
+
+            // Determine if we should auto-reconnect
+            const shouldReconnect = !isKnownLimitation &&
+              reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS &&
+              conversationHistoryRef.current.length > 0;
+
+            if (shouldReconnect) {
+              // Save current detected params before cleanup
+              savedParamsRef.current = {
+                rank: detectedRank,
+                category: detectedCategory,
+                course: detectedCourse,
+                location: detectedLocation
+              };
+
+              reconnectAttemptsRef.current++;
+              const attempt = reconnectAttemptsRef.current;
+              console.log(`Auto-reconnecting (attempt ${attempt}/${MAX_RECONNECT_ATTEMPTS})...`);
+              addLog(`Connection interrupted. Reconnecting (${attempt}/${MAX_RECONNECT_ATTEMPTS})...`, 'system');
+              setIsReconnecting(true);
+              isReconnectingRef.current = true;
+              setVisualizerState('processing');
+
+              // Cleanup session resources but NOT conversation history
+              cleanupSession(false);
+              setIsConnected(false);
+
+              // Reconnect after a short delay (exponential backoff)
+              const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+              setTimeout(() => {
+                if (!sessionEndedRef.current) {
+                  handleConnect();
                 }
-                handleDisconnect();
+              }, delay);
+            } else if (isKnownLimitation) {
+              // Known API limitation - offer to continue
+              console.log("Session ended due to known API limitation:", reason);
+              addLog("Session ended - click Start to continue chatting!", 'system');
+              setSessionEndedWithResults(true);
+              sessionEndedRef.current = true;
+              cleanupSession(false); // Keep history so "Continue" works with context
+              setIsConnected(false);
+            } else {
+              // Max reconnect attempts reached or no history
+              if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+                addLog("Connection lost. Click Start to begin a new session.", 'system');
+              } else if (reason) {
+                addLog(`Session closed: ${reason}`, 'system');
               }
+              handleDisconnect();
+            }
           },
           onerror: (e: any) => {
-             console.error("Socket Error:", e);
-             const errorMsg = e?.message || e?.error || JSON.stringify(e);
-             // Don't show error during reconnect - onclose will handle it
-             if (!isReconnectingRef.current) {
-               setError(`Connection error: ${errorMsg}`);
-               addLog(`Error: ${errorMsg}`, 'system');
-             }
-             isSessionActive.current = false;
+            console.error("Socket Error:", e);
+            const errorMsg = e?.message || e?.error || JSON.stringify(e);
+            // Don't show error during reconnect - onclose will handle it
+            if (!isReconnectingRef.current) {
+              setError(`Connection error: ${errorMsg}`);
+              addLog(`Error: ${errorMsg}`, 'system');
+            }
+            isSessionActive.current = false;
           }
         }
       });
@@ -1340,37 +1340,37 @@ export const App: React.FC = () => {
       const source = inputCtx.createMediaStreamSource(stream);
       const processor = inputCtx.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;
-      
+
       const userAnalyser = inputCtx.createAnalyser();
       userAnalyser.fftSize = 256;
       userAnalyserRef.current = userAnalyser;
       source.connect(userAnalyser);
-      
+
       processor.onaudioprocess = async (e) => {
         if (!isSessionActive.current) return;
 
         const inputData = e.inputBuffer.getChannelData(0);
         const rms = Math.sqrt(inputData.reduce((s, x) => s + x * x, 0) / inputData.length);
-        
+
         // Update user audio level for visualizer (normalized 0-1)
         setUserAudioLevel(Math.min(1, rms * 5));
-        
+
         if (rms > 0.02) setVisualizerState('listening');
         else if (visualizerState === 'listening') setVisualizerState('idle');
 
         try {
-            const partData = createBlob(inputData, inputSampleRate);
-            if(activeSessionRef.current) {
-                activeSessionRef.current.sendRealtimeInput({ media: partData });
-            }
-        } catch(e) {
-            console.error("Audio send error", e);
+          const partData = createBlob(inputData, inputSampleRate);
+          if (activeSessionRef.current) {
+            activeSessionRef.current.sendRealtimeInput({ media: partData });
+          }
+        } catch (e) {
+          console.error("Audio send error", e);
         }
       };
-      
+
       source.connect(processor);
       processor.connect(inputCtx.destination);
-      
+
       // Send initial trigger or replay conversation on reconnect
       setTimeout(() => {
         if (activeSessionRef.current && isSessionActive.current) {
@@ -1381,14 +1381,13 @@ export const App: React.FC = () => {
                 .slice(-20) // Last 20 messages for context
                 .map(m => `${m.role === 'user' ? 'Student' : 'SeatSathi'}: ${m.text}`)
                 .join('\n');
-              
-              const reconnectPrompt = `[SYSTEM: The session was briefly interrupted. Here is the conversation so far - continue naturally without re-introducing yourself:]\n\n${contextSummary}\n\n[Continue the conversation from where we left off. The student's details: ${
-                savedParamsRef.current.rank ? `Rank ${savedParamsRef.current.rank}` : ''
-              }${savedParamsRef.current.category ? `, Category ${savedParamsRef.current.category}` : ''
-              }${savedParamsRef.current.course ? `, Course ${savedParamsRef.current.course}` : ''
-              }${savedParamsRef.current.location ? `, Location ${savedParamsRef.current.location}` : ''
-              }. Say something like "Sorry for the brief interruption, I'm back! Where were we?" and continue helping.]`;
-              
+
+              const reconnectPrompt = `[SYSTEM: The session was briefly interrupted. Here is the conversation so far - continue naturally without re-introducing yourself:]\n\n${contextSummary}\n\n[Continue the conversation from where we left off. The student's details: ${savedParamsRef.current.rank ? `Rank ${savedParamsRef.current.rank}` : ''
+                }${savedParamsRef.current.category ? `, Category ${savedParamsRef.current.category}` : ''
+                }${savedParamsRef.current.course ? `, Course ${savedParamsRef.current.course}` : ''
+                }${savedParamsRef.current.location ? `, Location ${savedParamsRef.current.location}` : ''
+                }. Say something like "Sorry for the brief interruption, I'm back! Where were we?" and continue helping.]`;
+
               activeSessionRef.current.sendClientContent({
                 turns: [{ role: "user", parts: [{ text: reconnectPrompt }] }],
                 turnComplete: true
@@ -1422,20 +1421,20 @@ export const App: React.FC = () => {
     }
   };
 
-  
+
   // DEFAULT now shows: first 10 Moderate, then Safe, then Reach 
   const getSortedRecommendations = () => {
     let sorted = [...recommendations];
-    
+
     if (activeListIndex >= 0) {
       return sorted;
     }
-    
+
     if (sortOrder === 'default' || sortOrder === 'medium-first') {
       const medium = sorted.filter(r => r.chance === 'Moderate');
       const high = sorted.filter(r => r.chance === 'Safe');
       const low = sorted.filter(r => r.chance === 'Reach');
-      
+
       const first10Medium = medium.slice(0, 10);
       const remainingMedium = medium.slice(10);
       sorted = [...first10Medium, ...high, ...remainingMedium, ...low];
@@ -1468,7 +1467,7 @@ export const App: React.FC = () => {
     const filterLabel = filterType.replace('-first', ' first');
     // Check if a list with this exact filter already exists
     const existingIndex = savedLists.findIndex(l => l.name.includes(filterLabel));
-    
+
     if (existingIndex >= 0) {
       // Update existing list with this filter
       const updatedLists = [...savedLists];
@@ -1519,7 +1518,7 @@ export const App: React.FC = () => {
   // List modification handlers - allow free interchange regardless of chance level
   const handleMoveUp = (index: number) => {
     if (index <= 0) return;
-    
+
     // When viewing a saved list, update that list
     if (activeListIndex >= 0) {
       const newRecs = [...recommendations];
@@ -1531,7 +1530,7 @@ export const App: React.FC = () => {
       setSavedLists(updatedLists);
       return;
     }
-    
+
     // Default/edit mode - directly modify main list (allows free interchange)
     const newRecs = [...recommendations];
     [newRecs[index - 1], newRecs[index]] = [newRecs[index], newRecs[index - 1]];
@@ -1551,7 +1550,7 @@ export const App: React.FC = () => {
       setSavedLists(updatedLists);
       return;
     }
-    
+
     // Default/edit mode - directly modify main list (allows free interchange)
     if (index >= recommendations.length - 1) return;
     const newRecs = [...recommendations];
@@ -1570,7 +1569,7 @@ export const App: React.FC = () => {
       setSavedLists(updatedLists);
       return;
     }
-    
+
     // Default/edit mode - directly modify main list
     const newRecs = recommendations.filter((_, i) => i !== index);
     setRecommendations(newRecs);
@@ -1580,7 +1579,7 @@ export const App: React.FC = () => {
   const listContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const collegeSectionRef = useRef<HTMLDivElement>(null);
-  
+
   // Clear auto-scroll interval helper
   const clearAutoScroll = () => {
     if (autoScrollIntervalRef.current) {
@@ -1588,7 +1587,7 @@ export const App: React.FC = () => {
       autoScrollIntervalRef.current = null;
     }
   };
-  
+
   const handleDragStart = (index: number) => {
     // Allow dragging in edit mode OR when viewing saved list
     if (listMode !== 'edit' && activeListIndex < 0) return;
@@ -1599,21 +1598,21 @@ export const App: React.FC = () => {
     e.preventDefault();
     if ((listMode !== 'edit' && activeListIndex < 0) || draggedIndex === null) return;
     setDragOverIndex(index);
-    
+
     // Auto-scroll feature with smooth scrolling
     const container = listContainerRef.current;
     if (container) {
       const rect = container.getBoundingClientRect();
       const scrollThreshold = 100; // px from edge to trigger scroll
       const scrollSpeed = 3; // Slower, smoother scroll speed
-      
+
       // Clear any existing auto-scroll
       clearAutoScroll();
-      
+
       // Get header and footer positions for extended scroll zones
       const headerBottom = 80; // Approximate header height
       const footerTop = window.innerHeight - 120; // Approximate footer start
-      
+
       // Scroll down if near bottom of container OR near footer/start session area
       if ((e.clientY > rect.bottom - scrollThreshold && e.clientY < rect.bottom) || e.clientY > footerTop) {
         autoScrollIntervalRef.current = setInterval(() => {
@@ -1647,13 +1646,13 @@ export const App: React.FC = () => {
   const handleDragEnd = () => {
     // Clear auto-scroll interval
     clearAutoScroll();
-    
+
     if (draggedIndex === null || dragOverIndex === null || draggedIndex === dragOverIndex) {
       setDraggedIndex(null);
       setDragOverIndex(null);
       return;
     }
-    
+
     // When viewing a saved list, update that list
     if (activeListIndex >= 0) {
       const newRecs = [...recommendations];
@@ -1668,13 +1667,13 @@ export const App: React.FC = () => {
       setDragOverIndex(null);
       return;
     }
-    
+
     // Default mode and edit mode - modify main list directly (preserves custom order)
     const newRecs = [...recommendations];
     const [draggedItem] = newRecs.splice(draggedIndex, 1);
     newRecs.splice(dragOverIndex, 0, draggedItem);
     setRecommendations(newRecs);
-    
+
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
@@ -1706,8 +1705,8 @@ export const App: React.FC = () => {
   if (view === 'landing') {
     return (
       <>
-        <LandingPage 
-          onStart={() => setView('app')} 
+        <LandingPage
+          onStart={() => setView('app')}
           user={user}
           onLoginClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
           onSignupClick={() => { setAuthModalMode('signup'); setShowAuthModal(true); }}
@@ -1716,8 +1715,8 @@ export const App: React.FC = () => {
           toggleTheme={toggleTheme}
           onNoteClick={() => setShowNoteModal(true)}
         />
-        <AuthModal 
-          isOpen={showAuthModal} 
+        <AuthModal
+          isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           onAuthSuccess={() => setShowAuthModal(false)}
           initialMode={authModalMode}
@@ -1738,8 +1737,8 @@ export const App: React.FC = () => {
           confirmStyle="warning"
           theme={theme}
         />
-        <NoteModal 
-          isOpen={showNoteModal} 
+        <NoteModal
+          isOpen={showNoteModal}
           onClose={() => setShowNoteModal(false)}
           theme={theme}
         />
@@ -1763,73 +1762,73 @@ export const App: React.FC = () => {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-    <div className={`h-screen relative z-10 ${themeClasses.bg} ${themeClasses.text} flex flex-col selection:bg-[#007AFF]/30 overflow-y-auto overflow-x-hidden font-sans`}>
-      <header className={`w-full border-b ${themeClasses.headerBg} backdrop-blur-xl sticky top-0 z-30 shrink-0`}>
-        <div className="flex justify-between items-center px-4 sm:px-6 py-4 max-w-7xl mx-auto w-full">
-          <div className="flex items-center gap-2 md:gap-3">
-           <button 
-             onClick={handleBackToLanding}
-             className={`p-1.5 md:p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-[#2C2C2E] text-[#8E8E93] hover:text-[#FFFFFF]' : 'hover:bg-[#E5E5EA] text-[#8E8E93] hover:text-[#1C1C1E]'} transition-colors`}
-             aria-label="Back to Home"
-           >
-             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-           </button>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={handleBackToLanding}>
-              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-[#007AFF] flex items-center justify-center text-white font-bold text-sm md:text-base shadow-sm">S</div>
-              <h1 className={`font-semibold text-lg md:text-xl tracking-tight ${theme === 'dark' ? 'text-white' : 'text-[#1C1C1E]'}`}>Seat<span className="text-[#007AFF]">Sathi</span></h1>
+      <div className={`h-screen relative z-10 ${themeClasses.bg} ${themeClasses.text} flex flex-col selection:bg-[#007AFF]/30 overflow-y-auto overflow-x-hidden font-sans`}>
+        <header className={`w-full border-b ${themeClasses.headerBg} backdrop-blur-xl sticky top-0 z-30 shrink-0`}>
+          <div className="flex justify-between items-center px-4 sm:px-6 py-4 max-w-7xl mx-auto w-full">
+            <div className="flex items-center gap-2 md:gap-3">
+              <button
+                onClick={handleBackToLanding}
+                className={`p-1.5 md:p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-[#2C2C2E] text-[#8E8E93] hover:text-[#FFFFFF]' : 'hover:bg-[#E5E5EA] text-[#8E8E93] hover:text-[#1C1C1E]'} transition-colors`}
+                aria-label="Back to Home"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+              </button>
+              <div className="flex items-center gap-2 cursor-pointer" onClick={handleBackToLanding}>
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-[#007AFF] flex items-center justify-center text-white font-bold text-sm md:text-base shadow-sm">S</div>
+                <h1 className={`font-semibold text-lg md:text-xl tracking-tight ${theme === 'dark' ? 'text-white' : 'text-[#1C1C1E]'}`}>Seat<span className="text-[#007AFF]">Sathi</span></h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-[10px] md:text-xs font-medium text-[#8E8E93] uppercase tracking-wide">Live Mode</div>
+              {/* Theme Toggle Button in Header */}
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                onClick={toggleTheme}
+                className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'bg-[#2C2C2E] text-[#0A84FF] hover:bg-[#3A3A3C]' : 'bg-[#E5E5EA] text-[#007AFF] hover:bg-[#D1D1D6]'}`}
+                title={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {theme === 'dark' ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="m4.93 4.93 1.41 1.41" />
+                    <path d="m17.66 17.66 1.41 1.41" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="m6.34 17.66-1.41 1.41" />
+                    <path d="m19.07 4.93-1.41 1.41" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                  </svg>
+                )}
+              </motion.button>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-[10px] md:text-xs font-medium text-[#8E8E93] uppercase tracking-wide">Live Mode</div>
-            {/* Theme Toggle Button in Header */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              onClick={toggleTheme}
-              className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'bg-[#2C2C2E] text-[#0A84FF] hover:bg-[#3A3A3C]' : 'bg-[#E5E5EA] text-[#007AFF] hover:bg-[#D1D1D6]'}`}
-              title={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {theme === 'dark' ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4"/>
-                  <path d="M12 2v2"/>
-                  <path d="M12 20v2"/>
-                  <path d="m4.93 4.93 1.41 1.41"/>
-                  <path d="m17.66 17.66 1.41 1.41"/>
-                  <path d="M2 12h2"/>
-                  <path d="M20 12h2"/>
-                  <path d="m6.34 17.66-1.41 1.41"/>
-                  <path d="m19.07 4.93-1.41 1.41"/>
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
-                </svg>
-              )}
-            </motion.button>
-          </div>
-        </div>
-      </header>
-      
-      {/* Section 1: Voice Agent (First thing user sees - Full viewport height minus header and footer) */}
-      <main className="min-h-[calc(100vh-140px)] flex flex-col relative">
-        
-        {/* Main content area with Voice Agent centered and Logs on right */}
-        <div className="flex-1 flex items-center justify-center relative px-6 max-w-7xl mx-auto w-full">
-          
-          {/* AI Thoughts Panel - Fixed to left edge of screen */}
-          <div className={`fixed left-0 top-16 bottom-20 z-20 transition-all duration-300 hidden md:flex ${showAiThoughts ? 'w-72' : 'w-10'}`}>
+        </header>
+
+        {/* Section 1: Voice Agent (First thing user sees - Full viewport height minus header and footer) */}
+        <main className="min-h-[calc(100vh-140px)] flex flex-col relative">
+
+          {/* Main content area with Voice Agent centered and Logs on right */}
+          <div className="flex-1 flex items-center justify-center relative px-6 max-w-7xl mx-auto w-full">
+
+            {/* AI Thoughts Panel - Fixed to left edge of screen */}
+            <div className={`fixed left-0 top-16 bottom-20 z-20 transition-all duration-300 hidden md:flex ${showAiThoughts ? 'w-72' : 'w-10'}`}>
               {showAiThoughts ? (
                 <div className={`w-full h-full rounded-r-2xl border-r border-y overflow-hidden flex flex-col backdrop-blur-xl ${themeClasses.panelBg}`}>
                   <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${themeClasses.panelBg}`}>
                     <div className={`text-xs font-semibold uppercase ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>AI Analysis</div>
-                    <button 
+                    <button
                       onClick={() => setShowAiThoughts(false)}
                       className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-[#1e3a5f]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                       title="Hide AI thoughts"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m15 18-6-6 6-6"/>
+                        <path d="m15 18-6-6 6-6" />
                       </svg>
                     </button>
                   </div>
@@ -1839,8 +1838,8 @@ export const App: React.FC = () => {
                         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`text-center text-xs mt-6 ${theme === 'dark' ? 'text-[#8E8E93]' : 'text-[#8E8E93]'}`}>AI thoughts will appear here...</motion.p>
                       ) : (
                         aiThoughts.map((thought, i) => (
-                          <motion.div 
-                            key={i} 
+                          <motion.div
+                            key={i}
                             layout
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1855,201 +1854,197 @@ export const App: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <button 
+                <button
                   onClick={() => setShowAiThoughts(true)}
                   className={`w-10 h-10 rounded-r-lg flex items-center justify-center transition-colors backdrop-blur-xl ${themeClasses.panelBg} border-l-0 ${theme === 'dark' ? 'text-white hover:bg-[#0d1829]/60' : 'text-slate-700 hover:bg-white/80'}`}
                   title="Show AI thoughts"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m9 18 6-6-6-6"/>
+                    <path d="m9 18 6-6-6-6" />
                   </svg>
                 </button>
               )}
-          </div>
+            </div>
 
-          {/* Voice Agent centered */}
-          <div className="flex w-full items-center justify-center">
-            
-            {/* Voice Agent - Centered in the viewport */}
-            <div className="flex flex-col items-center justify-center max-w-md">
-              <Visualizer 
-                state={visualizerState} 
-                isMuted={isMuted} 
-                isUserSpeaking={isConnected && isSpeechRecognitionActive && !isMuted}
-                aiAudioLevel={aiAudioLevel}
-                userAudioLevel={userAudioLevel}
-              />
-              
-              {/* Text Input (Dual-Mode) */}
-              <form onSubmit={handleSendTextMessage} className="w-full max-w-sm mt-6 relative z-10">
-                <input
-                  type="text"
-                  value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  disabled={!isConnected}
-                  placeholder={isConnected ? "Message..." : "Connect to chat..."}
-                  className={`w-full px-4 py-3 pr-12 rounded-full border backdrop-blur-xl outline-none transition-all ${
-                    theme === 'dark' 
-                      ? 'bg-[#1C1C1E]/80 border-[#2C2C2E] text-white placeholder-[#8E8E93] focus:border-[#0A84FF]/50 focus:bg-[#1C1C1E]' 
-                      : 'bg-white/80 border-[#E5E5EA] text-[#1C1C1E] placeholder-[#8E8E93] focus:border-[#007AFF]/50 focus:bg-white'
-                  }`}
+            {/* Voice Agent centered */}
+            <div className="flex w-full items-center justify-center">
+
+              {/* Voice Agent - Centered in the viewport */}
+              <div className="flex flex-col items-center justify-center max-w-md">
+                <Visualizer
+                  state={visualizerState}
+                  isMuted={isMuted}
+                  isUserSpeaking={isConnected && isSpeechRecognitionActive && !isMuted}
+                  aiAudioLevel={aiAudioLevel}
+                  userAudioLevel={userAudioLevel}
                 />
-                <motion.button
-                  whileTap={isConnected && textInput.trim() ? { scale: 0.9 } : undefined}
-                  transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-                  type="submit"
-                  disabled={!isConnected || !textInput.trim()}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${
-                    !isConnected || !textInput.trim()
-                      ? 'text-[#8E8E93] opacity-50 cursor-not-allowed'
-                      : 'text-white bg-[#007AFF] hover:bg-[#007AFF]/90'
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </motion.button>
-              </form>
-              
-              {/* Status Text */}
-              <div className="text-center mt-4 space-y-1">
-                <p className={`text-lg md:text-2xl font-light ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
+
+                {/* Text Input (Dual-Mode) */}
+                <form onSubmit={handleSendTextMessage} className="w-full max-w-sm mt-6 relative z-10">
+                  <input
+                    type="text"
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    disabled={!isConnected}
+                    placeholder={isConnected ? "Message..." : "Connect to chat..."}
+                    className={`w-full px-4 py-3 pr-12 rounded-full border backdrop-blur-xl outline-none transition-all ${theme === 'dark'
+                        ? 'bg-[#1C1C1E]/80 border-[#2C2C2E] text-white placeholder-[#8E8E93] focus:border-[#0A84FF]/50 focus:bg-[#1C1C1E]'
+                        : 'bg-white/80 border-[#E5E5EA] text-[#1C1C1E] placeholder-[#8E8E93] focus:border-[#007AFF]/50 focus:bg-white'
+                      }`}
+                  />
+                  <motion.button
+                    whileTap={isConnected && textInput.trim() ? { scale: 0.9 } : undefined}
+                    transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                    type="submit"
+                    disabled={!isConnected || !textInput.trim()}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${!isConnected || !textInput.trim()
+                        ? 'text-[#8E8E93] opacity-50 cursor-not-allowed'
+                        : 'text-white bg-[#007AFF] hover:bg-[#007AFF]/90'
+                      }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                  </motion.button>
+                </form>
+
+                {/* Status Text */}
+                <div className="text-center mt-4 space-y-1">
+                  <p className={`text-lg md:text-2xl font-light ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
                     {isReconnecting ? "Reconnecting..." :
-                     visualizerState === 'idle' && isConnected && isMuted ? "Muted" :
-                     visualizerState === 'idle' && isConnected ? "Listening..." : 
-                     visualizerState === 'speaking' ? "Speaking..." : 
-                     visualizerState === 'processing' ? "Thinking..." : 
-                     "Ready to assist"}
-                </p>
-                {!isConnected && (
+                      visualizerState === 'idle' && isConnected && isMuted ? "Muted" :
+                        visualizerState === 'idle' && isConnected ? "Listening..." :
+                          visualizerState === 'speaking' ? "Speaking..." :
+                            visualizerState === 'processing' ? "Thinking..." :
+                              "Ready to assist"}
+                  </p>
+                  {!isConnected && (
                     <p className="text-slate-400 text-sm">Connect to start your admission counseling session</p>
-                )}
-                {isConnected && isMuted && (
+                  )}
+                  {isConnected && isMuted && (
                     <p className="text-yellow-500 text-sm">Unmute your microphone to speak</p>
-                )}
+                  )}
+                </div>
               </div>
+            </div>
+
+            {/* Conversation Logs - Fixed to right edge of screen with toggle */}
+            <div className={`fixed right-2 top-16 bottom-20 z-20 transition-all duration-300 hidden md:flex ${showConversationLogs ? 'w-72' : 'w-10'}`}>
+              {showConversationLogs ? (
+                <div
+                  ref={logsContainerRef}
+                  className={`w-full h-full rounded-l-2xl border-l border-y overflow-hidden flex flex-col backdrop-blur-xl ${themeClasses.panelBg}`}
+                >
+                  <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${themeClasses.panelBg}`}>
+                    <button
+                      onClick={() => setShowConversationLogs(false)}
+                      className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-[#1e3a5f]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                      title="Hide conversation logs"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m9 18 6-6-6-6" />
+                      </svg>
+                    </button>
+                    <div className={`text-xs font-semibold uppercase ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Conversation</div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
+                    {logs.length === 0 && <div className={`text-center text-xs italic mt-6 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Conversation will appear here</div>}
+                    {logs.map((log, i) => (
+                      <div key={i} className={`text-xs md:text-sm px-4 py-2.5 max-w-[95%] ${log.type === 'system'
+                          ? `mx-auto italic text-center rounded-full border ${theme === 'dark' ? 'text-slate-400 bg-[#0d1829] border-[#1e3a5f]' : 'text-slate-400 bg-slate-100 border-slate-200'}`
+                          : log.type === 'agent'
+                            ? `mr-auto rounded-full border ${theme === 'dark' ? 'bg-[#0d1829] text-slate-200 border-[#1e3a5f]' : 'bg-slate-100 text-slate-700 border-slate-200'}`
+                            : `ml-auto rounded-full text-right border ${theme === 'dark' ? 'bg-yellow-500/10 text-yellow-100 border-yellow-500/20' : 'bg-yellow-50 text-yellow-800 border-yellow-200'}`
+                        }`}>
+                        {log.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowConversationLogs(true)}
+                  className={`w-10 h-10 rounded-l-lg flex items-center justify-center transition-colors backdrop-blur-xl ${themeClasses.panelBg} border-r-0 ${theme === 'dark' ? 'text-white hover:bg-[#0d1829]/60' : 'text-slate-700 hover:bg-white/80'}`}
+                  title="Show conversation logs"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Conversation Logs - Fixed to right edge of screen with toggle */}
-          <div className={`fixed right-2 top-16 bottom-20 z-20 transition-all duration-300 hidden md:flex ${showConversationLogs ? 'w-72' : 'w-10'}`}>
-            {showConversationLogs ? (
-              <div 
-                ref={logsContainerRef}
-                className={`w-full h-full rounded-l-2xl border-l border-y overflow-hidden flex flex-col backdrop-blur-xl ${themeClasses.panelBg}`}
-              >
-                <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${themeClasses.panelBg}`}>
-                  <button 
-                    onClick={() => setShowConversationLogs(false)}
-                    className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-[#1e3a5f]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
-                    title="Hide conversation logs"
+          {/* Footer Controls - Fixed sticky pill at bottom with black bg and sharper corners */}
+          <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-2 sm:px-4">
+            <div className={`w-full rounded-xl border p-2 flex items-center justify-center gap-2 sm:gap-3 backdrop-blur-xl ${themeClasses.panelBg} shadow-lg`}>
+              {!isConnected ? (
+                <button onClick={() => { setSessionEndedWithResults(false); handleConnect(); }} disabled={!hasApiKey} className={`flex-1 max-w-xs bg-[#007AFF] hover:bg-[#007AFF]/90 text-white font-medium py-2 px-4 sm:px-6 rounded-full transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm ${!hasApiKey ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 shadow-lg shadow-[#007AFF]/20'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
+                  <span>{sessionEndedWithResults ? 'Continue' : 'Start'}</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleToggleMute}
+                    className={`p-2.5 rounded-full transition-all flex items-center justify-center ${isMuted
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30'
+                        : 'bg-slate-900 text-slate-300 border border-slate-700 hover:bg-slate-800'
+                      }`}
+                    title={isMuted ? "Unmute microphone" : "Mute microphone"}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m9 18 6-6-6-6"/>
-                    </svg>
+                    {isMuted ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="2" x2="22" y1="2" y2="22" />
+                        <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
+                        <path d="M5 10v2a7 7 0 0 0 12 5" />
+                        <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
+                        <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
+                        <line x1="12" x2="12" y1="19" y2="22" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" x2="12" y1="19" y2="22" />
+                      </svg>
+                    )}
                   </button>
-                  <div className={`text-xs font-semibold uppercase ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Conversation</div>
+                  <button onClick={() => setShowEndCallConfirm(true)} className="bg-red-500 hover:bg-red-400 text-white font-bold py-2 px-4 sm:px-6 rounded-full transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm active:scale-95 shadow-lg shadow-red-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" x2="6" y1="6" y2="18" /><line x1="6" x2="18" y1="6" y2="18" /></svg>
+                    <span>End</span>
+                  </button>
                 </div>
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-                  {logs.length === 0 && <div className={`text-center text-xs italic mt-6 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Conversation will appear here</div>}
-                  {logs.map((log, i) => (
-                    <div key={i} className={`text-xs md:text-sm px-4 py-2.5 max-w-[95%] ${
-                        log.type === 'system' 
-                          ? `mx-auto italic text-center rounded-full border ${theme === 'dark' ? 'text-slate-400 bg-[#0d1829] border-[#1e3a5f]' : 'text-slate-400 bg-slate-100 border-slate-200'}` 
-                          : log.type === 'agent' 
-                            ? `mr-auto rounded-full border ${theme === 'dark' ? 'bg-[#0d1829] text-slate-200 border-[#1e3a5f]' : 'bg-slate-100 text-slate-700 border-slate-200'}` 
-                            : `ml-auto rounded-full text-right border ${theme === 'dark' ? 'bg-yellow-500/10 text-yellow-100 border-yellow-500/20' : 'bg-yellow-50 text-yellow-800 border-yellow-200'}`
-                      }`}>
-                       {log.text}
-                    </div>
-                  ))}
+              )}
+            </div>
+            {error && <p className="text-red-400 text-[10px] md:text-xs text-center mt-2 font-mono px-2 max-w-2xl mx-auto">{error}</p>}
+          </div>
+        </main>
+
+        {/* Section 2: College List (User scrolls down to see this) */}
+        <section ref={collegeSectionRef} className={`border-t mt-32 px-2 sm:px-4 md:px-6 lg:px-[288px] ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}>
+          <div className="px-4 py-6">
+            {/* Section Title */}
+            <div className="mb-4">
+              <h2 className={`text-lg md:text-xl font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
+                College Recommendations
+              </h2>
+              <p className={`text-xs md:text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                Based on your KCET rank and preferences
+              </p>
+            </div>
+            {/* College List Panel - Full width with consistent margins */}
+            <div className={`${!hasSearched ? 'hidden md:flex' : 'flex'} flex-col w-full min-h-[60vh] rounded-xl border overflow-hidden backdrop-blur-xl ${themeClasses.panelBg}`}>
+              {!hasSearched ? (
+                <div className={`h-full flex-1 flex flex-col items-center justify-center p-8 text-center ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <svg className={`w-16 h-16 mb-4 opacity-50 animate-float ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4" />
+                  </svg>
+                  <p className={`text-lg font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Waiting for KCET requirements...</p>
+                  <p className="text-sm mt-2 text-slate-500">Tell SeatSathi your rank, category, and preferred course to see matches.</p>
                 </div>
-              </div>
-            ) : (
-              <button 
-                onClick={() => setShowConversationLogs(true)}
-                className={`w-10 h-10 rounded-l-lg flex items-center justify-center transition-colors backdrop-blur-xl ${themeClasses.panelBg} border-r-0 ${theme === 'dark' ? 'text-white hover:bg-[#0d1829]/60' : 'text-slate-700 hover:bg-white/80'}`}
-                title="Show conversation logs"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m15 18-6-6 6-6"/>
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Footer Controls - Fixed sticky pill at bottom with black bg and sharper corners */}
-        <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-2 sm:px-4">
-          <div className={`w-full rounded-xl border p-2 flex items-center justify-center gap-2 sm:gap-3 backdrop-blur-xl ${themeClasses.panelBg} shadow-lg`}>
-            {!isConnected ? (
-              <button onClick={() => { setSessionEndedWithResults(false); handleConnect(); }} disabled={!hasApiKey} className={`flex-1 max-w-xs bg-[#007AFF] hover:bg-[#007AFF]/90 text-white font-medium py-2 px-4 sm:px-6 rounded-full transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm ${!hasApiKey ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 shadow-lg shadow-[#007AFF]/20'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-                <span>{sessionEndedWithResults ? 'Continue' : 'Start'}</span>
-              </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={handleToggleMute}
-                  className={`p-2.5 rounded-full transition-all flex items-center justify-center ${
-                    isMuted 
-                      ? 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30' 
-                      : 'bg-slate-900 text-slate-300 border border-slate-700 hover:bg-slate-800'
-                  }`}
-                  title={isMuted ? "Unmute microphone" : "Mute microphone"}
-                >
-                  {isMuted ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="2" x2="22" y1="2" y2="22"/>
-                      <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/>
-                      <path d="M5 10v2a7 7 0 0 0 12 5"/>
-                      <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"/>
-                      <path d="M9 9v3a3 3 0 0 0 5.12 2.12"/>
-                      <line x1="12" x2="12" y1="19" y2="22"/>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                      <line x1="12" x2="12" y1="19" y2="22"/>
-                    </svg>
-                  )}
-                </button>
-                <button onClick={() => setShowEndCallConfirm(true)} className="bg-red-500 hover:bg-red-400 text-white font-bold py-2 px-4 sm:px-6 rounded-full transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm active:scale-95 shadow-lg shadow-red-500/20">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-                  <span>End</span>
-                </button>
-              </div>
-            )}
-          </div>
-          {error && <p className="text-red-400 text-[10px] md:text-xs text-center mt-2 font-mono px-2 max-w-2xl mx-auto">{error}</p>}
-        </div>
-      </main>
-
-      {/* Section 2: College List (User scrolls down to see this) */}
-      <section ref={collegeSectionRef} className={`border-t mt-32 px-2 sm:px-4 md:px-6 lg:px-[288px] ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}>
-        <div className="px-4 py-6">
-        {/* Section Title */}
-        <div className="mb-4">
-          <h2 className={`text-lg md:text-xl font-bold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-            College Recommendations
-          </h2>
-          <p className={`text-xs md:text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-            Based on your KCET rank and preferences
-          </p>
-        </div>
-        {/* College List Panel - Full width with consistent margins */}
-        <div className={`${!hasSearched ? 'hidden md:flex' : 'flex'} flex-col w-full min-h-[60vh] rounded-xl border overflow-hidden backdrop-blur-xl ${themeClasses.panelBg}`}>
-           {!hasSearched ? (
-              <div className={`h-full flex-1 flex flex-col items-center justify-center p-8 text-center ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>
-                 <svg className={`w-16 h-16 mb-4 opacity-50 animate-float ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4" />
-                 </svg>
-                 <p className={`text-lg font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Waiting for KCET requirements...</p>
-                 <p className="text-sm mt-2 text-slate-500">Tell SeatSathi your rank, category, and preferred course to see matches.</p>
-              </div>
-           ) : recommendations.length > 0 ? (
-              <div className="flex flex-col h-full">
-                 {/* Fixed Header with Controls - OUTSIDE scrollable area */}
-                 <div className={`shrink-0 border-b p-3 space-y-3 ${themeClasses.panelBg}`}>
+              ) : recommendations.length > 0 ? (
+                <div className="flex flex-col h-full">
+                  {/* Fixed Header with Controls - OUTSIDE scrollable area */}
+                  <div className={`shrink-0 border-b p-3 space-y-3 ${themeClasses.panelBg}`}>
                     {/* Top Row: Title, View/Edit Toggle, Export */}
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                       <span className={`text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
@@ -2072,7 +2067,7 @@ export const App: React.FC = () => {
                             Edit
                           </button>
                         </div>
-                        <PdfExportDropdown 
+                        <PdfExportDropdown
                           recommendations={sortedRecommendations}
                           studentInfo={{
                             rank: detectedRank || undefined,
@@ -2084,22 +2079,21 @@ export const App: React.FC = () => {
                         {filteredRecommendations.length > 10 && (
                           <button
                             onClick={() => setShowAll(!showAll)}
-                            className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-                              showAll 
-                                ? theme === 'dark' 
-                                  ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' 
+                            className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${showAll
+                                ? theme === 'dark'
+                                  ? 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                                   : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
                                 : 'bg-yellow-500 text-slate-900 hover:bg-yellow-400'
-                            }`}
+                              }`}
                           >
                             {showAll ? (
                               <>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
                                 Show Less
                               </>
                             ) : (
                               <>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                                 Show All ({filteredRecommendations.length})
                               </>
                             )}
@@ -2107,28 +2101,28 @@ export const App: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Sort by chance buttons - Always visible */}
                     <div className="flex gap-1 sm:gap-1.5 flex-wrap">
-                      <button 
+                      <button
                         onClick={() => setSortOrder('default')}
                         className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-lg font-medium transition-all transform hover:scale-105 ${sortOrder === 'default' ? 'bg-slate-600 text-white shadow-lg' : theme === 'dark' ? 'bg-slate-800/80 text-slate-400 hover:bg-slate-700' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}
                       >
                         Default
                       </button>
-                      <button 
+                      <button
                         onClick={() => setSortOrder('high-first')}
                         className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-lg font-medium transition-all transform hover:scale-105 ${sortOrder === 'high-first' ? 'bg-green-600 text-white shadow-lg shadow-green-500/30' : theme === 'dark' ? 'bg-slate-800/80 text-green-400 hover:bg-green-900/50' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
                       >
                         High
                       </button>
-                      <button 
+                      <button
                         onClick={() => setSortOrder('medium-first')}
                         className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-lg font-medium transition-all transform hover:scale-105 ${sortOrder === 'medium-first' ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-500/30' : theme === 'dark' ? 'bg-slate-800/80 text-yellow-400 hover:bg-yellow-900/50' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'}`}
                       >
                         Medium
                       </button>
-                      <button 
+                      <button
                         onClick={() => setSortOrder('low-first')}
                         className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-lg font-medium transition-all transform hover:scale-105 ${sortOrder === 'low-first' ? 'bg-red-600 text-white shadow-lg shadow-red-500/30' : theme === 'dark' ? 'bg-slate-800/80 text-red-400 hover:bg-red-900/50' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
                       >
@@ -2162,7 +2156,7 @@ export const App: React.FC = () => {
                           ))}
                         </select>
                       )}
-                      
+
                       {/* Save to List button */}
                       <button
                         onClick={() => {
@@ -2176,7 +2170,7 @@ export const App: React.FC = () => {
                         + Save List
                       </button>
                     </div>
-                    
+
                     {/* Saved Lists Tabs */}
                     {savedLists.length > 0 && (
                       <div className="flex gap-1 flex-wrap items-center">
@@ -2205,7 +2199,7 @@ export const App: React.FC = () => {
                             className={`px-2 py-1 text-xs rounded font-medium transition-all flex items-center gap-1 ${activeListIndex === idx ? 'bg-orange-500 text-white' : 'bg-slate-800 text-orange-400 hover:bg-orange-900/50'}`}
                           >
                             {list.name} ({list.data.length})
-                            <span 
+                            <span
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSavedLists(savedLists.filter((_, i) => i !== idx));
@@ -2224,26 +2218,26 @@ export const App: React.FC = () => {
                         <strong>{activeListIndex >= 0 ? 'Editing Saved List:' : 'Edit Mode:'}</strong> Drag cards to reorder, use arrows to move, or click X to remove from list
                       </div>
                     )}
-                 </div>
-                 
-                 {/* Scrollable College List */}
-                 <div 
-                   ref={listContainerRef}
-                   onDragLeave={handleDragLeave}
-                   className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3"
-                 >
+                  </div>
+
+                  {/* Scrollable College List */}
+                  <div
+                    ref={listContainerRef}
+                    onDragLeave={handleDragLeave}
+                    className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3"
+                  >
                     {displayedRecommendations.map((rec, displayIdx) => {
-                      const originalIndex = recommendations.findIndex(r => 
-                        r.collegeName === rec.collegeName && 
-                        r.branch === rec.branch && 
+                      const originalIndex = recommendations.findIndex(r =>
+                        r.collegeName === rec.collegeName &&
+                        r.branch === rec.branch &&
                         r.cutoff2025 === rec.cutoff2025
                       );
                       const isDragging = draggedIndex === originalIndex;
                       const isDragOver = dragOverIndex === originalIndex;
-                      
+
                       // Show controls in edit mode OR when viewing a saved list
                       const showEditControls = listMode === 'edit' || activeListIndex >= 0;
-                      
+
                       return (
                         <div
                           key={`${rec.collegeName}-${rec.branch}-${displayIdx}`}
@@ -2253,8 +2247,8 @@ export const App: React.FC = () => {
                           onDragEnd={handleDragEnd}
                           className={`transition-all duration-300 ${isDragging ? 'opacity-50 scale-[1.02]' : ''} ${isDragOver ? 'border-yellow-500' : ''} ${showEditControls ? 'cursor-grab active:cursor-grabbing' : ''}`}
                         >
-                          <CollegeCard 
-                            data={rec} 
+                          <CollegeCard
+                            data={rec}
                             index={displayIdx}
                             totalCount={displayedRecommendations.length}
                             onMoveUp={showEditControls ? () => handleMoveUp(originalIndex) : undefined}
@@ -2267,75 +2261,75 @@ export const App: React.FC = () => {
                         </div>
                       );
                     })}
-                    
+
                     {/* Show More / Show Less button at bottom of list */}
                     {filteredRecommendations.length > 10 && (
-                      <button 
+                      <button
                         onClick={() => setShowAll(!showAll)}
                         className={`w-full py-3 mt-2 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${theme === 'dark' ? 'bg-slate-800/80 text-yellow-400 hover:bg-yellow-900/30 border border-slate-700' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-200'}`}
                       >
                         {showAll ? (
                           <>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
                             Show Less
                           </>
                         ) : (
                           <>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                             Show {filteredRecommendations.length - 10} More Colleges
                           </>
                         )}
                       </button>
                     )}
-                 </div>
-              </div>
-           ) : (
-              <div className={`flex-1 flex flex-col items-center justify-center p-8 text-center ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>
-                 <p className={`text-lg font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>No colleges match your criteria.</p>
-                 <p className="text-sm mt-2 text-slate-500">Try adjusting your rank or preferences.</p>
-              </div>
-           )}
-        </div>
-        </div>
-      </section>
+                  </div>
+                </div>
+              ) : (
+                <div className={`flex-1 flex flex-col items-center justify-center p-8 text-center ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <p className={`text-lg font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>No colleges match your criteria.</p>
+                  <p className="text-sm mt-2 text-slate-500">Try adjusting your rank or preferences.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
 
-      {/* Footer Section - Plain text disclaimer */}
-      <section className={`w-full py-6 pb-20 border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}>
-        <div className="px-6 max-w-7xl mx-auto text-center space-y-3">
-          <p className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-            SeatSathi AI is currently under development. Responses are generated by AI and may vary, please verify important details from official sources.
-          </p>
-          <a 
-            href="https://cetonline.karnataka.gov.in/kea/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className={`inline-flex items-center gap-1 text-xs hover:underline ${theme === 'dark' ? 'text-yellow-500 hover:text-yellow-400' : 'text-yellow-600 hover:text-yellow-500'}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
-            Visit KEA Official Website
-          </a>
-          <p className={`text-xs ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>
-            © 2026 SeatSathi. All rights reserved.
-          </p>
-        </div>
-      </section>
+        {/* Footer Section - Plain text disclaimer */}
+        <section className={`w-full py-6 pb-20 border-t ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}>
+          <div className="px-6 max-w-7xl mx-auto text-center space-y-3">
+            <p className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+              SeatSathi AI is currently under development. Responses are generated by AI and may vary, please verify important details from official sources.
+            </p>
+            <a
+              href="https://cetonline.karnataka.gov.in/kea/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-1 text-xs hover:underline ${theme === 'dark' ? 'text-yellow-500 hover:text-yellow-400' : 'text-yellow-600 hover:text-yellow-500'}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" /></svg>
+              Visit KEA Official Website
+            </a>
+            <p className={`text-xs ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>
+              © 2026 SeatSathi. All rights reserved.
+            </p>
+          </div>
+        </section>
 
-      {/* End Call Confirmation Modal */}
-      <ConfirmModal
-        isOpen={showEndCallConfirm}
-        onClose={() => setShowEndCallConfirm(false)}
-        onConfirm={() => {
-          setShowEndCallConfirm(false);
-          handleDisconnect();
-        }}
-        title="End Call"
-        message="Are you sure you want to end this call? Your current conversation will be saved."
-        confirmText="End Call"
-        cancelText="Continue"
-        confirmStyle="danger"
-        theme={theme}
-      />
-    </div>
+        {/* End Call Confirmation Modal */}
+        <ConfirmModal
+          isOpen={showEndCallConfirm}
+          onClose={() => setShowEndCallConfirm(false)}
+          onConfirm={() => {
+            setShowEndCallConfirm(false);
+            handleDisconnect();
+          }}
+          title="End Call"
+          message="Are you sure you want to end this call? Your current conversation will be saved."
+          confirmText="End Call"
+          cancelText="Continue"
+          confirmStyle="danger"
+          theme={theme}
+        />
+      </div>
     </ThemeContext.Provider>
   );
 };
