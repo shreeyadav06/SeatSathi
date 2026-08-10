@@ -180,18 +180,21 @@ SPECIAL BRANCHES:
    - The system will automatically show college cards on screen, so just confirm you found options.
    - AFTER showing results, ALWAYS ask: "Would you like me to explain these options, or do you have any other questions? I'm here to help!"
 
-CRITICAL - WHEN TO USE find_matching_colleges TOOL:
-- ONLY use find_matching_colleges when user EXPLICITLY asks for college list/recommendations
+CRITICAL - WHEN TO USE findMatchingCollegesTask TOOL:
+- ONLY use findMatchingCollegesTask when user EXPLICITLY asks for college list/recommendations
 - Examples of when TO use: "find colleges for rank 5000", "show colleges", "what can I get", "update list with rank X"
 - Examples of when NOT to use: "tell me about RV College", "is RVCE good?", "what courses does BMS offer?"
-- For questions about specific colleges, use get_specific_college_cutoff instead - this does NOT update the list
+- For questions about specific colleges, use getSpecificCollegeCutoffTask instead - this does NOT update the list
 - DO NOT update the college list when user is just asking general questions about a college!
 - DO NOT announce or narrate that you are using a tool. NEVER say things like "I am employing the tool", "Let me fetch from the database", or "I'll use the tool now". JUST CALL THE TOOL SILENTLY!
 - YOUR SPEECH MUST BE NATURAL. Any system actions (tool calls) must happen silently in the background without you talking about them.
+- EXTREMELY IMPORTANT RULE: You are an API backend agent when it comes to tool calls. If you need to use a tool, ONLY output the JSON tool call payload. NEVER output any conversational text or filler words before or after the tool call.
+  - User: "Show me colleges for rank 5000"
+  - You: [SILENT TOOL CALL execution only]
 
  COLLEGE-SPECIFIC QUERIES (CRITICAL):
 When user asks about a specific college like "Tell me about RV University" or "E285 details":
-1. Use get_specific_college_cutoff tool with the college code (e.g., E285) or name
+1. Use getSpecificCollegeCutoffTask tool with the college code (e.g., E285) or name
 2. From the tool response, provide detailed information including:
    - Full college name and location (district)
    - All courses/branches offered at that college
@@ -978,7 +981,8 @@ export const App: React.FC = () => {
       const { GoogleGenAI, Modality } = await loadGenAI();
 
       // We pass a dummy key because the actual API key is safely stored in our Cloudflare proxy
-      const ai = new GoogleGenAI({ apiKey: 'proxy-enabled' });
+      // We MUST force v1alpha because the native-audio-preview model requires it for BidiGenerateContent
+      const ai = new GoogleGenAI({ apiKey: 'proxy-enabled', apiVersion: 'v1alpha' });
 
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const inputCtx = new AudioContextClass();
@@ -1018,11 +1022,13 @@ export const App: React.FC = () => {
       // Proxy interceptor: route traffic through our secure Cloudflare Worker
       const OriginalWebSocket = window.WebSocket;
       window.WebSocket = function (url: string | URL, protocols?: string | string[]) {
+        const urlStr = url.toString();
         try {
-          const parsedUrl = new URL(url.toString(), window.location.href);
-          if (parsedUrl.hostname === 'generativelanguage.googleapis.com') {
+          if (urlStr.includes('generativelanguage.googleapis.com')) {
             console.log("Proxying Gemini WebSocket connection...");
-            return new OriginalWebSocket('wss://seatsathi-proxy.seatsathi.workers.dev', protocols);
+            const parsedUrl = new URL(urlStr);
+            const proxyUrl = 'wss://seatsathi-proxy.seatsathi.workers.dev' + parsedUrl.pathname + parsedUrl.search;
+            return new OriginalWebSocket(proxyUrl, protocols);
           }
         } catch {
           // If URL parsing fails, fall back to original behavior.
@@ -1198,7 +1204,7 @@ export const App: React.FC = () => {
                 console.log("Executing tool:", fc.name, fc.args);
 
                 try {
-                  if (fc.name === 'find_matching_colleges') {
+                  if (fc.name === 'findMatchingCollegesTask') {
                     const { rank, category, course, location } = fc.args as any;
                     const recs = await findMatchingColleges(Number(rank), String(category), String(course), String(location));
                     setRecommendations(recs);
@@ -1211,7 +1217,7 @@ export const App: React.FC = () => {
                       message: "UI updated successfully. Tell the user to scroll down to view the full list.",
                       top_matches: recs.slice(0, 3).map(r => r.collegeName)
                     };
-                  } else if (fc.name === 'get_specific_college_cutoff') {
+                  } else if (fc.name === 'getSpecificCollegeCutoffTask') {
                     const { collegeName, category, course } = fc.args as any;
                     const cutoffData = await getSpecificCollegeCutoff(String(collegeName), String(category), String(course));
                     // Keep it small to avoid websocket limits
@@ -1242,7 +1248,7 @@ export const App: React.FC = () => {
                   });
                   // Add success feedback to logs
                   const toolName = functionResponses[0]?.name || 'tool';
-                  if (toolName === 'find_matching_colleges') {
+                  if (toolName === 'findMatchingCollegesTask') {
                     const count = (functionResponses[0]?.response as any)?.result?.found || 0;
                     addLog(`Found ${count} matching colleges - scroll down to view!`, 'system');
                   }
@@ -1888,8 +1894,8 @@ export const App: React.FC = () => {
                     disabled={!isConnected}
                     placeholder={isConnected ? "Message..." : "Connect to chat..."}
                     className={`w-full px-4 py-3 pr-12 rounded-full border backdrop-blur-xl outline-none transition-all ${theme === 'dark'
-                        ? 'bg-[#1C1C1E]/80 border-[#2C2C2E] text-white placeholder-[#8E8E93] focus:border-[#0A84FF]/50 focus:bg-[#1C1C1E]'
-                        : 'bg-white/80 border-[#E5E5EA] text-[#1C1C1E] placeholder-[#8E8E93] focus:border-[#007AFF]/50 focus:bg-white'
+                      ? 'bg-[#1C1C1E]/80 border-[#2C2C2E] text-white placeholder-[#8E8E93] focus:border-[#0A84FF]/50 focus:bg-[#1C1C1E]'
+                      : 'bg-white/80 border-[#E5E5EA] text-[#1C1C1E] placeholder-[#8E8E93] focus:border-[#007AFF]/50 focus:bg-white'
                       }`}
                   />
                   <motion.button
@@ -1898,8 +1904,8 @@ export const App: React.FC = () => {
                     type="submit"
                     disabled={!isConnected || !textInput.trim()}
                     className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${!isConnected || !textInput.trim()
-                        ? 'text-[#8E8E93] opacity-50 cursor-not-allowed'
-                        : 'text-white bg-[#007AFF] hover:bg-[#007AFF]/90'
+                      ? 'text-[#8E8E93] opacity-50 cursor-not-allowed'
+                      : 'text-white bg-[#007AFF] hover:bg-[#007AFF]/90'
                       }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -1949,10 +1955,10 @@ export const App: React.FC = () => {
                     {logs.length === 0 && <div className={`text-center text-xs italic mt-6 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Conversation will appear here</div>}
                     {logs.map((log, i) => (
                       <div key={i} className={`text-xs md:text-sm px-4 py-2.5 max-w-[95%] ${log.type === 'system'
-                          ? `mx-auto italic text-center rounded-full border ${theme === 'dark' ? 'text-slate-400 bg-[#0d1829] border-[#1e3a5f]' : 'text-slate-400 bg-slate-100 border-slate-200'}`
-                          : log.type === 'agent'
-                            ? `mr-auto rounded-full border ${theme === 'dark' ? 'bg-[#0d1829] text-slate-200 border-[#1e3a5f]' : 'bg-slate-100 text-slate-700 border-slate-200'}`
-                            : `ml-auto rounded-full text-right border ${theme === 'dark' ? 'bg-yellow-500/10 text-yellow-100 border-yellow-500/20' : 'bg-yellow-50 text-yellow-800 border-yellow-200'}`
+                        ? `mx-auto italic text-center rounded-full border ${theme === 'dark' ? 'text-slate-400 bg-[#0d1829] border-[#1e3a5f]' : 'text-slate-400 bg-slate-100 border-slate-200'}`
+                        : log.type === 'agent'
+                          ? `mr-auto rounded-full border ${theme === 'dark' ? 'bg-[#0d1829] text-slate-200 border-[#1e3a5f]' : 'bg-slate-100 text-slate-700 border-slate-200'}`
+                          : `ml-auto rounded-full text-right border ${theme === 'dark' ? 'bg-yellow-500/10 text-yellow-100 border-yellow-500/20' : 'bg-yellow-50 text-yellow-800 border-yellow-200'}`
                         }`}>
                         {log.text}
                       </div>
@@ -1986,8 +1992,8 @@ export const App: React.FC = () => {
                   <button
                     onClick={handleToggleMute}
                     className={`p-2.5 rounded-full transition-all flex items-center justify-center ${isMuted
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30'
-                        : 'bg-slate-900 text-slate-300 border border-slate-700 hover:bg-slate-800'
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30'
+                      : 'bg-slate-900 text-slate-300 border border-slate-700 hover:bg-slate-800'
                       }`}
                     title={isMuted ? "Unmute microphone" : "Mute microphone"}
                   >
@@ -2080,10 +2086,10 @@ export const App: React.FC = () => {
                           <button
                             onClick={() => setShowAll(!showAll)}
                             className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${showAll
-                                ? theme === 'dark'
-                                  ? 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                                  : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                                : 'bg-yellow-500 text-slate-900 hover:bg-yellow-400'
+                              ? theme === 'dark'
+                                ? 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                              : 'bg-yellow-500 text-slate-900 hover:bg-yellow-400'
                               }`}
                           >
                             {showAll ? (
