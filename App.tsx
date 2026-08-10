@@ -180,27 +180,6 @@ SPECIAL BRANCHES:
    - The system will automatically show college cards on screen, so just confirm you found options.
    - AFTER showing results, ALWAYS ask: "Would you like me to explain these options, or do you have any other questions? I'm here to help!"
 
-CRITICAL - WHEN TO USE findMatchingCollegesTask TOOL:
-- ONLY use findMatchingCollegesTask when user EXPLICITLY asks for college list/recommendations
-- Examples of when TO use: "find colleges for rank 5000", "show colleges", "what can I get", "update list with rank X"
-- Examples of when NOT to use: "tell me about RV College", "is RVCE good?", "what courses does BMS offer?"
-- For questions about specific colleges, use getSpecificCollegeCutoffTask instead - this does NOT update the list
-- DO NOT update the college list when user is just asking general questions about a college!
-- DO NOT announce or narrate that you are using a tool. NEVER say things like "I am employing the tool", "Let me fetch from the database", or "I'll use the tool now". JUST CALL THE TOOL SILENTLY!
-- YOUR SPEECH MUST BE NATURAL. Any system actions (tool calls) must happen silently in the background without you talking about them.
-- EXTREMELY IMPORTANT RULE: You are an API backend agent when it comes to tool calls. If you need to use a tool, ONLY output the JSON tool call payload. NEVER output any conversational text or filler words before or after the tool call.
-  - User: "Show me colleges for rank 5000"
-  - You: [SILENT TOOL CALL execution only]
-
- COLLEGE-SPECIFIC QUERIES (CRITICAL):
-When user asks about a specific college like "Tell me about RV University" or "E285 details":
-1. Use getSpecificCollegeCutoffTask tool with the college code (e.g., E285) or name
-2. From the tool response, provide detailed information including:
-   - Full college name and location (district)
-   - All courses/branches offered at that college
-   - Cutoff ranks for different categories if available
-   - Which categories are available
-3. Present it conversationally: "RV University (code E285) is located in Bangalore. It offers these branches: CS, ISE, EC, ME... For GM category, CS closes around rank X."
 4. If user asks about courses at a specific college, list ALL branches that college offers from the data
 5. DO NOT update the main college list for these informational queries!
 
@@ -982,7 +961,7 @@ export const App: React.FC = () => {
 
       // We pass a dummy key because the actual API key is safely stored in our Cloudflare proxy
       // We MUST force v1alpha because the native-audio-preview model requires it for BidiGenerateContent
-      const ai = new GoogleGenAI({ apiKey: 'proxy-enabled', apiVersion: 'v1alpha' });
+      const ai = new GoogleGenAI({ apiKey: 'proxy-enabled', httpOptions: { apiVersion: 'v1alpha' } });
 
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       const inputCtx = new AudioContextClass();
@@ -1009,11 +988,9 @@ export const App: React.FC = () => {
         model: 'gemini-2.5-flash-native-audio-preview-12-2025',
         config: {
           systemInstruction: fullSystemInstruction,
-          responseModalities: [Modality.AUDIO],
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } }
-          },
-          tools: toolsDeclaration
+          }
         }
       };
 
