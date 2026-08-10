@@ -186,6 +186,8 @@ CRITICAL - WHEN TO USE find_matching_colleges TOOL:
 - Examples of when NOT to use: "tell me about RV College", "is RVCE good?", "what courses does BMS offer?"
 - For questions about specific colleges, use get_specific_college_cutoff instead - this does NOT update the list
 - DO NOT update the college list when user is just asking general questions about a college!
+- DO NOT announce or narrate that you are using a tool. NEVER say things like "I am employing the tool", "Let me fetch from the database", or "I'll use the tool now". JUST CALL THE TOOL SILENTLY!
+- YOUR SPEECH MUST BE NATURAL. Any system actions (tool calls) must happen silently in the background without you talking about them.
 
  COLLEGE-SPECIFIC QUERIES (CRITICAL):
 When user asks about a specific college like "Tell me about RV University" or "E285 details":
@@ -825,6 +827,9 @@ export const App: React.FC = () => {
         setUser(authUser);
       });
     });
+    
+    // Preload GenAI module in the background so it's ready when user clicks Start
+    loadGenAI().catch(e => console.error("Failed to preload GenAI module", e));
     
     return () => {
       if (unsubscribe) unsubscribe();
