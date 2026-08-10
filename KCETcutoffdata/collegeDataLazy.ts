@@ -49,7 +49,12 @@ export async function loadCollegeData(): Promise<Colleges> {
       if (!response.ok) {
         throw new Error(`Failed to fetch college data: ${response.statusText}`);
       }
-      cachedColleges = await response.json();
+      const json = await response.json();
+      if (json.metadata && json.colleges) {
+        cachedColleges = json.colleges;
+      } else {
+        cachedColleges = json;
+      }
       console.log(`Successfully loaded ${Object.keys(cachedColleges || {}).length} colleges.`);
       return cachedColleges!;
     } catch (err) {
