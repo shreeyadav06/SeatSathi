@@ -273,52 +273,55 @@ export const findMatchingColleges = async (
 ): Promise<CollegeRecommendation[]> => {
   const startTime = performance.now();
   
-  // Parse multiple courses and locations
+  // Parse multiple courses, locations, and categories
+  const categories = category.split(',').map(c => c.trim()).filter(c => c.length > 0);
   const courses = course.split(',').map(c => c.trim()).filter(c => c.length > 0);
   const locations = location.split(',').map(l => l.trim()).filter(l => l.length > 0);
   
-  console.log(`Searching for courses: [${courses.join(', ')}] in locations: [${locations.join(', ')}]`);
+  console.log(`Searching for categories: [${categories.join(', ')}], courses: [${courses.join(', ')}] in locations: [${locations.join(', ')}]`);
   
-  // Collect results from all course/location combinations
+  // Collect results from all category/course/location combinations
   const allResults: CollegeRecommendation[] = [];
   const seenKeys = new Set<string>();
   
-  for (const singleCourse of courses) {
-    for (const singleLocation of locations) {
-      let results: CollegeRecommendation[] = [];
-      
-      // Try to use database for fast queries
-      if (useDatabase) {
-        try {
-          const result = await findMatchingCollegesFast(rank, category, singleCourse, singleLocation);
-          console.log(`[DB Query] Found ${result.recommendations.length} colleges for ${singleCourse}/${singleLocation} in ${result.queryTimeMs}ms`);
-          results = result.recommendations;
-        } catch (error) {
-          console.warn('Database query failed, falling back to in-memory:', error);
-          results = await findMatchingCollegesLegacy(rank, category, singleCourse, singleLocation);
+  for (const singleCategory of categories) {
+    for (const singleCourse of courses) {
+      for (const singleLocation of locations) {
+        let results: CollegeRecommendation[] = [];
+        
+        // Try to use database for fast queries
+        if (useDatabase) {
+          try {
+            const result = await findMatchingCollegesFast(rank, singleCategory, singleCourse, singleLocation);
+            console.log(`[DB Query] Found ${result.recommendations.length} colleges for ${singleCategory}/${singleCourse}/${singleLocation} in ${result.queryTimeMs}ms`);
+            results = result.recommendations;
+          } catch (error) {
+            console.warn('Database query failed, falling back to in-memory:', error);
+            results = await findMatchingCollegesLegacy(rank, singleCategory, singleCourse, singleLocation);
+          }
+        } else {
+          results = await findMatchingCollegesLegacy(rank, singleCategory, singleCourse, singleLocation);
         }
-      } else {
-        results = await findMatchingCollegesLegacy(rank, category, singleCourse, singleLocation);
-      }
-      
-      // Also search PDF data if available
-      if (hasPdfData()) {
-        const pdfResults = searchPdfColleges(rank, category, singleCourse, singleLocation);
-        console.log(`[PDF Search] Found ${pdfResults.length} additional colleges from uploaded PDF`);
-        results = [...results, ...pdfResults];
-      }
-      
-      // Add unique results, tagging with course and location
-      for (const rec of results) {
-        const uniqueKey = `${rec.collegeName}|${rec.branch}|${rec.cutoff2025}`;
-        if (!seenKeys.has(uniqueKey)) {
-          seenKeys.add(uniqueKey);
-          // Add course/location metadata for filtering
-          allResults.push({
-            ...rec,
-            searchCourse: singleCourse,
-            searchLocation: singleLocation
-          } as CollegeRecommendation & { searchCourse: string; searchLocation: string });
+        
+        // Also search PDF data if available
+        if (hasPdfData()) {
+          const pdfResults = searchPdfColleges(rank, singleCategory, singleCourse, singleLocation);
+          console.log(`[PDF Search] Found ${pdfResults.length} additional colleges from uploaded PDF`);
+          results = [...results, ...pdfResults];
+        }
+        
+        // Add unique results, tagging with course and location
+        for (const rec of results) {
+          const uniqueKey = `${rec.collegeName}|${rec.branch}|${rec.cutoff2025}|${singleCategory}`;
+          if (!seenKeys.has(uniqueKey)) {
+            seenKeys.add(uniqueKey);
+            // Add course/location metadata for filtering
+            allResults.push({
+              ...rec,
+              searchCourse: singleCourse,
+              searchLocation: singleLocation
+            } as CollegeRecommendation & { searchCourse: string; searchLocation: string });
+          }
         }
       }
     }

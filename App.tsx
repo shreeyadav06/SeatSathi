@@ -651,11 +651,14 @@ export const App: React.FC = () => {
       // Category 1
       { pattern: /\bcategory\s*(?:1|one)\b/i, value: '1G' },
     ];
+    const foundCategories: string[] = [];
     for (const { pattern, value } of categoryPatterns) {
-      if (pattern.test(lowerText)) {
-        foundCategory = value;
-        break;
+      if (pattern.test(lowerText) && !foundCategories.includes(value)) {
+        foundCategories.push(value);
       }
+    }
+    if (foundCategories.length > 0) {
+      foundCategory = foundCategories.join(',');
     }
 
     // Extract course
@@ -664,6 +667,11 @@ export const App: React.FC = () => {
       { pattern: /\bcse\b/i, value: 'CS' },
       { pattern: /\bcs\b/i, value: 'CS' },
       { pattern: /\bcomputer\b/i, value: 'CS' },
+      { pattern: /\bartificial\s*intelligence\b/i, value: 'AI' },
+      { pattern: /\bai\b/i, value: 'AI' },
+      { pattern: /\baiml\b/i, value: 'AI' },
+      { pattern: /\bmachine\s*learning\b/i, value: 'AI' },
+      { pattern: /\bai\s*and\s*ml\b/i, value: 'AI' },
       { pattern: /\belectronics\b/i, value: 'EC' },
       { pattern: /\bece\b/i, value: 'EC' },
       { pattern: /\bec\b/i, value: 'EC' },
@@ -753,7 +761,14 @@ export const App: React.FC = () => {
     }
     if (foundCategory !== null) {
       console.log("Detected new category:", foundCategory);
-      setDetectedCategory(foundCategory);
+      setDetectedCategory(prev => {
+        if (!prev) return foundCategory;
+        if (/\b(?:and|also|both|,)\b/i.test(lowerText)) {
+          const combined = Array.from(new Set([...prev.split(','), ...foundCategory!.split(',')])).filter(Boolean).join(',');
+          return combined;
+        }
+        return foundCategory;
+      });
     }
     if (foundCourse !== null) {
       console.log("Detected new course:", foundCourse);
