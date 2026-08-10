@@ -680,11 +680,14 @@ export const App: React.FC = () => {
       { pattern: /\bautomation\b/i, value: 'Robotics' },
       { pattern: /\brobot\b/i, value: 'Robotics' },
     ];
+    const foundCourses: string[] = [];
     for (const { pattern, value } of coursePatterns) {
-      if (pattern.test(lowerText)) {
-        foundCourse = value;
-        break;
+      if (pattern.test(lowerText) && !foundCourses.includes(value)) {
+        foundCourses.push(value);
       }
+    }
+    if (foundCourses.length > 0) {
+      foundCourse = foundCourses.join(',');
     }
 
     // Extract location (comprehensive Karnataka cities + common voice misspellings)
@@ -733,11 +736,14 @@ export const App: React.FC = () => {
       { pattern: /\ball\s*(?:over|locations?|cities?)\b/i, value: 'anywhere' },
       { pattern: /\bkarnataka\b/i, value: 'anywhere' },
     ];
+    const foundLocations: string[] = [];
     for (const { pattern, value } of locationPatterns) {
-      if (pattern.test(lowerText)) {
-        foundLocation = value;
-        break;
+      if (pattern.test(lowerText) && !foundLocations.includes(value)) {
+        foundLocations.push(value);
       }
+    }
+    if (foundLocations.length > 0) {
+      foundLocation = foundLocations.join(',');
     }
 
     // Only update state if we found new values in THIS message
@@ -751,11 +757,25 @@ export const App: React.FC = () => {
     }
     if (foundCourse !== null) {
       console.log("Detected new course:", foundCourse);
-      setDetectedCourse(foundCourse);
+      setDetectedCourse(prev => {
+        if (!prev) return foundCourse;
+        if (/\b(?:and|also|both|,)\b/i.test(lowerText)) {
+          const combined = Array.from(new Set([...prev.split(','), ...foundCourse!.split(',')])).filter(Boolean).join(',');
+          return combined;
+        }
+        return foundCourse;
+      });
     }
     if (foundLocation !== null) {
       console.log("Detected new location:", foundLocation);
-      setDetectedLocation(foundLocation);
+      setDetectedLocation(prev => {
+        if (!prev) return foundLocation;
+        if (/\b(?:and|also|both|,)\b/i.test(lowerText)) {
+          const combined = Array.from(new Set([...prev.split(','), ...foundLocation!.split(',')])).filter(Boolean).join(',');
+          return combined;
+        }
+        return foundLocation;
+      });
     }
   }, []);
 
