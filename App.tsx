@@ -263,24 +263,45 @@ import { LandingPage } from './components/LandingPage';
 
 const TypewriterCaption: React.FC<{text: string}> = ({ text }) => {
   const [displayed, setDisplayed] = useState("");
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     
     if (text.startsWith(displayed) && text.length > displayed.length) {
       // Adding text
+      setIsVisible(true);
       timeout = setTimeout(() => {
         setDisplayed(text.substring(0, displayed.length + 3));
       }, 30);
     } else if (text !== displayed) {
       // Text was reset or completely changed
+      setIsVisible(true);
       setDisplayed(text.substring(0, 3));
+    } else if (text === displayed && displayed.length > 0) {
+      // Finished typing, hide after 3 seconds
+      timeout = setTimeout(() => {
+        setIsVisible(false);
+      }, 3000);
     }
     
     return () => clearTimeout(timeout);
   }, [text, displayed]);
 
-  return <>{displayed}</>;
+  // Extract only the current sentence to show
+  const getVisibleText = (fullText: string) => {
+    const matches = [...fullText.matchAll(/([.?!])\s+/g)];
+    if (matches.length > 0) {
+      const lastMatch = matches[matches.length - 1];
+      const startIndex = lastMatch.index! + lastMatch[0].length;
+      return fullText.substring(startIndex);
+    }
+    return fullText;
+  };
+
+  if (!isVisible || !displayed) return null;
+
+  return <>{getVisibleText(displayed)}</>;
 };
 
 // --- Main Application ---
