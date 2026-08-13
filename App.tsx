@@ -269,20 +269,20 @@ const TypewriterCaption: React.FC<{text: string}> = ({ text }) => {
     let timeout: NodeJS.Timeout;
     
     if (text.startsWith(displayed) && text.length > displayed.length) {
-      // Adding text
+      // Adding text (1 char at a time for natural speech speed)
       setIsVisible(true);
       timeout = setTimeout(() => {
-        setDisplayed(text.substring(0, displayed.length + 3));
-      }, 30);
+        setDisplayed(text.substring(0, displayed.length + 1));
+      }, 40);
     } else if (text !== displayed) {
       // Text was reset or completely changed
       setIsVisible(true);
-      setDisplayed(text.substring(0, 3));
+      setDisplayed(text.substring(0, 1));
     } else if (text === displayed && displayed.length > 0) {
-      // Finished typing, hide after 3 seconds
+      // Finished typing, hide after 5 seconds to ensure audio finishes playing
       timeout = setTimeout(() => {
         setIsVisible(false);
-      }, 3000);
+      }, 5000);
     }
     
     return () => clearTimeout(timeout);
