@@ -708,44 +708,75 @@ export const App: React.FC = () => {
 
     // Extract location (comprehensive Karnataka cities + common voice misspellings)
     const locationPatterns = [
+      // Bangalore
       { pattern: /\bbangalore\b/i, value: 'bangalore' },
       { pattern: /\bbengaluru\b/i, value: 'bangalore' },
       { pattern: /\bblr\b/i, value: 'bangalore' },
+      { pattern: /\bb'lore\b/i, value: 'bangalore' },
+      { pattern: /\bblore\b/i, value: 'bangalore' },
+      // Mysore
       { pattern: /\bmysore\b/i, value: 'mysore' },
       { pattern: /\bmysuru\b/i, value: 'mysore' },
+      { pattern: /\bmys\b/i, value: 'mysore' },
+      // Mangalore
       { pattern: /\bmangalore\b/i, value: 'mangalore' },
       { pattern: /\bmangaluru\b/i, value: 'mangalore' },
+      { pattern: /\bmlr\b/i, value: 'mangalore' },
+      // Hubli-Dharwad
       { pattern: /\bhubli\b/i, value: 'hubli' },
+      { pattern: /\bhubballi\b/i, value: 'hubli' },
       { pattern: /\bdharwad\b/i, value: 'hubli' },
-      // Belgaum / Belagavi — common voice misrecognitions
+      { pattern: /\bhbd\b/i, value: 'hubli' },
+      // Belgaum / Belagavi
       { pattern: /\bbelgaum\b/i, value: 'belgaum' },
       { pattern: /\bbelagavi\b/i, value: 'belgaum' },
+      { pattern: /\bbgm\b/i, value: 'belgaum' },
       { pattern: /\bbelgau\b/i, value: 'belgaum' },
       { pattern: /\bbelgam\b/i, value: 'belgaum' },
       { pattern: /\bbelgav\b/i, value: 'belgaum' },
       { pattern: /\bbel\s*gaum\b/i, value: 'belgaum' },
       { pattern: /\bbela\s*gavi\b/i, value: 'belgaum' },
-      // Other Karnataka cities
+      // Gulbarga / Kalaburagi
       { pattern: /\bgulbarga\b/i, value: 'gulbarga' },
       { pattern: /\bkalaburagi\b/i, value: 'gulbarga' },
-      { pattern: /\bdavangere\b/i, value: 'davangere' },
-      { pattern: /\bdavanagere\b/i, value: 'davangere' },
+      { pattern: /\bklb\b/i, value: 'gulbarga' },
+      // Shimoga / Shivamogga
       { pattern: /\bshimoga\b/i, value: 'shimoga' },
       { pattern: /\bshivamogga\b/i, value: 'shimoga' },
+      { pattern: /\bsmg\b/i, value: 'shimoga' },
+      // Davangere
+      { pattern: /\bdavangere\b/i, value: 'davangere' },
+      { pattern: /\bdavanagere\b/i, value: 'davangere' },
+      { pattern: /\bdvg\b/i, value: 'davangere' },
+      // Tumkur
       { pattern: /\btumkur\b/i, value: 'tumkur' },
       { pattern: /\btumakuru\b/i, value: 'tumkur' },
-      { pattern: /\bhassan\b/i, value: 'hassan' },
-      { pattern: /\bmandya\b/i, value: 'mandya' },
-      { pattern: /\braichur\b/i, value: 'raichur' },
+      { pattern: /\btmk\b/i, value: 'tumkur' },
+      // Bellary / Ballari
       { pattern: /\bbellary\b/i, value: 'bellary' },
       { pattern: /\bballari\b/i, value: 'bellary' },
+      { pattern: /\bbly\b/i, value: 'bellary' },
+      // Bijapur / Vijayapura
+      { pattern: /\bbijapur\b/i, value: 'bijapur' },
+      { pattern: /\bvijayapura\b/i, value: 'bijapur' },
+      { pattern: /\bbjp\b/i, value: 'bijapur' },
+      // Hassan
+      { pattern: /\bhassan\b/i, value: 'hassan' },
+      { pattern: /\bhsn\b/i, value: 'hassan' },
+      // Udupi
+      { pattern: /\budupi\b/i, value: 'udupi' },
+      { pattern: /\budp\b/i, value: 'udupi' },
+      // Chikmagalur
+      { pattern: /\bchikmagalur\b/i, value: 'chikmagalur' },
+      { pattern: /\bchikkamagaluru\b/i, value: 'chikmagalur' },
+      { pattern: /\bckm\b/i, value: 'chikmagalur' },
+      // Others
+      { pattern: /\bmandya\b/i, value: 'mandya' },
+      { pattern: /\braichur\b/i, value: 'raichur' },
       { pattern: /\bbidar\b/i, value: 'bidar' },
       { pattern: /\bchitradurga\b/i, value: 'chitradurga' },
       { pattern: /\bkolar\b/i, value: 'kolar' },
-      { pattern: /\budupi\b/i, value: 'udupi' },
-      { pattern: /\bchikmagalur\b/i, value: 'chikmagalur' },
       { pattern: /\bbagalkot\b/i, value: 'bagalkot' },
-      { pattern: /\bbijapur\b/i, value: 'bijapur' },
       { pattern: /\bgadag\b/i, value: 'gadag' },
       { pattern: /\bhospet\b/i, value: 'hospet' },
       { pattern: /\banywhere\b/i, value: 'anywhere' },
