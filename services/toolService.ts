@@ -315,12 +315,13 @@ export const findMatchingColleges = async (
           const uniqueKey = `${rec.collegeName}|${rec.branch}|${rec.cutoff2025}|${singleCategory}`;
           if (!seenKeys.has(uniqueKey)) {
             seenKeys.add(uniqueKey);
-            // Add course/location metadata for filtering
+            // Add course/location/category metadata for filtering
             allResults.push({
               ...rec,
               searchCourse: singleCourse,
-              searchLocation: singleLocation
-            } as CollegeRecommendation & { searchCourse: string; searchLocation: string });
+              searchLocation: singleLocation,
+              searchCategory: singleCategory
+            } as CollegeRecommendation & { searchCourse: string; searchLocation: string; searchCategory: string; });
           }
         }
       }

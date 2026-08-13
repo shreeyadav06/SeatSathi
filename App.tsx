@@ -531,14 +531,24 @@ export const App: React.FC = () => {
     let foundCourse: string | null = null;
     let foundLocation: string | null = null;
 
-    const rankMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{4,6})/i) ||
-      text.match(/(\d{4,6})\s*rank/i) ||
-      text.match(/\b(\d{4,6})\b/);
-    if (rankMatch) {
-      const rank = parseInt(rankMatch[1]);
-      if (rank >= 1000 && rank <= 200000) {
-        foundRank = rank;
+    let rank = null;
+
+    const kRankMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{1,3}(?:\.\d+)?)\s*k\b/i) ||
+      text.match(/(\d{1,3}(?:\.\d+)?)\s*k\s*rank/i) ||
+      text.match(/\b(\d{1,3}(?:\.\d+)?)\s*k\b/i);
+
+    if (kRankMatch) {
+      rank = Math.round(parseFloat(kRankMatch[1]) * 1000);
+    } else {
+      const normalMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{4,6})/i) ||
+        text.match(/(\d{4,6})\s*rank/i);
+      if (normalMatch) {
+        rank = parseInt(normalMatch[1]);
       }
+    }
+
+    if (rank !== null && rank >= 1000 && rank <= 200000) {
+      foundRank = rank;
     }
 
     // Extract category check from most specific to least
@@ -631,7 +641,6 @@ export const App: React.FC = () => {
       { pattern: /\bg\s*m\b/i, value: 'GM' },
       { pattern: /\bgm\b/i, value: 'GM' },
       { pattern: /\bgeneral\s*merit\b/i, value: 'GM' },
-      { pattern: /\bgeneral\b/i, value: 'GM' },
 
       // EWS variants
       { pattern: /\be\s*w\s*s\b/i, value: 'EWG' },
@@ -677,7 +686,6 @@ export const App: React.FC = () => {
       { pattern: /\bec\b/i, value: 'EC' },
       { pattern: /\bmechanical\b/i, value: 'ME' },
       { pattern: /\bmech\b/i, value: 'ME' },
-      { pattern: /\bme\b/i, value: 'ME' },
       { pattern: /\bcivil\b/i, value: 'CV' },
       { pattern: /\bcv\b/i, value: 'CV' },
       { pattern: /\belectrical\b/i, value: 'EE' },
@@ -700,43 +708,75 @@ export const App: React.FC = () => {
 
     // Extract location (comprehensive Karnataka cities + common voice misspellings)
     const locationPatterns = [
+      // Bangalore
       { pattern: /\bbangalore\b/i, value: 'bangalore' },
       { pattern: /\bbengaluru\b/i, value: 'bangalore' },
+      { pattern: /\bblr\b/i, value: 'bangalore' },
+      { pattern: /\bb'lore\b/i, value: 'bangalore' },
+      { pattern: /\bblore\b/i, value: 'bangalore' },
+      // Mysore
       { pattern: /\bmysore\b/i, value: 'mysore' },
       { pattern: /\bmysuru\b/i, value: 'mysore' },
+      { pattern: /\bmys\b/i, value: 'mysore' },
+      // Mangalore
       { pattern: /\bmangalore\b/i, value: 'mangalore' },
       { pattern: /\bmangaluru\b/i, value: 'mangalore' },
+      { pattern: /\bmlr\b/i, value: 'mangalore' },
+      // Hubli-Dharwad
       { pattern: /\bhubli\b/i, value: 'hubli' },
+      { pattern: /\bhubballi\b/i, value: 'hubli' },
       { pattern: /\bdharwad\b/i, value: 'hubli' },
-      // Belgaum / Belagavi — common voice misrecognitions
+      { pattern: /\bhbd\b/i, value: 'hubli' },
+      // Belgaum / Belagavi
       { pattern: /\bbelgaum\b/i, value: 'belgaum' },
       { pattern: /\bbelagavi\b/i, value: 'belgaum' },
+      { pattern: /\bbgm\b/i, value: 'belgaum' },
       { pattern: /\bbelgau\b/i, value: 'belgaum' },
       { pattern: /\bbelgam\b/i, value: 'belgaum' },
       { pattern: /\bbelgav\b/i, value: 'belgaum' },
       { pattern: /\bbel\s*gaum\b/i, value: 'belgaum' },
       { pattern: /\bbela\s*gavi\b/i, value: 'belgaum' },
-      // Other Karnataka cities
+      // Gulbarga / Kalaburagi
       { pattern: /\bgulbarga\b/i, value: 'gulbarga' },
       { pattern: /\bkalaburagi\b/i, value: 'gulbarga' },
-      { pattern: /\bdavangere\b/i, value: 'davangere' },
-      { pattern: /\bdavanagere\b/i, value: 'davangere' },
+      { pattern: /\bklb\b/i, value: 'gulbarga' },
+      // Shimoga / Shivamogga
       { pattern: /\bshimoga\b/i, value: 'shimoga' },
       { pattern: /\bshivamogga\b/i, value: 'shimoga' },
+      { pattern: /\bsmg\b/i, value: 'shimoga' },
+      // Davangere
+      { pattern: /\bdavangere\b/i, value: 'davangere' },
+      { pattern: /\bdavanagere\b/i, value: 'davangere' },
+      { pattern: /\bdvg\b/i, value: 'davangere' },
+      // Tumkur
       { pattern: /\btumkur\b/i, value: 'tumkur' },
       { pattern: /\btumakuru\b/i, value: 'tumkur' },
-      { pattern: /\bhassan\b/i, value: 'hassan' },
-      { pattern: /\bmandya\b/i, value: 'mandya' },
-      { pattern: /\braichur\b/i, value: 'raichur' },
+      { pattern: /\btmk\b/i, value: 'tumkur' },
+      // Bellary / Ballari
       { pattern: /\bbellary\b/i, value: 'bellary' },
       { pattern: /\bballari\b/i, value: 'bellary' },
+      { pattern: /\bbly\b/i, value: 'bellary' },
+      // Bijapur / Vijayapura
+      { pattern: /\bbijapur\b/i, value: 'bijapur' },
+      { pattern: /\bvijayapura\b/i, value: 'bijapur' },
+      { pattern: /\bbjp\b/i, value: 'bijapur' },
+      // Hassan
+      { pattern: /\bhassan\b/i, value: 'hassan' },
+      { pattern: /\bhsn\b/i, value: 'hassan' },
+      // Udupi
+      { pattern: /\budupi\b/i, value: 'udupi' },
+      { pattern: /\budp\b/i, value: 'udupi' },
+      // Chikmagalur
+      { pattern: /\bchikmagalur\b/i, value: 'chikmagalur' },
+      { pattern: /\bchikkamagaluru\b/i, value: 'chikmagalur' },
+      { pattern: /\bckm\b/i, value: 'chikmagalur' },
+      // Others
+      { pattern: /\bmandya\b/i, value: 'mandya' },
+      { pattern: /\braichur\b/i, value: 'raichur' },
       { pattern: /\bbidar\b/i, value: 'bidar' },
       { pattern: /\bchitradurga\b/i, value: 'chitradurga' },
       { pattern: /\bkolar\b/i, value: 'kolar' },
-      { pattern: /\budupi\b/i, value: 'udupi' },
-      { pattern: /\bchikmagalur\b/i, value: 'chikmagalur' },
       { pattern: /\bbagalkot\b/i, value: 'bagalkot' },
-      { pattern: /\bbijapur\b/i, value: 'bijapur' },
       { pattern: /\bgadag\b/i, value: 'gadag' },
       { pattern: /\bhospet\b/i, value: 'hospet' },
       { pattern: /\banywhere\b/i, value: 'anywhere' },
@@ -761,36 +801,15 @@ export const App: React.FC = () => {
     }
     if (foundCategory !== null) {
       console.log("Detected new category:", foundCategory);
-      setDetectedCategory(prev => {
-        if (!prev) return foundCategory;
-        if (/\b(?:and|also|both|,)\b/i.test(lowerText)) {
-          const combined = Array.from(new Set([...prev.split(','), ...foundCategory!.split(',')])).filter(Boolean).join(',');
-          return combined;
-        }
-        return foundCategory;
-      });
+      setDetectedCategory(foundCategory);
     }
     if (foundCourse !== null) {
       console.log("Detected new course:", foundCourse);
-      setDetectedCourse(prev => {
-        if (!prev) return foundCourse;
-        if (/\b(?:and|also|both|,)\b/i.test(lowerText)) {
-          const combined = Array.from(new Set([...prev.split(','), ...foundCourse!.split(',')])).filter(Boolean).join(',');
-          return combined;
-        }
-        return foundCourse;
-      });
+      setDetectedCourse(foundCourse);
     }
     if (foundLocation !== null) {
       console.log("Detected new location:", foundLocation);
-      setDetectedLocation(prev => {
-        if (!prev) return foundLocation;
-        if (/\b(?:and|also|both|,)\b/i.test(lowerText)) {
-          const combined = Array.from(new Set([...prev.split(','), ...foundLocation!.split(',')])).filter(Boolean).join(',');
-          return combined;
-        }
-        return foundLocation;
-      });
+      setDetectedLocation(foundLocation);
     }
   }, []);
 
@@ -974,6 +993,9 @@ export const App: React.FC = () => {
 
     // Send to Gemini Live API
     try {
+      // Process text for matching parameters before clearing
+      extractInfoFromText(textInput);
+      
       activeSessionRef.current.sendClientContent({
         turns: [{ role: "user", parts: [{ text: textInput }] }],
         turnComplete: true
@@ -1888,7 +1910,7 @@ export const App: React.FC = () => {
             <div className="flex w-full items-center justify-center">
 
               {/* Voice Agent - Centered in the viewport */}
-              <div className="flex flex-col items-center justify-center max-w-md">
+              <div className="flex flex-col items-center justify-center max-w-md w-full">
                 <Visualizer
                   state={visualizerState}
                   isMuted={isMuted}
@@ -1896,6 +1918,22 @@ export const App: React.FC = () => {
                   aiAudioLevel={aiAudioLevel}
                   userAudioLevel={userAudioLevel}
                 />
+
+                {/* Live Captions */}
+                {(liveCaption || userSpeechCaption) && (
+                  <div className="mt-6 w-full px-4 text-center animate-fade-in">
+                    {userSpeechCaption && (
+                      <p className="text-sm md:text-base font-medium text-[#0A84FF] mb-1 italic">
+                        {userSpeechCaption}
+                      </p>
+                    )}
+                    {liveCaption && (
+                      <p className={`text-base md:text-lg font-medium leading-relaxed ${theme === 'dark' ? 'text-[#F2F2F7]' : 'text-[#1C1C1E]'}`}>
+                        {liveCaption}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Text Input (Dual-Mode) */}
                 <form onSubmit={handleSendTextMessage} className="w-full max-w-sm mt-6 relative z-10">

@@ -9,6 +9,7 @@ export interface CollegeRecommendation {
   // Optional fields for multi-search tracking
   searchCourse?: string;
   searchLocation?: string;
+  searchCategory?: string;
   // Optional fields for additional data
   isPure?: boolean;
   collegeCode?: string;
