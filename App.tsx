@@ -532,8 +532,7 @@ export const App: React.FC = () => {
     let foundLocation: string | null = null;
 
     const rankMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{4,6})/i) ||
-      text.match(/(\d{4,6})\s*rank/i) ||
-      text.match(/\b(\d{4,6})\b/);
+      text.match(/(\d{4,6})\s*rank/i);
     if (rankMatch) {
       const rank = parseInt(rankMatch[1]);
       if (rank >= 1000 && rank <= 200000) {
@@ -631,7 +630,6 @@ export const App: React.FC = () => {
       { pattern: /\bg\s*m\b/i, value: 'GM' },
       { pattern: /\bgm\b/i, value: 'GM' },
       { pattern: /\bgeneral\s*merit\b/i, value: 'GM' },
-      { pattern: /\bgeneral\b/i, value: 'GM' },
 
       // EWS variants
       { pattern: /\be\s*w\s*s\b/i, value: 'EWG' },
@@ -677,7 +675,6 @@ export const App: React.FC = () => {
       { pattern: /\bec\b/i, value: 'EC' },
       { pattern: /\bmechanical\b/i, value: 'ME' },
       { pattern: /\bmech\b/i, value: 'ME' },
-      { pattern: /\bme\b/i, value: 'ME' },
       { pattern: /\bcivil\b/i, value: 'CV' },
       { pattern: /\bcv\b/i, value: 'CV' },
       { pattern: /\belectrical\b/i, value: 'EE' },
@@ -761,36 +758,15 @@ export const App: React.FC = () => {
     }
     if (foundCategory !== null) {
       console.log("Detected new category:", foundCategory);
-      setDetectedCategory(prev => {
-        if (!prev) return foundCategory;
-        if (/\b(?:and|also|both|,)\b/i.test(lowerText)) {
-          const combined = Array.from(new Set([...prev.split(','), ...foundCategory!.split(',')])).filter(Boolean).join(',');
-          return combined;
-        }
-        return foundCategory;
-      });
+      setDetectedCategory(foundCategory);
     }
     if (foundCourse !== null) {
       console.log("Detected new course:", foundCourse);
-      setDetectedCourse(prev => {
-        if (!prev) return foundCourse;
-        if (/\b(?:and|also|both|,)\b/i.test(lowerText)) {
-          const combined = Array.from(new Set([...prev.split(','), ...foundCourse!.split(',')])).filter(Boolean).join(',');
-          return combined;
-        }
-        return foundCourse;
-      });
+      setDetectedCourse(foundCourse);
     }
     if (foundLocation !== null) {
       console.log("Detected new location:", foundLocation);
-      setDetectedLocation(prev => {
-        if (!prev) return foundLocation;
-        if (/\b(?:and|also|both|,)\b/i.test(lowerText)) {
-          const combined = Array.from(new Set([...prev.split(','), ...foundLocation!.split(',')])).filter(Boolean).join(',');
-          return combined;
-        }
-        return foundLocation;
-      });
+      setDetectedLocation(foundLocation);
     }
   }, []);
 
@@ -1888,7 +1864,7 @@ export const App: React.FC = () => {
             <div className="flex w-full items-center justify-center">
 
               {/* Voice Agent - Centered in the viewport */}
-              <div className="flex flex-col items-center justify-center max-w-md">
+              <div className="flex flex-col items-center justify-center max-w-md w-full">
                 <Visualizer
                   state={visualizerState}
                   isMuted={isMuted}
@@ -1896,6 +1872,22 @@ export const App: React.FC = () => {
                   aiAudioLevel={aiAudioLevel}
                   userAudioLevel={userAudioLevel}
                 />
+
+                {/* Live Captions */}
+                {(liveCaption || userSpeechCaption) && (
+                  <div className="mt-6 w-full px-4 text-center animate-fade-in">
+                    {userSpeechCaption && (
+                      <p className="text-sm md:text-base font-medium text-[#0A84FF] mb-1 italic">
+                        {userSpeechCaption}
+                      </p>
+                    )}
+                    {liveCaption && (
+                      <p className={`text-base md:text-lg font-medium leading-relaxed ${theme === 'dark' ? 'text-[#F2F2F7]' : 'text-[#1C1C1E]'}`}>
+                        {liveCaption}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Text Input (Dual-Mode) */}
                 <form onSubmit={handleSendTextMessage} className="w-full max-w-sm mt-6 relative z-10">
