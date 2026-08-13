@@ -531,13 +531,24 @@ export const App: React.FC = () => {
     let foundCourse: string | null = null;
     let foundLocation: string | null = null;
 
-    const rankMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{4,6})/i) ||
-      text.match(/(\d{4,6})\s*rank/i);
-    if (rankMatch) {
-      const rank = parseInt(rankMatch[1]);
-      if (rank >= 1000 && rank <= 200000) {
-        foundRank = rank;
+    let rank = null;
+
+    const kRankMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{1,3}(?:\.\d+)?)\s*k\b/i) ||
+      text.match(/(\d{1,3}(?:\.\d+)?)\s*k\s*rank/i) ||
+      text.match(/\b(\d{1,3}(?:\.\d+)?)\s*k\b/i);
+
+    if (kRankMatch) {
+      rank = Math.round(parseFloat(kRankMatch[1]) * 1000);
+    } else {
+      const normalMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{4,6})/i) ||
+        text.match(/(\d{4,6})\s*rank/i);
+      if (normalMatch) {
+        rank = parseInt(normalMatch[1]);
       }
+    }
+
+    if (rank !== null && rank >= 1000 && rank <= 200000) {
+      foundRank = rank;
     }
 
     // Extract category check from most specific to least
@@ -699,6 +710,7 @@ export const App: React.FC = () => {
     const locationPatterns = [
       { pattern: /\bbangalore\b/i, value: 'bangalore' },
       { pattern: /\bbengaluru\b/i, value: 'bangalore' },
+      { pattern: /\bblr\b/i, value: 'bangalore' },
       { pattern: /\bmysore\b/i, value: 'mysore' },
       { pattern: /\bmysuru\b/i, value: 'mysore' },
       { pattern: /\bmangalore\b/i, value: 'mangalore' },
@@ -950,6 +962,9 @@ export const App: React.FC = () => {
 
     // Send to Gemini Live API
     try {
+      // Process text for matching parameters before clearing
+      extractInfoFromText(textInput);
+      
       activeSessionRef.current.sendClientContent({
         turns: [{ role: "user", parts: [{ text: textInput }] }],
         turnComplete: true
