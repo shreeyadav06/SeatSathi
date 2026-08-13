@@ -260,6 +260,29 @@ You were NOT made by Google. You are SeatSathi, made for Karnataka students.
 
 
 import { LandingPage } from './components/LandingPage';
+
+const TypewriterCaption: React.FC<{text: string}> = ({ text }) => {
+  const [displayed, setDisplayed] = useState("");
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    
+    if (text.startsWith(displayed) && text.length > displayed.length) {
+      // Adding text
+      timeout = setTimeout(() => {
+        setDisplayed(text.substring(0, displayed.length + 3));
+      }, 30);
+    } else if (text !== displayed) {
+      // Text was reset or completely changed
+      setDisplayed(text.substring(0, 3));
+    }
+    
+    return () => clearTimeout(timeout);
+  }, [text, displayed]);
+
+  return <>{displayed}</>;
+};
+
 // --- Main Application ---
 export const App: React.FC = () => {
   const [view, setView] = useState<'landing' | 'app'>('landing');
@@ -534,8 +557,7 @@ export const App: React.FC = () => {
     let rank = null;
 
     const kRankMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{1,3}(?:\.\d+)?)\s*k\b/i) ||
-      text.match(/(\d{1,3}(?:\.\d+)?)\s*k\s*rank/i) ||
-      text.match(/\b(\d{1,3}(?:\.\d+)?)\s*k\b/i);
+      text.match(/(\d{1,3}(?:\.\d+)?)\s*k\s*rank/i);
 
     if (kRankMatch) {
       rank = Math.round(parseFloat(kRankMatch[1]) * 1000);
@@ -667,7 +689,7 @@ export const App: React.FC = () => {
       }
     }
     if (foundCategories.length > 0) {
-      foundCategory = foundCategories.join(',');
+      foundCategory = foundCategories[0]; // Only take the first matched category
     }
 
     // Extract course
@@ -1045,6 +1067,9 @@ export const App: React.FC = () => {
         model: 'gemini-2.5-flash-native-audio-preview-12-2025',
         config: {
           systemInstruction: fullSystemInstruction,
+          generationConfig: {
+            responseModalities: ["AUDIO" as any] // The native-audio-preview model doesn't support ["AUDIO", "TEXT"] and requires only AUDIO. Text transcripts will still be sent automatically.
+          },
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } }
           }
@@ -1116,7 +1141,6 @@ export const App: React.FC = () => {
               for (const part of modelParts) {
                 if (part.text) {
                   let text = part.text;
-                  extractInfoFromText(text);
 
                   const isAiThought = text.startsWith('**') ||
                     text.includes('Verifying') ||
@@ -1143,10 +1167,6 @@ export const App: React.FC = () => {
                     lastSpeakingTimeRef.current = now;
 
                     aiSpeechBufferRef.current += (aiSpeechBufferRef.current ? ' ' : '') + text;
-
-                    if (aiSpeechBufferRef.current.length > 200) {
-                      aiSpeechBufferRef.current = '...' + aiSpeechBufferRef.current.slice(-150);
-                    }
 
                     setLiveCaption(aiSpeechBufferRef.current);
 
@@ -1239,8 +1259,13 @@ export const App: React.FC = () => {
 
                 try {
                   if (fc.name === 'findMatchingCollegesTask') {
-                    const { rank, category, course, location } = fc.args as any;
-                    const recs = await findMatchingColleges(Number(rank), String(category), String(course), String(location));
+                    const args = fc.args as any;
+                    const finalRank = args.rank || savedParamsRef.current.rank;
+                    const finalCategory = args.category || savedParamsRef.current.category;
+                    const finalCourse = args.course || savedParamsRef.current.course;
+                    const finalLocation = args.location || savedParamsRef.current.location;
+                    
+                    const recs = await findMatchingColleges(Number(finalRank), String(finalCategory), String(finalCourse), String(finalLocation));
                     setRecommendations(recs);
                     setOriginalAiRecommendations(recs);
                     setActiveListIndex(-1);
@@ -1929,7 +1954,7 @@ export const App: React.FC = () => {
                     )}
                     {liveCaption && (
                       <p className={`text-base md:text-lg font-medium leading-relaxed ${theme === 'dark' ? 'text-[#F2F2F7]' : 'text-[#1C1C1E]'}`}>
-                        {liveCaption}
+                        <TypewriterCaption text={liveCaption} />
                       </p>
                     )}
                   </div>
