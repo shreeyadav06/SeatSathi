@@ -1068,7 +1068,7 @@ export const App: React.FC = () => {
         config: {
           systemInstruction: fullSystemInstruction,
           generationConfig: {
-            responseModalities: ["AUDIO", "TEXT"]
+            responseModalities: ["AUDIO" as any] // The native-audio-preview model doesn't support ["AUDIO", "TEXT"] and requires only AUDIO. Text transcripts will still be sent automatically.
           },
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } }
