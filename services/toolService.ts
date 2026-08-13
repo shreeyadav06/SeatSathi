@@ -568,7 +568,7 @@ export const toolsDeclaration: any[] = [
       },
       {
         name: "find_matching_colleges",
-        description: "ONLY call this tool when user EXPLICITLY asks for college recommendations/list with specific rank. DO NOT call this for general questions about a college (like 'tell me about RV University'). Use ONLY when user says things like: 'find colleges for rank 5000', 'show me colleges', 'what colleges can I get with rank X', 'update my list with rank X'. Finds colleges based on rank, category, course and location.",
+        description: "ONLY call this tool when user EXPLICITLY asks for college recommendations/list. Finds colleges based on rank, category, course and location. ONLY provide parameters that the user has explicitly stated. If a user hasn't mentioned a new rank/category/etc, DO NOT provide it in the arguments (leave it undefined) and the system will use their previously established values.",
         parameters: {
           type: "OBJECT",
           properties: {
@@ -576,8 +576,7 @@ export const toolsDeclaration: any[] = [
             category: { type: "STRING", description: "Student's category (e.g., GM, 2AG, 3BG)" },
             course: { type: "STRING", description: "Preferred branch codes or names, comma-separated for multiple (e.g. 'CS' or 'CS,ME,AIML' for multiple courses)" },
             location: { type: "STRING", description: "Preferred locations, comma-separated for multiple (e.g., 'Bangalore' or 'Bangalore,Mysore')" }
-          },
-          required: ["rank", "category", "course", "location"]
+          }
         }
       },
       {
