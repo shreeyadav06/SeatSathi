@@ -18,13 +18,14 @@ export async function findMatchingCollegesFast(
   // Split category string by comma and normalize each
   const categories = category.split(',').map(c => normalizeCategory(c.trim())).filter(Boolean);
   const courseCategories = mapCourseToCategory(course);
-  const normLoc = location.toLowerCase().trim();
+  const normLocs = location.split(',').map(l => l.toLowerCase().trim()).filter(Boolean);
   
   // Build query based on filters
   let query = db.cutoffs.where('branchCategory').anyOf(courseCategories);
   
   // Location filter (if not "anywhere" or "karnataka")
-  const filterByLocation = normLoc && normLoc !== 'karnataka' && normLoc !== 'anywhere';
+  const isAnywhere = normLocs.length === 0 || normLocs.includes('karnataka') || normLocs.includes('anywhere');
+  const filterByLocation = !isAnywhere;
   
   // Get matching cutoffs from database
   let cutoffs: CutoffRecord[];
@@ -35,7 +36,7 @@ export async function findMatchingCollegesFast(
     cutoffs = await db.cutoffs
       .where('branchCategory')
       .anyOf(courseCategories)
-      .and((record: CutoffRecord) => record.location === normLoc || record.location.includes(normLoc) || normLoc.includes(record.location))
+      .and((record: CutoffRecord) => normLocs.some(loc => record.location === loc || record.location.includes(loc) || loc.includes(record.location)))
       .and((record: CutoffRecord) => categories.includes(record.category))
       .toArray();
   } else {
@@ -45,6 +46,22 @@ export async function findMatchingCollegesFast(
       .anyOf(courseCategories)
       .and((record: CutoffRecord) => categories.includes(record.category))
       .toArray();
+  }
+  
+  // STRICT COURSE FILTERING: Ensure "AI" doesn't return all "CS" branches
+  const searchCourses = course.split(',').map(c => c.toLowerCase().trim().replace(/[^a-z0-9]/g, '')).filter(Boolean);
+  if (searchCourses.length > 0) {
+    cutoffs = cutoffs.filter(record => {
+      return searchCourses.some(search => {
+        if (['cs', 'cse', 'computer', 'computerscience'].includes(search)) return record.branchNormalized === 'CS-PURE';
+        if (['ai', 'aiml', 'artificialintelligence', 'machinelearning'].includes(search)) return record.branchNormalized === 'CS-AIML';
+        if (['data', 'datascience'].includes(search)) return record.branchNormalized === 'CS-DATA';
+        if (['cyber', 'cybersecurity'].includes(search)) return record.branchNormalized === 'CS-CYBER';
+        if (['bs', 'business'].includes(search)) return record.branchNormalized === 'CS-BS';
+        // For other branches, if they matched the branchCategory, we keep them
+        return true; 
+      });
+    });
   }
   
   const totalRecordsScanned = cutoffs.length;
@@ -66,12 +83,19 @@ export async function findMatchingCollegesFast(
     const key = `${record.collegeCode}|${record.branchNormalized}|${record.category}`;
     
     if (!collegeMap.has(key)) {
+      let displayCourse = record.branchNormalized;
+      if (displayCourse.endsWith('-PURE')) {
+        displayCourse = displayCourse.split('-')[0]; // e.g. 'CS-PURE' -> 'CS'
+      } else if (displayCourse.includes('-')) {
+        displayCourse = displayCourse.split('-')[1]; // e.g. 'CS-AIML' -> 'AIML'
+      }
+
       collegeMap.set(key, {
         collegeName: record.collegeName,
         branchName: record.branchName,
         branchNormalized: record.branchNormalized,
         category: record.category,
-        baseCourse: record.branchCategory.split('-')[0], // e.g. 'CS-PURE' -> 'CS'
+        baseCourse: displayCourse,
         isPure: record.isPure,
         location: record.location,
         cutoffs2024: [],
