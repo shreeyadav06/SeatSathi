@@ -6,6 +6,8 @@ export interface CollegeRecommendation {
   cutoff2024: string; // Changed to string
   chance: 'Safe' | 'Moderate' | 'Reach';
   location: string;
+  category?: string;
+  baseCourse?: string;
   // Optional fields for multi-search tracking
   searchCourse?: string;
   searchLocation?: string;

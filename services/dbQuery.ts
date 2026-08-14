@@ -15,7 +15,8 @@ export async function findMatchingCollegesFast(
 ): Promise<QueryResult> {
   const startTime = performance.now();
   
-  const normCat = normalizeCategory(category);
+  // Split category string by comma and normalize each
+  const categories = category.split(',').map(c => normalizeCategory(c.trim())).filter(Boolean);
   const courseCategories = mapCourseToCategory(course);
   const normLoc = location.toLowerCase().trim();
   
@@ -35,24 +36,26 @@ export async function findMatchingCollegesFast(
       .where('branchCategory')
       .anyOf(courseCategories)
       .and((record: CutoffRecord) => record.location === normLoc || record.location.includes(normLoc) || normLoc.includes(record.location))
-      .and((record: CutoffRecord) => record.category === normCat)
+      .and((record: CutoffRecord) => categories.includes(record.category))
       .toArray();
   } else {
     // Just filter by course and category
     cutoffs = await db.cutoffs
       .where('branchCategory')
       .anyOf(courseCategories)
-      .and((record: CutoffRecord) => record.category === normCat)
+      .and((record: CutoffRecord) => categories.includes(record.category))
       .toArray();
   }
   
   const totalRecordsScanned = cutoffs.length;
   
-  // Group cutoffs by college+branch to get best cutoff per college-branch pair
+  // Group cutoffs by college+branch+category to get best cutoff per college-branch-category trio
   const collegeMap = new Map<string, {
     collegeName: string;
     branchName: string;
     branchNormalized: string;
+    category: string;
+    baseCourse: string;
     isPure: boolean;
     location: string;
     cutoffs2024: number[];
@@ -60,13 +63,15 @@ export async function findMatchingCollegesFast(
   }>();
   
   cutoffs.forEach(record => {
-    const key = `${record.collegeCode}|${record.branchNormalized}`;
+    const key = `${record.collegeCode}|${record.branchNormalized}|${record.category}`;
     
     if (!collegeMap.has(key)) {
       collegeMap.set(key, {
         collegeName: record.collegeName,
         branchName: record.branchName,
         branchNormalized: record.branchNormalized,
+        category: record.category,
+        baseCourse: record.branchCategory.split('-')[0], // e.g. 'CS-PURE' -> 'CS'
         isPure: record.isPure,
         location: record.location,
         cutoffs2024: [],
@@ -124,6 +129,8 @@ export async function findMatchingCollegesFast(
       cutoff2024: cutoff2024.range,
       chance,
       location: locationDisplay,
+      category: data.category,
+      baseCourse: data.baseCourse,
       isPure: data.isPure,
       collegeCode: data.collegeName.match(/\((E\d+)\)/)?.[1] || undefined
     });

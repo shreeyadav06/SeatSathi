@@ -348,9 +348,10 @@ export const App: React.FC = () => {
   // List mode: 'view' (default) or 'edit' - NOTE: saved lists are always editable now
   const [listMode, setListMode] = useState<'view' | 'edit'>('view');
 
-  // Course and Location filter states (for multi-course/location searches)
+  // Course, Location, and Category filter states (for multi searches)
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   // Drag and drop state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -716,7 +717,7 @@ export const App: React.FC = () => {
       }
     }
     if (foundCategories.length > 0) {
-      foundCategory = foundCategories[0]; // Only take the first matched category
+      foundCategory = foundCategories.join(',');
     }
 
     // Extract course
@@ -1775,14 +1776,20 @@ export const App: React.FC = () => {
     setDragOverIndex(null);
   };
 
-  // Get unique courses and locations for filters
-  const uniqueCourses = Array.from(new Set(recommendations.map(r => r.searchCourse).filter(Boolean))) as string[];
-  const uniqueLocations = Array.from(new Set(recommendations.map(r => r.searchLocation).filter(Boolean))) as string[];
+  // Get unique courses, locations, and categories for filters
+  const uniqueCourses = Array.from(new Set(recommendations.map(r => r.baseCourse || r.searchCourse).filter(Boolean))) as string[];
+  const uniqueLocations = Array.from(new Set(recommendations.map(r => r.searchLocation || r.location).filter(Boolean))) as string[];
+  const uniqueCategories = Array.from(new Set(recommendations.map(r => r.category || r.searchCategory).filter(Boolean))) as string[];
 
-  // Apply course and location filters
+  // Apply course, location, and category filters
   const filteredRecommendations = getSortedRecommendations().filter(rec => {
-    if (courseFilter !== 'all' && rec.searchCourse !== courseFilter) return false;
-    if (locationFilter !== 'all' && rec.searchLocation !== locationFilter) return false;
+    const recCourse = rec.baseCourse || rec.searchCourse;
+    const recLocation = rec.searchLocation || rec.location;
+    const recCategory = rec.category || rec.searchCategory;
+
+    if (courseFilter !== 'all' && recCourse !== courseFilter) return false;
+    if (locationFilter !== 'all' && recLocation !== locationFilter && recLocation?.toLowerCase() !== locationFilter.toLowerCase()) return false;
+    if (categoryFilter !== 'all' && recCategory !== categoryFilter) return false;
     return true;
   });
 
@@ -2239,19 +2246,23 @@ export const App: React.FC = () => {
                       </span>
                       <div className="flex items-center gap-2 flex-wrap">
                         {/* View/Edit Mode Toggle */}
-                        <div className={`flex rounded-lg overflow-hidden border ${theme === 'dark' ? 'border-slate-700' : 'border-slate-300'}`}>
-                          <button
+                        <div className={`flex rounded-full overflow-hidden p-1 backdrop-blur-md ${theme === 'dark' ? 'bg-[#2C2C2E]/60 border border-[#3A3A3C]/50' : 'bg-[#E5E5EA]/60 border border-[#D1D1D6]/50'}`}>
+                          <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                             onClick={() => setListMode('view')}
-                            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-all ${listMode === 'view' ? 'bg-yellow-500 text-slate-900' : theme === 'dark' ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-colors rounded-full ${listMode === 'view' ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
                           >
                             View
-                          </button>
-                          <button
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                             onClick={() => setListMode('edit')}
-                            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-all ${listMode === 'edit' ? 'bg-yellow-500 text-slate-900' : theme === 'dark' ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-colors rounded-full ${listMode === 'edit' ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
                           >
                             Edit
-                          </button>
+                          </motion.button>
                         </div>
                         <PdfExportDropdown
                           recommendations={sortedRecommendations}
@@ -2263,13 +2274,17 @@ export const App: React.FC = () => {
                         />
                         {/* Show More/Less button - Top */}
                         {filteredRecommendations.length > 10 && (
-                          <button
+                          <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                             onClick={() => setShowAll(!showAll)}
-                            className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${showAll
+                            className={`px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs rounded-full font-medium transition-colors flex items-center gap-1.5 backdrop-blur-md ${showAll
                               ? theme === 'dark'
-                                ? 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                                : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                              : 'bg-yellow-500 text-slate-900 hover:bg-yellow-400'
+                                ? 'bg-[#2C2C2E]/60 text-white/80 hover:bg-[#3A3A3C]/80 border border-[#3A3A3C]/50'
+                                : 'bg-[#E5E5EA]/60 text-black/80 hover:bg-[#D1D1D6]/80 border border-[#D1D1D6]/50'
+                              : theme === 'dark'
+                                ? 'bg-white text-black shadow-sm'
+                                : 'bg-black text-white shadow-sm'
                               }`}
                           >
                             {showAll ? (
@@ -2283,118 +2298,181 @@ export const App: React.FC = () => {
                                 Show All ({filteredRecommendations.length})
                               </>
                             )}
-                          </button>
+                          </motion.button>
                         )}
                       </div>
                     </div>
 
                     {/* Sort by chance buttons - Always visible */}
-                    <div className="flex gap-1 sm:gap-1.5 flex-wrap">
-                      <button
+                    <div className={`flex gap-1 sm:gap-1.5 flex-wrap p-1 rounded-full backdrop-blur-md w-fit ${theme === 'dark' ? 'bg-[#2C2C2E]/40 border border-[#3A3A3C]/30' : 'bg-[#E5E5EA]/40 border border-[#D1D1D6]/30'}`}>
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                         onClick={() => setSortOrder('default')}
-                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-lg font-medium transition-all transform hover:scale-105 ${sortOrder === 'default' ? 'bg-slate-600 text-white shadow-lg' : theme === 'dark' ? 'bg-slate-800/80 text-slate-400 hover:bg-slate-700' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}
+                        className={`px-3 py-1.5 text-[10px] sm:text-xs rounded-full font-medium transition-colors ${sortOrder === 'default' ? (theme === 'dark' ? 'bg-[#3A3A3C] text-white shadow-sm border border-[#48484A]' : 'bg-white text-black shadow-sm border border-[#E5E5EA]') : (theme === 'dark' ? 'text-white/60 hover:text-white/90 hover:bg-white/5' : 'text-black/60 hover:text-black/90 hover:bg-black/5')}`}
                       >
                         Default
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                         onClick={() => setSortOrder('high-first')}
-                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-lg font-medium transition-all transform hover:scale-105 ${sortOrder === 'high-first' ? 'bg-green-600 text-white shadow-lg shadow-green-500/30' : theme === 'dark' ? 'bg-slate-800/80 text-green-400 hover:bg-green-900/50' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                        className={`px-3 py-1.5 text-[10px] sm:text-xs rounded-full font-medium transition-colors ${sortOrder === 'high-first' ? 'bg-green-500/20 text-green-500 shadow-sm border border-green-500/30' : (theme === 'dark' ? 'text-green-500/60 hover:text-green-400 hover:bg-green-500/10' : 'text-green-600/70 hover:text-green-600 hover:bg-green-500/10')}`}
                       >
                         High
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                         onClick={() => setSortOrder('medium-first')}
-                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-lg font-medium transition-all transform hover:scale-105 ${sortOrder === 'medium-first' ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-500/30' : theme === 'dark' ? 'bg-slate-800/80 text-yellow-400 hover:bg-yellow-900/50' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'}`}
+                        className={`px-3 py-1.5 text-[10px] sm:text-xs rounded-full font-medium transition-colors ${sortOrder === 'medium-first' ? 'bg-yellow-500/20 text-yellow-500 shadow-sm border border-yellow-500/30' : (theme === 'dark' ? 'text-yellow-500/60 hover:text-yellow-400 hover:bg-yellow-500/10' : 'text-yellow-600/70 hover:text-yellow-600 hover:bg-yellow-500/10')}`}
                       >
                         Medium
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                         onClick={() => setSortOrder('low-first')}
-                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-lg font-medium transition-all transform hover:scale-105 ${sortOrder === 'low-first' ? 'bg-red-600 text-white shadow-lg shadow-red-500/30' : theme === 'dark' ? 'bg-slate-800/80 text-red-400 hover:bg-red-900/50' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                        className={`px-3 py-1.5 text-[10px] sm:text-xs rounded-full font-medium transition-colors ${sortOrder === 'low-first' ? 'bg-red-500/20 text-red-500 shadow-sm border border-red-500/30' : (theme === 'dark' ? 'text-red-500/60 hover:text-red-400 hover:bg-red-500/10' : 'text-red-600/70 hover:text-red-600 hover:bg-red-500/10')}`}
                       >
                         Low
-                      </button>
+                      </motion.button>
                     </div>
 
-                    {/* Course and Location Filters + Save List */}
+                    {/* Course, Category, and Location Filters + Save List */}
                     <div className="flex gap-2 flex-wrap items-center">
-                      {uniqueCourses.length > 1 && (
-                        <select
-                          value={courseFilter}
-                          onChange={(e) => setCourseFilter(e.target.value)}
-                          className={`px-3 py-1.5 text-xs rounded-lg border focus:border-yellow-500 focus:outline-none ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'}`}
-                        >
-                          <option value="all">All Courses</option>
-                          {uniqueCourses.map(c => (
-                            <option key={c} value={c}>{c.toUpperCase()}</option>
+                      {uniqueCategories.length > 1 && (
+                        <div className={`flex rounded-full overflow-hidden p-1 backdrop-blur-md ${theme === 'dark' ? 'bg-[#2C2C2E]/60 border border-[#3A3A3C]/50' : 'bg-[#E5E5EA]/60 border border-[#D1D1D6]/50'}`}>
+                          <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                            onClick={() => setCategoryFilter('all')}
+                            className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-colors rounded-full ${categoryFilter === 'all' ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
+                          >
+                            All Categories
+                          </motion.button>
+                          {uniqueCategories.map(c => (
+                            <motion.button
+                              key={c}
+                              whileTap={{ scale: 0.96 }}
+                              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                              onClick={() => setCategoryFilter(c)}
+                              className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-colors rounded-full ${categoryFilter === c ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
+                            >
+                              {c.toUpperCase()}
+                            </motion.button>
                           ))}
-                        </select>
+                        </div>
                       )}
-                      {uniqueLocations.length > 1 && (
-                        <select
-                          value={locationFilter}
-                          onChange={(e) => setLocationFilter(e.target.value)}
-                          className="px-3 py-1.5 text-xs rounded-lg bg-slate-800 border border-slate-700 text-slate-300 focus:border-yellow-500 focus:outline-none"
-                        >
-                          <option value="all">All Locations</option>
-                          {uniqueLocations.map(l => (
-                            <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>
+                      
+                      {uniqueCourses.length > 1 && (
+                        <div className={`flex rounded-full overflow-hidden p-1 backdrop-blur-md ${theme === 'dark' ? 'bg-[#2C2C2E]/60 border border-[#3A3A3C]/50' : 'bg-[#E5E5EA]/60 border border-[#D1D1D6]/50'}`}>
+                          <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                            onClick={() => setCourseFilter('all')}
+                            className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-colors rounded-full ${courseFilter === 'all' ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
+                          >
+                            All Courses
+                          </motion.button>
+                          {uniqueCourses.map(c => (
+                            <motion.button
+                              key={c}
+                              whileTap={{ scale: 0.96 }}
+                              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                              onClick={() => setCourseFilter(c)}
+                              className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-colors rounded-full ${courseFilter === c ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
+                            >
+                              {c.toUpperCase()}
+                            </motion.button>
                           ))}
-                        </select>
+                        </div>
+                      )}
+                      
+                      {uniqueLocations.length > 1 && (
+                        <div className={`flex rounded-full overflow-hidden p-1 backdrop-blur-md ${theme === 'dark' ? 'bg-[#2C2C2E]/60 border border-[#3A3A3C]/50' : 'bg-[#E5E5EA]/60 border border-[#D1D1D6]/50'}`}>
+                          <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                            onClick={() => setLocationFilter('all')}
+                            className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-colors rounded-full ${locationFilter === 'all' ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
+                          >
+                            All Locations
+                          </motion.button>
+                          {uniqueLocations.map(l => (
+                            <motion.button
+                              key={l}
+                              whileTap={{ scale: 0.96 }}
+                              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                              onClick={() => setLocationFilter(l)}
+                              className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium transition-colors rounded-full ${locationFilter === l ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
+                            >
+                              {l.charAt(0).toUpperCase() + l.slice(1)}
+                            </motion.button>
+                          ))}
+                        </div>
                       )}
 
                       {/* Save to List button */}
-                      <button
+                      <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                         onClick={() => {
                           const listName = `List ${savedLists.length + 1}`;
                           setSavedLists([...savedLists, { name: listName, data: [...sortedRecommendations] }]);
                           addLog(`Saved ${sortedRecommendations.length} colleges to ${listName}`, 'system');
                         }}
-                        className="px-3 py-1.5 text-xs rounded-lg font-medium bg-orange-900/50 text-orange-400 hover:bg-orange-800/50 transition-all border border-orange-500/30"
+                        className={`px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs rounded-full font-medium transition-colors border backdrop-blur-md ${theme === 'dark' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20 hover:bg-orange-500/20 hover:border-orange-500/40' : 'bg-orange-500/5 text-orange-600 border-orange-500/20 hover:bg-orange-500/10'}`}
                         title="Save current list"
                       >
                         + Save List
-                      </button>
+                      </motion.button>
                     </div>
 
                     {/* Saved Lists Tabs */}
                     {savedLists.length > 0 && (
-                      <div className="flex gap-1 flex-wrap items-center">
-                        <span className="text-xs text-slate-500 mr-1">Lists:</span>
-                        <button
-                          onClick={() => {
-                            setActiveListIndex(-1);
-                            // Restore original AI-suggested list when clicking "Current"
-                            if (originalAiRecommendations.length > 0) {
-                              setRecommendations(originalAiRecommendations);
-                            }
-                          }}
-                          className={`px-2 py-1 text-xs rounded font-medium transition-all ${activeListIndex === -1 ? 'bg-yellow-500 text-slate-900' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
-                        >
-                          Current ({activeListIndex === -1 ? recommendations.length : originalAiRecommendations.length})
-                        </button>
-                        {savedLists.map((list, idx) => (
-                          <button
-                            key={idx}
+                      <div className="flex gap-2 flex-wrap items-center mt-2">
+                        <span className={`text-xs ${theme === 'dark' ? 'text-white/50' : 'text-black/50'}`}>Lists:</span>
+                        <div className={`flex flex-wrap gap-1 rounded-full p-1 backdrop-blur-md ${theme === 'dark' ? 'bg-[#2C2C2E]/40 border border-[#3A3A3C]/30' : 'bg-[#E5E5EA]/40 border border-[#D1D1D6]/30'}`}>
+                          <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                             onClick={() => {
-                              setActiveListIndex(idx);
-                              setRecommendations(list.data);
-                              // Automatically enable edit mode when viewing saved lists
-                              setListMode('edit');
+                              setActiveListIndex(-1);
+                              // Restore original AI-suggested list when clicking "Current"
+                              if (originalAiRecommendations.length > 0) {
+                                setRecommendations(originalAiRecommendations);
+                              }
                             }}
-                            className={`px-2 py-1 text-xs rounded font-medium transition-all flex items-center gap-1 ${activeListIndex === idx ? 'bg-orange-500 text-white' : 'bg-slate-800 text-orange-400 hover:bg-orange-900/50'}`}
+                            className={`px-3 py-1.5 text-[10px] sm:text-xs rounded-full font-medium transition-colors ${activeListIndex === -1 ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/60 hover:text-white/90 hover:bg-white/5' : 'text-black/60 hover:text-black/90 hover:bg-black/5')}`}
                           >
-                            {list.name} ({list.data.length})
-                            <span
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSavedLists(savedLists.filter((_, i) => i !== idx));
-                                if (activeListIndex === idx) setActiveListIndex(-1);
+                            Current ({activeListIndex === -1 ? recommendations.length : originalAiRecommendations.length})
+                          </motion.button>
+                          {savedLists.map((list, idx) => (
+                            <motion.button
+                              key={idx}
+                              whileTap={{ scale: 0.96 }}
+                              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                              onClick={() => {
+                                setActiveListIndex(idx);
+                                setRecommendations(list.data);
+                                // Automatically enable edit mode when viewing saved lists
+                                setListMode('edit');
                               }}
-                              className="hover:text-red-400 cursor-pointer"
-                            >×</span>
-                          </button>
-                        ))}
+                              className={`px-3 py-1.5 text-[10px] sm:text-xs rounded-full font-medium transition-colors flex items-center gap-2 ${activeListIndex === idx ? 'bg-orange-500 text-white shadow-sm' : (theme === 'dark' ? 'text-orange-400/80 hover:text-orange-400 hover:bg-orange-500/10' : 'text-orange-600/80 hover:text-orange-600 hover:bg-orange-500/10')}`}
+                            >
+                              {list.name} ({list.data.length})
+                              <span
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSavedLists(savedLists.filter((_, i) => i !== idx));
+                                  if (activeListIndex === idx) setActiveListIndex(-1);
+                                }}
+                                className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${activeListIndex === idx ? 'hover:bg-white/20' : (theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-black/10')}`}
+                              >×</span>
+                            </motion.button>
+                          ))}
+                        </div>
                       </div>
                     )}
 
