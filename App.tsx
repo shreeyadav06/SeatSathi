@@ -2242,14 +2242,14 @@ export const App: React.FC = () => {
               ) : recommendations.length > 0 ? (
                 <div className="flex flex-col h-full">
                   {/* Fixed Header with Controls - OUTSIDE scrollable area */}
-                  <div className={`shrink-0 border-b p-3 space-y-3 ${themeClasses.panelBg}`}>
+                  <div className={`shrink-0 border-b p-3 space-y-3 relative z-50 ${themeClasses.panelBg}`}>
                     {/* Top Row: Title, View/Edit Toggle, Export */}
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 relative z-50">
                       <span className={`text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
                         <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
                         Matches ({filteredRecommendations.length})
                       </span>
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap relative z-50">
                         {/* View/Edit Mode Toggle */}
                         <div className={`flex rounded-full overflow-hidden p-1 backdrop-blur-md ${theme === 'dark' ? 'bg-[#2C2C2E]/60 border border-[#3A3A3C]/50' : 'bg-[#E5E5EA]/60 border border-[#D1D1D6]/50'}`}>
                           <motion.button
