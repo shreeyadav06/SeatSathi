@@ -264,44 +264,51 @@ export function normalizeCategory(cat: string): string {
  * Map user course input to branch category
  */
 export function mapCourseToCategory(courseInput: string): string[] {
-  const cLower = courseInput.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const courses = courseInput.split(',').map(c => c.trim()).filter(Boolean);
   
-  // Return array of matching categories (for broader search)
-  if (['cs', 'cse', 'computer', 'computerscience'].includes(cLower)) {
-    return ['CS']; // Will match CS-PURE, CS-AIML, CS-DATA, etc.
-  }
-  if (['is', 'ise', 'it', 'information', 'informationscience'].includes(cLower)) {
-    return ['IS'];
-  }
-  if (['ec', 'ece', 'electronics'].includes(cLower)) {
-    return ['EC'];
-  }
-  if (['ee', 'electrical'].includes(cLower)) {
-    return ['EE'];
-  }
-  if (['me', 'mech', 'mechanical'].includes(cLower)) {
-    return ['ME'];
-  }
-  if (['cv', 'civil', 'ce'].includes(cLower)) {
-    return ['CV'];
-  }
-  if (['robotics', 'automation', 'ra', 'robot'].includes(cLower)) {
-    return ['ROBOTICS'];
-  }
-  if (['bt', 'biotech', 'biotechnology'].includes(cLower)) {
-    return ['BT'];
-  }
-  if (['ch', 'chemical'].includes(cLower)) {
-    return ['CH'];
-  }
-  if (['ae', 'aerospace', 'aeronautical'].includes(cLower)) {
-    return ['AE'];
-  }
-  if (['ar', 'architecture'].includes(cLower)) {
-    return ['AR'];
-  }
-  
-  return [cLower.toUpperCase()];
+  const mapSingleCourse = (courseStr: string): string[] => {
+    const cLower = courseStr.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Return array of matching categories (for broader search)
+    if (['cs', 'cse', 'computer', 'computerscience', 'ai', 'aiml', 'artificialintelligence', 'machinelearning', 'data', 'datascience', 'cyber', 'cybersecurity'].includes(cLower)) {
+      return ['CS']; // Will match CS-PURE, CS-AIML, CS-DATA, etc.
+    }
+    if (['is', 'ise', 'it', 'information', 'informationscience'].includes(cLower)) {
+      return ['IS'];
+    }
+    if (['ec', 'ece', 'electronics'].includes(cLower)) {
+      return ['EC'];
+    }
+    if (['ee', 'electrical'].includes(cLower)) {
+      return ['EE'];
+    }
+    if (['me', 'mech', 'mechanical'].includes(cLower)) {
+      return ['ME'];
+    }
+    if (['cv', 'civil', 'ce'].includes(cLower)) {
+      return ['CV'];
+    }
+    if (['robotics', 'automation', 'ra', 'robot'].includes(cLower)) {
+      return ['ROBOTICS'];
+    }
+    if (['bt', 'biotech', 'biotechnology'].includes(cLower)) {
+      return ['BT'];
+    }
+    if (['ch', 'chemical'].includes(cLower)) {
+      return ['CH'];
+    }
+    if (['ae', 'aerospace', 'aeronautical'].includes(cLower)) {
+      return ['AE'];
+    }
+    if (['ar', 'architecture'].includes(cLower)) {
+      return ['AR'];
+    }
+    
+    return [cLower.toUpperCase()];
+  };
+
+  const allCategories = courses.flatMap(c => mapSingleCourse(c));
+  return [...new Set(allCategories)];
 }
 
 export async function isDatabasePopulated(): Promise<boolean> {
