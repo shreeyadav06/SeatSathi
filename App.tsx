@@ -2141,14 +2141,19 @@ export const App: React.FC = () => {
                   <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
                     {logs.length === 0 && <div className={`text-center text-xs italic mt-6 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Conversation will appear here</div>}
                     {logs.map((log, i) => (
-                      <div key={i} className={`text-xs md:text-sm px-4 py-2.5 max-w-[95%] ${log.type === 'system'
-                        ? `mx-auto italic text-center rounded-full border ${theme === 'dark' ? 'text-slate-400 bg-[#0d1829] border-[#1e3a5f]' : 'text-slate-400 bg-slate-100 border-slate-200'}`
+                      <motion.div 
+                        key={i} 
+                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                        className={`text-xs md:text-sm px-4 py-2.5 max-w-[95%] backdrop-blur-md shadow-sm ${log.type === 'system'
+                        ? `mx-auto italic text-center rounded-2xl border ${theme === 'dark' ? 'text-slate-400 bg-[#1C1C1E]/60 border-[#3A3A3C]/50' : 'text-slate-500 bg-[#E5E5EA]/60 border-[#D1D1D6]/50'}`
                         : log.type === 'agent'
-                          ? `mr-auto rounded-full border ${theme === 'dark' ? 'bg-[#0d1829] text-slate-200 border-[#1e3a5f]' : 'bg-slate-100 text-slate-700 border-slate-200'}`
-                          : `ml-auto rounded-full text-right border ${theme === 'dark' ? 'bg-yellow-500/10 text-yellow-100 border-yellow-500/20' : 'bg-yellow-50 text-yellow-800 border-yellow-200'}`
+                          ? `mr-auto rounded-2xl rounded-tl-sm border ${theme === 'dark' ? 'bg-[#2C2C2E]/80 text-slate-200 border-[#3A3A3C]/50' : 'bg-white/80 text-slate-700 border-[#D1D1D6]/50'}`
+                          : `ml-auto rounded-2xl rounded-tr-sm text-right border ${theme === 'dark' ? 'bg-yellow-500/20 text-yellow-100 border-yellow-500/30' : 'bg-yellow-500/10 text-yellow-800 border-yellow-500/20'}`
                         }`}>
                         {log.text}
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
@@ -2528,9 +2533,11 @@ export const App: React.FC = () => {
 
                     {/* Show More / Show Less button at bottom of list */}
                     {filteredRecommendations.length > 10 && (
-                      <button
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                         onClick={() => setShowAll(!showAll)}
-                        className={`w-full py-3 mt-2 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${theme === 'dark' ? 'bg-slate-800/80 text-yellow-400 hover:bg-yellow-900/30 border border-slate-700' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-200'}`}
+                        className={`w-full py-3 mt-4 rounded-2xl font-medium transition-colors flex items-center justify-center gap-2 backdrop-blur-md shadow-sm border ${theme === 'dark' ? 'bg-[#2C2C2E]/60 text-yellow-400 hover:bg-[#3A3A3C]/80 border-[#3A3A3C]/50' : 'bg-[#E5E5EA]/60 text-yellow-700 hover:bg-[#D1D1D6]/80 border-[#D1D1D6]/50'}`}
                       >
                         {showAll ? (
                           <>
@@ -2543,7 +2550,7 @@ export const App: React.FC = () => {
                             Show {filteredRecommendations.length - 10} More Colleges
                           </>
                         )}
-                      </button>
+                      </motion.button>
                     )}
                   </div>
                 </div>
