@@ -1806,24 +1806,64 @@ export const App: React.FC = () => {
       return;
     }
     setUser({ isGuest: true, displayName: 'Guest' });
-    localStorage.setItem('lastGuestSession', now.toString());
     setView('app');
   };
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
+
     if (user?.isGuest) {
-      timer = setTimeout(() => {
-        if (activeSessionRef.current) {
-          handleDisconnect();
+      const sessionStartStr = localStorage.getItem('lastGuestSession');
+      
+      if (sessionStartStr) {
+        const sessionStart = parseInt(sessionStartStr);
+        const now = Date.now();
+        
+        if (now - sessionStart >= 24 * 60 * 60 * 1000) {
+          // Old session > 24hrs, clear it. Wait for connect to start a new one.
+          localStorage.removeItem('lastGuestSession');
+          if (isConnected) {
+            localStorage.setItem('lastGuestSession', now.toString());
+            timer = setTimeout(() => {
+              if (activeSessionRef.current) handleDisconnect();
+              setUser(null);
+              alert("Guest session expired. Please login to continue.");
+              setView('landing');
+            }, 2 * 60 * 1000);
+          }
+        } else {
+          // Active session within last 24 hours
+          const elapsed = now - sessionStart;
+          const timeRemaining = (2 * 60 * 1000) - elapsed;
+
+          if (timeRemaining <= 0) {
+            if (activeSessionRef.current) handleDisconnect();
+            setUser(null);
+            alert("Guest session expired. Please login to continue.");
+            setView('landing');
+          } else {
+            timer = setTimeout(() => {
+              if (activeSessionRef.current) handleDisconnect();
+              setUser(null);
+              alert("Guest session expired. Please login to continue.");
+              setView('landing');
+            }, timeRemaining);
+          }
         }
-        setUser(null);
-        alert("Guest session expired. Please login to continue.");
-        setView('landing');
-      }, 2 * 60 * 1000); // 2 minutes
+      } else if (isConnected) {
+        // First time connecting in this guest session
+        localStorage.setItem('lastGuestSession', Date.now().toString());
+        timer = setTimeout(() => {
+          if (activeSessionRef.current) handleDisconnect();
+          setUser(null);
+          alert("Guest session expired. Please login to continue.");
+          setView('landing');
+        }, 2 * 60 * 1000);
+      }
     }
+
     return () => clearTimeout(timer);
-  }, [user, handleDisconnect]);
+  }, [user, isConnected, handleDisconnect]);
 
   if (view === 'landing') {
     return (
