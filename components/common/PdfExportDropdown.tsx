@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CollegeRecommendation } from '../../types';
 
 const loadPdfExport = () => import('../../services/pdfExport');
@@ -38,49 +38,72 @@ export const PdfExportDropdown: React.FC<PdfExportDropdownProps> = ({ recommenda
 
   return (
     <div className="relative">
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-          onClick={() => setIsOpen(!isOpen)}
-          disabled={exporting}
-          className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs rounded-full font-medium transition-colors border backdrop-blur-md bg-slate-800/60 hover:bg-slate-700/80 text-white/90 border-slate-700/50 shadow-sm"
-        >
-          {exporting ? (
-            <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-            </svg>
-          ) : (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          )}
-          Export PDF
-          <svg className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      <motion.button
+        whileTap={{ scale: 0.96 }}
+        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={exporting}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-[#2C2C2E]/60 hover:bg-[#3A3A3C]/80 disabled:bg-[#1C1C1E]/40 text-white rounded-full border border-[#3A3A3C]/50 backdrop-blur-md shadow-sm transition-colors"
+      >
+        {exporting ? (
+          <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-        </motion.button>
-      
-      {isOpen && (
-        <div className="absolute top-full right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-20 overflow-hidden min-w-[140px]">
-          <button onClick={() => handleExport(10)} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-            Top 10 Colleges
-          </button>
-          {recommendations.length > 10 && (
-            <button onClick={() => handleExport(50)} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-              Top 50 Colleges
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+            <polyline points="14 2 14 8 20 8" />
+            <path d="M12 18v-6" />
+            <path d="m9 15 3 3 3-3" />
+          </svg>
+        )}
+        Export PDF
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+            className="absolute right-0 mt-2 w-48 bg-[#1C1C1E]/80 backdrop-blur-xl rounded-xl shadow-2xl z-50 overflow-hidden border border-[#3A3A3C]/50"
+          >
+            <button
+              onClick={() => handleExport(10)}
+              className="w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-[#3A3A3C]/60 transition-colors"
+            >
+              Top 10 Colleges
             </button>
-          )}
-          {recommendations.length > 50 && (
-            <button onClick={() => handleExport(100)} className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 transition-colors">
-              Top 100 Colleges
+            {recommendations.length > 10 && (
+              <button
+                onClick={() => handleExport(50)}
+                className="w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-[#3A3A3C]/60 transition-colors border-t border-[#3A3A3C]/30"
+              >
+                Top 50 Colleges
+              </button>
+            )}
+            {recommendations.length > 50 && (
+              <button
+                onClick={() => handleExport(100)}
+                className="w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-[#3A3A3C]/60 transition-colors border-t border-[#3A3A3C]/30"
+              >
+                Top 100 Colleges
+              </button>
+            )}
+            <button
+              onClick={() => handleExport('all')}
+              className="w-full text-left px-4 py-2.5 text-sm text-slate-200 hover:bg-[#3A3A3C]/60 transition-colors border-t border-[#3A3A3C]/30"
+            >
+              All ({recommendations.length})
             </button>
-          )}
-          <button onClick={() => handleExport('all')} className="w-full px-4 py-2 text-left text-sm text-yellow-400 hover:bg-slate-700 transition-colors border-t border-slate-700">
-            All ({recommendations.length})
-          </button>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
