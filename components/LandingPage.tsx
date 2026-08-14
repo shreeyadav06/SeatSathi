@@ -153,10 +153,20 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
                 className={`group w-full relative inline-flex items-center justify-center gap-2 text-base md:text-lg font-semibold px-6 md:px-8 py-3.5 md:py-4 rounded-2xl transition-colors border ${theme === 'dark' ? 'border-[#3A3A3C] text-white hover:bg-[#2C2C2E]' : 'border-[#E5E5EA] text-[#1C1C1E] hover:bg-[#E5E5EA]'}`}
               >
                 Continue as Guest
-                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
+                
+                {/* Info Tooltip Button */}
+                <div 
+                  className="group/tooltip relative flex items-center justify-center w-5 h-5 rounded-full border border-current opacity-60 hover:opacity-100 cursor-help transition-opacity ml-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="text-[10px] font-bold leading-none">i</span>
+                  {/* Tooltip text */}
+                  <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 sm:w-64 p-3 rounded-xl text-xs sm:text-sm font-normal text-center shadow-2xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-[100] pointer-events-none ${theme === 'dark' ? 'bg-[#2C2C2E] text-white border border-[#3A3A3C]' : 'bg-white text-[#1C1C1E] border border-[#E5E5EA]'}`}>
+                    Guest mode is restricted to a maximum 2-minute session. Auto-logout will occur, and your next guest session will be available after 24 hours.
+                    {/* Triangle pointer */}
+                    <div className={`absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent ${theme === 'dark' ? 'border-t-[#2C2C2E]' : 'border-t-white'}`}></div>
+                  </div>
+                </div>
               </motion.button>
 
               <p className={`text-sm ${theme === 'dark' ? 'text-[#8E8E93]' : 'text-[#8E8E93]'}`}>
