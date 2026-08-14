@@ -903,7 +903,12 @@ export const App: React.FC = () => {
 
     loadFirebase().then(firebase => {
       unsubscribe = firebase.onAuthChange((authUser) => {
-        setUser(authUser);
+        setUser((prevUser: any) => {
+          if (prevUser?.isGuest && !authUser) {
+            return prevUser;
+          }
+          return authUser;
+        });
       });
     });
 
@@ -1781,12 +1786,44 @@ export const App: React.FC = () => {
   // Auth handlers
   const handleLogout = async () => {
     try {
+      if (user?.isGuest) {
+        setUser(null);
+        return;
+      }
       const firebase = await loadFirebase();
       await firebase.logOut();
     } catch (err) {
       console.error('Logout failed:', err);
     }
   };
+
+  const handleGuestLogin = () => {
+    const lastGuestSession = localStorage.getItem('lastGuestSession');
+    const now = Date.now();
+    if (lastGuestSession && (now - parseInt(lastGuestSession)) < 24 * 60 * 60 * 1000) {
+      const hoursLeft = Math.ceil((24 * 60 * 60 * 1000 - (now - parseInt(lastGuestSession))) / (60 * 60 * 1000));
+      alert(`Guest limit reached. Please try again after ${hoursLeft} hours or login to continue.`);
+      return;
+    }
+    setUser({ isGuest: true, displayName: 'Guest' });
+    localStorage.setItem('lastGuestSession', now.toString());
+    setView('app');
+  };
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (user?.isGuest) {
+      timer = setTimeout(() => {
+        if (activeSessionRef.current) {
+          handleDisconnect();
+        }
+        setUser(null);
+        alert("Guest session expired. Please login to continue.");
+        setView('landing');
+      }, 2 * 60 * 1000); // 2 minutes
+    }
+    return () => clearTimeout(timer);
+  }, [user, handleDisconnect]);
 
   if (view === 'landing') {
     return (
@@ -1800,6 +1837,7 @@ export const App: React.FC = () => {
           theme={theme}
           toggleTheme={toggleTheme}
           onNoteClick={() => setShowNoteModal(true)}
+          onGuestLogin={handleGuestLogin}
         />
         <AuthModal
           isOpen={showAuthModal}
