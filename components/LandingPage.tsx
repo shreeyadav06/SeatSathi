@@ -16,8 +16,8 @@ interface LandingPageProps {
 // Minimal mock for NoteModal until we extract it too
 // If NoteModal is not extracted, we should pass it or extract it.
 // Actually, NoteModal is in App.tsx. I should pass onNoteClick.
-export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void }> = ({ 
-  onStart, user, onLoginClick, onSignupClick, onLogout, theme, toggleTheme, onNoteClick 
+export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void, onGuestLogin?: () => void }> = ({ 
+  onStart, user, onLoginClick, onSignupClick, onLogout, theme, toggleTheme, onNoteClick, onGuestLogin
 }) => {
   return (
     <div className={`min-h-screen max-h-screen flex flex-col font-sans selection:bg-blue-500/30 overflow-y-auto custom-scrollbar ${theme === 'dark' ? 'bg-black text-[#F2F2F7]' : 'bg-[#F2F2F7] text-[#1C1C1E]'}`}>
@@ -145,6 +145,20 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
               </motion.button>
+              
+              <motion.button 
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                onClick={onGuestLogin}
+                className={`group w-full relative inline-flex items-center justify-center gap-2 text-base md:text-lg font-semibold px-6 md:px-8 py-3.5 md:py-4 rounded-2xl transition-colors border ${theme === 'dark' ? 'border-[#3A3A3C] text-white hover:bg-[#2C2C2E]' : 'border-[#E5E5EA] text-[#1C1C1E] hover:bg-[#E5E5EA]'}`}
+              >
+                Continue as Guest
+                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </motion.button>
+
               <p className={`text-sm ${theme === 'dark' ? 'text-[#8E8E93]' : 'text-[#8E8E93]'}`}>
                 Don't have an account? <button onClick={onSignupClick} className="text-[#007AFF] hover:text-[#007AFF]/80 font-medium">Sign up</button>
               </p>
