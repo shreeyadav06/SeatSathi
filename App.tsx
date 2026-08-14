@@ -583,14 +583,20 @@ export const App: React.FC = () => {
     if (kRankMatch) {
       rank = Math.round(parseFloat(kRankMatch[1]) * 1000);
     } else {
-      const normalMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{4,6})/i) ||
-        text.match(/(\d{4,6})\s*rank/i);
+      const normalMatch = text.match(/rank\s*(?:is|of|:)?\s*(\d{1,7})/i) ||
+        text.match(/(\d{1,7})\s*rank/i);
       if (normalMatch) {
         rank = parseInt(normalMatch[1]);
+      } else {
+        // Fallback: look for a standalone number (at least 2 digits to avoid matching '1', '2', '3' from categories like '2A')
+        const standaloneMatch = text.match(/\b(\d{2,7})\b/);
+        if (standaloneMatch) {
+          rank = parseInt(standaloneMatch[1]);
+        }
       }
     }
 
-    if (rank !== null && rank >= 1000 && rank <= 200000) {
+    if (rank !== null && rank >= 1 && rank <= 500000) {
       foundRank = rank;
     }
 
