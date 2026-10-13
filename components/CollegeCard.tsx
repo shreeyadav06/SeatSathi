@@ -166,7 +166,15 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
       </div>
       
       {/* Cutoff Data */}
-      <div className={`mt-3 grid grid-cols-2 gap-2 text-xs border-t pt-2 ${isDark ? 'border-slate-700/50' : 'border-slate-200'}`}>
+      <div className={`mt-3 grid ${data.cutoff2026 && data.cutoff2026 !== 'N/A' ? 'grid-cols-3' : 'grid-cols-2'} gap-2 text-xs border-t pt-2 ${isDark ? 'border-slate-700/50' : 'border-slate-200'}`}>
+         {data.cutoff2026 && data.cutoff2026 !== 'N/A' && (
+           <div className={`p-2 rounded ${isDark ? 'bg-slate-900/40' : 'bg-white/60'}`}>
+              <span className={`block mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>2026 Range</span>
+              <span className={`font-mono text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                {data.cutoff2026}
+              </span>
+           </div>
+         )}
          <div className={`p-2 rounded ${isDark ? 'bg-slate-900/40' : 'bg-white/60'}`}>
             <span className={`block mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>2025 Range</span>
             <span className={`font-mono text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-800'}`}>

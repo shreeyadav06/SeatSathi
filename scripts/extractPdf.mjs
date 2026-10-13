@@ -156,6 +156,9 @@ function parseKCETCutoffText(text, year, round) {
 
 async function main() {
   const pdfFiles = [
+    { file: 'KCET 2026 r1 cutoff.pdf', year: '2026', round: 'R1' },
+    { file: 'KCET 2026 r2 cutoff.pdf', year: '2026', round: 'R2' },
+    { file: 'KCET 2026 r3 cutoff.pdf', year: '2026', round: 'R3' },
     { file: 'KCET 2025 r1 cutoff.pdf', year: '2025', round: 'R1' },
     { file: 'KCET 2025 r2 cutoff.pdf', year: '2025', round: 'R2' },
     { file: 'KCET 2025 r3 cutoff.pdf', year: '2025', round: 'R3' },

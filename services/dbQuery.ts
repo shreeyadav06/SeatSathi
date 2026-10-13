@@ -78,6 +78,7 @@ export async function findMatchingCollegesFast(
     location: string;
     cutoffs2024: number[];
     cutoffs2025: number[];
+    cutoffs2026: number[];
   }>();
   
   cutoffs.forEach(record => {
@@ -100,7 +101,8 @@ export async function findMatchingCollegesFast(
         isPure: record.isPure,
         location: record.location,
         cutoffs2024: [],
-        cutoffs2025: []
+        cutoffs2025: [],
+        cutoffs2026: []
       });
     }
     
@@ -109,6 +111,8 @@ export async function findMatchingCollegesFast(
       entry.cutoffs2024.push(record.cutoffRank);
     } else if (record.year === '2025') {
       entry.cutoffs2025.push(record.cutoffRank);
+    } else if (record.year === '2026') {
+      entry.cutoffs2026.push(record.cutoffRank);
     }
   });
   
@@ -129,12 +133,14 @@ export async function findMatchingCollegesFast(
     
     const cutoff2024 = getCutoffRange(data.cutoffs2024);
     const cutoff2025 = getCutoffRange(data.cutoffs2025);
+    const cutoff2026 = getCutoffRange(data.cutoffs2026);
     
     // Need at least one cutoff
-    if (cutoff2024.sortValue === 999999 && cutoff2025.sortValue === 999999) return;
+    if (cutoff2024.sortValue === 999999 && cutoff2025.sortValue === 999999 && cutoff2026.sortValue === 999999) return;
     
-    // Calculate chance
-    const refCutoff = cutoff2025.sortValue !== 999999 ? cutoff2025.sortValue : cutoff2024.sortValue;
+    // Calculate chance - prioritize newest year
+    const refCutoff = cutoff2026.sortValue !== 999999 ? cutoff2026.sortValue :
+                      (cutoff2025.sortValue !== 999999 ? cutoff2025.sortValue : cutoff2024.sortValue);
     const diff = refCutoff - rank;
     let chance: 'Safe' | 'Moderate' | 'Reach' = 'Reach';
     if (diff >= 1000) {
@@ -150,6 +156,7 @@ export async function findMatchingCollegesFast(
     recommendations.push({
       collegeName: data.collegeName,
       branch: data.branchName,
+      cutoff2026: cutoff2026.range,
       cutoff2025: cutoff2025.range,
       cutoff2024: cutoff2024.range,
       chance,
@@ -213,15 +220,16 @@ export async function getSpecificCollegeCutoffFast(
   }
   
   // Group by branch
-  const branchMap = new Map<string, { branch: string; cutoffs2024: number[]; cutoffs2025: number[] }>();
+  const branchMap = new Map<string, { branch: string; cutoffs2024: number[]; cutoffs2025: number[]; cutoffs2026: number[] }>();
   
   cutoffs.forEach(record => {
     if (!branchMap.has(record.branchName)) {
-      branchMap.set(record.branchName, { branch: record.branchName, cutoffs2024: [], cutoffs2025: [] });
+      branchMap.set(record.branchName, { branch: record.branchName, cutoffs2024: [], cutoffs2025: [], cutoffs2026: [] });
     }
     const entry = branchMap.get(record.branchName)!;
     if (record.year === '2024') entry.cutoffs2024.push(record.cutoffRank);
     if (record.year === '2025') entry.cutoffs2025.push(record.cutoffRank);
+    if (record.year === '2026') entry.cutoffs2026.push(record.cutoffRank);
   });
   
   const results = Array.from(branchMap.values()).map(data => {
@@ -234,6 +242,7 @@ export async function getSpecificCollegeCutoffFast(
     
     return {
       branch: data.branch,
+      cutoff2026: getRange(data.cutoffs2026),
       cutoff2025: getRange(data.cutoffs2025),
       cutoff2024: getRange(data.cutoffs2024)
     };

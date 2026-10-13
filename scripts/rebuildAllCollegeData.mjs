@@ -118,13 +118,18 @@ function rebuild() {
   console.log('Rebuilding collegeData.json from raw text files strictly by KCET Code...');
   
   const existingPath = path.join(ROOT, 'public', 'collegeData.json');
+  let rawData = {};
   let collegesMap = {};
   if (fs.existsSync(existingPath)) {
-    collegesMap = JSON.parse(fs.readFileSync(existingPath, 'utf-8'));
+    rawData = JSON.parse(fs.readFileSync(existingPath, 'utf-8'));
+    collegesMap = rawData.colleges || rawData;
     console.log(`Loaded ${Object.keys(collegesMap).length} existing colleges from collegeData.json.`);
   }
 
   const rawFiles = [
+    { file: '2026_R1_raw.txt', year: '2026', round: 'R1' },
+    { file: '2026_R2_raw.txt', year: '2026', round: 'R2' },
+    { file: '2026_R3_raw.txt', year: '2026', round: 'R3' },
     { file: '2025_R1_raw.txt', year: '2025', round: 'R1' },
     { file: '2025_R2_raw.txt', year: '2025', round: 'R2' },
     { file: '2025_R3_raw.txt', year: '2025', round: 'R3' },
@@ -156,7 +161,16 @@ function rebuild() {
   }
 
   // Write back to public/collegeData.json
-  fs.writeFileSync(existingPath, JSON.stringify(collegesMap, null, 2));
+  if (rawData.colleges) {
+    rawData.metadata = rawData.metadata || {};
+    rawData.metadata.years = ["2024", "2025", "2026"];
+    rawData.metadata.description = "KCET Cutoff Data for 2024, 2025, and 2026";
+    rawData.metadata.lastUpdated = new Date().toISOString().split('T')[0];
+    rawData.colleges = collegesMap;
+    fs.writeFileSync(existingPath, JSON.stringify(rawData, null, 2));
+  } else {
+    fs.writeFileSync(existingPath, JSON.stringify(collegesMap, null, 2));
+  }
   console.log(`Updated ${existingPath} successfully!`);
 }
 

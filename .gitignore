@@ -121,3 +121,16 @@ probs with v2.2.0.md
 # Testing details and artifacts
 tests/
 test-results/
+.agents*
+.agent/
+
+# Brag launch video assets & screenshots
+brag-output/
+SeatSathi_Landing_Page.png
+SeatSathi_Voice_Agent.png
+
+# Firebase CLI configuration and Firestore rules (deployed manually/console)
+firebase.json
+firestore.rules
+
+

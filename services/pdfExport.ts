@@ -99,6 +99,7 @@ export const exportToPDF = (
     { header: '#', dataKey: 'index' },
     { header: 'College Name', dataKey: 'college' },
     { header: 'Branch', dataKey: 'branch' },
+    { header: '2026 Cutoff', dataKey: 'cutoff2026' },
     { header: '2025 Cutoff', dataKey: 'cutoff2025' },
     { header: '2024 Cutoff', dataKey: 'cutoff2024' },
     { header: 'Chance', dataKey: 'chance' }
@@ -106,8 +107,9 @@ export const exportToPDF = (
   
   const tableData = collegestoExport.map((rec, idx) => ({
     index: (idx + 1).toString(),
-    college: rec.collegeName.length > 45 ? rec.collegeName.substring(0, 42) + '...' : rec.collegeName,
-    branch: rec.branch.length > 25 ? rec.branch.substring(0, 22) + '...' : rec.branch,
+    college: rec.collegeName.length > 40 ? rec.collegeName.substring(0, 37) + '...' : rec.collegeName,
+    branch: rec.branch.length > 22 ? rec.branch.substring(0, 19) + '...' : rec.branch,
+    cutoff2026: rec.cutoff2026 || 'N/A',
     cutoff2025: rec.cutoff2025,
     cutoff2024: rec.cutoff2024,
     chance: rec.chance
@@ -121,6 +123,7 @@ export const exportToPDF = (
       row.index,
       row.college,
       row.branch,
+      row.cutoff2026,
       row.cutoff2025,
       row.cutoff2024,
       row.chance

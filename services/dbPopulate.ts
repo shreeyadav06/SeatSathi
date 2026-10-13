@@ -133,7 +133,7 @@ export async function populateDatabase(): Promise<{ success: boolean; stats: { c
 
 // Data version - increment this when KCET_DATA changes significantly
 // This forces a database repopulation on the client side
-const DATA_VERSION = 8; // Incremented: Added missing 2025 cutoffs for E141 (PES Electronic City) & college mapping fix
+const DATA_VERSION = 9; // Incremented: Added complete 2026 R1, R2, and R3 cutoffs across all colleges and branches
 const VERSION_KEY = 'kcet_data_version';
 
 /**
