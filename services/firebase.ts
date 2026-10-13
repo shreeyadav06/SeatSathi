@@ -370,14 +370,6 @@ export const getCurrentList = async (userId: string): Promise<any[]> => {
   
   return [];
 };
-  
-  if (userSnap.exists()) {
-    const data = userSnap.data();
-    return data.currentList || [];
-  }
-  
-  return [];
-};
 
 export const saveSessionToLocal = (session: ChatSession): void => {
   const sessions = getLocalSessions();

@@ -1135,9 +1135,9 @@ export const App: React.FC = () => {
         : `&mode=guest`;
       (window as any).__proxyAuthParams = authParams;
 
-      // Idempotent Proxy interceptor: route traffic through our secure Cloudflare Worker once
-      if (!(window as any).__wsProxyPatched) {
-        const OriginalWebSocket = window.WebSocket;
+      // Idempotent Proxy interceptor: route traffic through our secure Cloudflare Worker
+      if (!(window as any).__originalWebSocket) {
+        (window as any).__originalWebSocket = window.WebSocket;
         window.WebSocket = function (url: string | URL, protocols?: string | string[]) {
           const urlStr = url.toString();
           try {
@@ -1146,14 +1146,13 @@ export const App: React.FC = () => {
               const parsedUrl = new URL(urlStr);
               const extraParams = (window as any).__proxyAuthParams || '&mode=guest';
               const proxyUrl = 'wss://seatsathi-proxy.seatsathi.workers.dev' + parsedUrl.pathname + parsedUrl.search + extraParams;
-              return new OriginalWebSocket(proxyUrl, protocols);
+              return new (window as any).__originalWebSocket(proxyUrl, protocols);
             }
           } catch {
             // If URL parsing fails, fall back to original behavior.
           }
-          return new OriginalWebSocket(url, protocols);
+          return new (window as any).__originalWebSocket(url, protocols);
         } as any;
-        (window as any).__wsProxyPatched = true;
       }
 
       const sessionPromise = ai.live.connect({
@@ -1488,7 +1487,6 @@ export const App: React.FC = () => {
       });
 
       const session = await sessionPromise;
-      window.WebSocket = OriginalWebSocket; // Restore native WebSocket
       activeSessionRef.current = session;
 
       const source = inputCtx.createMediaStreamSource(stream);
