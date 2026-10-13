@@ -346,8 +346,8 @@ export const findMatchingColleges = async (
     const chanceDiff = chanceOrder[a.chance] - chanceOrder[b.chance];
     if (chanceDiff !== 0) return chanceDiff;
 
-    const valA = getMin(a.cutoff2025) !== 999999 ? getMin(a.cutoff2025) : getMin(a.cutoff2024);
-    const valB = getMin(b.cutoff2025) !== 999999 ? getMin(b.cutoff2025) : getMin(b.cutoff2024);
+    const valA = (a.cutoff2026 && getMin(a.cutoff2026) !== 999999) ? getMin(a.cutoff2026) : (getMin(a.cutoff2025) !== 999999 ? getMin(a.cutoff2025) : getMin(a.cutoff2024));
+    const valB = (b.cutoff2026 && getMin(b.cutoff2026) !== 999999) ? getMin(b.cutoff2026) : (getMin(b.cutoff2025) !== 999999 ? getMin(b.cutoff2025) : getMin(b.cutoff2024));
     
     const diffA = valA - rank;
     const diffB = valB - rank;
@@ -399,31 +399,37 @@ const findMatchingCollegesLegacy = async (
     // Process each branch group - merge data from same-type branches
     branchGroups.forEach((branches, normalizedBranch) => {
         // Collect all cutoff data from all variants of this branch
+        let best2026: { range: string, sortValue: number } = { range: "N/A", sortValue: 999999 };
         let best2025: { range: string, sortValue: number } = { range: "N/A", sortValue: 999999 };
         let best2024: { range: string, sortValue: number } = { range: "N/A", sortValue: 999999 };
         let displayBranchName = branches[0].originalName;
         
         branches.forEach(({ branchData, originalName }) => {
+            const data2026 = getCutoffRange(branchData, '2026', normCat);
             const data2025 = getCutoffRange(branchData, '2025', normCat);
             const data2024 = getCutoffRange(branchData, '2024', normCat);
             
             // Take the best (lowest rank) cutoff for each year
+            if (data2026.sortValue < best2026.sortValue) {
+              best2026 = data2026;
+              if (data2026.sortValue !== 999999) displayBranchName = originalName;
+            }
             if (data2025.sortValue < best2025.sortValue) {
               best2025 = data2025;
-              if (data2025.sortValue !== 999999) displayBranchName = originalName;
+              if (best2026.sortValue === 999999 && data2025.sortValue !== 999999) displayBranchName = originalName;
             }
             if (data2024.sortValue < best2024.sortValue) {
               best2024 = data2024;
-              if (best2025.sortValue === 999999 && data2024.sortValue !== 999999) {
+              if (best2026.sortValue === 999999 && best2025.sortValue === 999999 && data2024.sortValue !== 999999) {
                 displayBranchName = originalName;
               }
             }
         });
 
         // We need at least one cutoff to recommend
-        if (best2025.sortValue === 999999 && best2024.sortValue === 999999) return;
+        if (best2026.sortValue === 999999 && best2025.sortValue === 999999 && best2024.sortValue === 999999) return;
 
-        const refCutoff = best2025.sortValue !== 999999 ? best2025.sortValue : best2024.sortValue;
+        const refCutoff = best2026.sortValue !== 999999 ? best2026.sortValue : (best2025.sortValue !== 999999 ? best2025.sortValue : best2024.sortValue);
         
         // Updated chance calculation based on new logic
         // refCutoff is the college's cutoff rank (lower is better/harder)
@@ -457,6 +463,7 @@ const findMatchingCollegesLegacy = async (
           const rec: CollegeRecommendation = {
               collegeName: college.name,
               branch: displayBranchName,
+              cutoff2026: best2026.range,
               cutoff2025: best2025.range,
               cutoff2024: best2024.range,
               chance,
@@ -488,8 +495,8 @@ const findMatchingCollegesLegacy = async (
      const chanceDiff = chanceOrder[a.chance] - chanceOrder[b.chance];
      if (chanceDiff !== 0) return chanceDiff;
 
-     const valA = getMin(a.cutoff2025) !== 999999 ? getMin(a.cutoff2025) : getMin(a.cutoff2024);
-     const valB = getMin(b.cutoff2025) !== 999999 ? getMin(b.cutoff2025) : getMin(b.cutoff2024);
+     const valA = (a.cutoff2026 && getMin(a.cutoff2026) !== 999999) ? getMin(a.cutoff2026) : (getMin(a.cutoff2025) !== 999999 ? getMin(a.cutoff2025) : getMin(a.cutoff2024));
+     const valB = (b.cutoff2026 && getMin(b.cutoff2026) !== 999999) ? getMin(b.cutoff2026) : (getMin(b.cutoff2025) !== 999999 ? getMin(b.cutoff2025) : getMin(b.cutoff2024));
      
      const diffA = valA - rank;
      const diffB = valB - rank;
@@ -540,6 +547,7 @@ const getSpecificCollegeCutoffLegacy = async (collegeName: string, category: str
     const results = matchingBranches.map(([bName, bData]) => {
         return {
             branch: bName,
+            cutoff2026: getCutoffRange(bData, '2026', normCat).range,
             cutoff2025: getCutoffRange(bData, '2025', normCat).range,
             cutoff2024: getCutoffRange(bData, '2024', normCat).range
         };
@@ -587,7 +595,7 @@ export const toolsDeclaration: any[] = [
       },
       {
         name: "find_matching_colleges",
-        description: "ONLY call this tool when user EXPLICITLY asks for college recommendations/list. Finds colleges based on rank, category, course and location. ONLY provide parameters that the user has explicitly stated. If a user hasn't mentioned a new rank/category/etc, DO NOT provide it in the arguments (leave it undefined) and the system will use their previously established values.",
+        description: "ONLY call this tool when user EXPLICITLY asks for college recommendations/list. Finds colleges based on official KEA 2026, 2025, and 2024 cutoffs matching rank, category, course and location. ONLY provide parameters that the user has explicitly stated. If a user hasn't mentioned a new rank/category/etc, DO NOT provide it in the arguments (leave it undefined) and the system will use their previously established values.",
         parameters: {
           type: "OBJECT",
           properties: {
@@ -600,7 +608,7 @@ export const toolsDeclaration: any[] = [
       },
       {
         name: "get_specific_college_cutoff",
-        description: "Gets cutoff information for a SPECIFIC college. Use this when user asks about a particular college like 'tell me about RV College', 'what is the cutoff for BMS', 'can I get into PES with my rank'. This does NOT update the college list UI.",
+        description: "Gets official cutoff information (including 2026, 2025, and 2024) for a SPECIFIC college. Use this when user asks about a particular college like 'tell me about RV College', 'what is the cutoff for BMS', 'can I get into PES with my rank'. This does NOT update the college list UI.",
         parameters: {
           type: "OBJECT",
           properties: {

@@ -124,6 +124,9 @@ IMPORTANT: This introduction is ONLY for the first message. All subsequent respo
   - Round 2: For vacant seats after Round 1
   - Round 3: Final mop-up round for remaining seats
   - Extended rounds if seats remain
+- CUTOFF DATA AVAILABILITY (2026, 2025, 2024):
+  - You have official KCET 2026 cutoffs (R1, R2, R3) loaded alongside 2025 and 2024.
+  - When discussing latest cutoffs, refer to 2026 as the most recent benchmark from KEA (Karnataka Examinations Authority).
 - Ranking Formula: 50% KCET score + 50% 12th board marks (normalized)
 - Seat Matrix: ~50,000 engineering seats across 200+ colleges in Karnataka
 
@@ -910,6 +913,7 @@ export const App: React.FC = () => {
     let unsubscribe: (() => void) | null = null;
 
     loadFirebase().then(firebase => {
+      firebase.checkRedirectResult().catch(e => console.warn(e));
       unsubscribe = firebase.onAuthChange((authUser) => {
         setUser((prevUser: any) => {
           if (prevUser?.isGuest && !authUser) {
@@ -1375,9 +1379,26 @@ export const App: React.FC = () => {
             const reason = e?.message || e?.reason || '';
             const code = e?.code;
 
+            if (reason.includes('Session time limit reached')) {
+              console.log("Session ended: Server-enforced time limit reached");
+              sessionEndedRef.current = true;
+              cleanupSession(false);
+              setIsConnected(false);
+              if (user?.isGuest) {
+                alert("Guest session limit reached (2 minutes). Please log in to continue.");
+                setView('landing');
+              } else {
+                addLog("Session reached the 10-minute active limit. Click Start to begin a new session.", 'system');
+              }
+              return;
+            }
+
             const isKnownLimitation = reason.includes('not implemented') ||
               reason.includes('not supported') ||
-              reason.includes('not enabled');
+              reason.includes('not enabled') ||
+              reason.includes('Rate limit') ||
+              reason.includes('Forbidden') ||
+              code === 1008 || code === 4403;
 
             // Determine if we should auto-reconnect
             const shouldReconnect = !isKnownLimitation &&

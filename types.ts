@@ -2,6 +2,7 @@
 export interface CollegeRecommendation {
   collegeName: string;
   branch: string;
+  cutoff2026?: string;
   cutoff2025: string; // Changed to string to support ranges (e.g., "12000 - 15000")
   cutoff2024: string; // Changed to string
   chance: 'Safe' | 'Moderate' | 'Reach';

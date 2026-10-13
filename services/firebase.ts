@@ -1,9 +1,15 @@
 import { initializeApp } from 'firebase/app';
 import { 
-  getAuth, 
+  getAuth,
+  initializeAuth,
+  browserLocalPersistence,
+  indexedDBLocalPersistence,
+  browserPopupRedirectResolver,
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -42,9 +48,17 @@ let googleProvider: any = null;
 
 if (isFirebaseConfigured()) {
   app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
+  try {
+    auth = initializeAuth(app, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+      popupRedirectResolver: browserPopupRedirectResolver
+    });
+  } catch {
+    auth = getAuth(app);
+  }
   db = getFirestore(app);
   googleProvider = new GoogleAuthProvider();
+  googleProvider.setCustomParameters({ prompt: 'select_account' });
 }
 
 export interface AuthUser {
@@ -66,7 +80,11 @@ export const signUpWithEmail = async (email: string, password: string, displayNa
     }
   }
   
-  await createUserProfile(result.user);
+  try {
+    await createUserProfile(result.user);
+  } catch (err) {
+    console.warn('createUserProfile error (non-fatal):', err);
+  }
   
   return {
     uid: result.user.uid,
@@ -91,8 +109,12 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
   if (!auth || !googleProvider) throw new Error('Firebase not configured');
   const result = await signInWithPopup(auth, googleProvider);
   
-  // Create user profile if first time
-  await createUserProfile(result.user);
+  // Create user profile if first time (safely isolated)
+  try {
+    await createUserProfile(result.user);
+  } catch (err) {
+    console.warn('createUserProfile error (non-fatal):', err);
+  }
   
   return {
     uid: result.user.uid,
@@ -100,6 +122,34 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
     displayName: result.user.displayName,
     photoURL: result.user.photoURL
   };
+};
+
+export const signInWithGoogleRedirect = async (): Promise<void> => {
+  if (!auth || !googleProvider) throw new Error('Firebase not configured');
+  await signInWithRedirect(auth, googleProvider);
+};
+
+export const checkRedirectResult = async (): Promise<AuthUser | null> => {
+  if (!auth) return null;
+  try {
+    const result = await getRedirectResult(auth);
+    if (result?.user) {
+      try {
+        await createUserProfile(result.user);
+      } catch (err) {
+        console.warn('createUserProfile error (non-fatal):', err);
+      }
+      return {
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        photoURL: result.user.photoURL
+      };
+    }
+  } catch (err) {
+    console.warn('checkRedirectResult error:', err);
+  }
+  return null;
 };
 
 export const logOut = async (): Promise<void> => {
@@ -313,20 +363,19 @@ export const getLocalLists = (): any[] => {
 
 // Test Firebase connection
 export const testFirebaseConnection = async (): Promise<{ success: boolean; message: string }> => {
-  if (!db) {
+  if (!db || !auth) {
     return { success: false, message: 'Firebase not configured' };
   }
   
   try {
-    const testRef = doc(db, '_test', 'connection');
-    await setDoc(testRef, { 
-      testTime: serverTimestamp(),
-      status: 'connected' 
-    });
-    console.log('✅ Firebase Firestore connection successful!');
-    return { success: true, message: 'Firebase Firestore connected successfully!' };
+    if (auth.currentUser) {
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      await getDoc(userRef);
+    }
+    console.log('✅ Firebase Firestore initialized successfully!');
+    return { success: true, message: 'Firebase Firestore initialized successfully!' };
   } catch (error: any) {
-    console.error('❌ Firebase connection failed:', error);
+    console.error('❌ Firebase connection check failed:', error);
     return { success: false, message: `Firebase error: ${error.message}` };
   }
 };

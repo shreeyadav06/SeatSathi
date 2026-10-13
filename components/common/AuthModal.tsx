@@ -66,12 +66,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
     setLoading(true);
     try {
       const firebase = await loadFirebase();
-      await firebase.signInWithGoogle();
-      onAuthSuccess();
-      onClose();
+      try {
+        await firebase.signInWithGoogle();
+        onAuthSuccess();
+        onClose();
+      } catch (popupErr: any) {
+        console.warn('Popup sign-in failed, initiating automatic redirect fallback:', popupErr);
+        // Seamless fallback to full-page OAuth redirect (bypasses popup blockers and cookie limits)
+        await firebase.signInWithGoogleRedirect();
+      }
     } catch (err: any) {
+      console.error('Google Sign-In Error details:', err);
       setError(err.message || 'Google sign-in failed');
-    } finally {
       setLoading(false);
     }
   };
