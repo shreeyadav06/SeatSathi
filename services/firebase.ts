@@ -231,20 +231,58 @@ const createUserProfile = async (user: User): Promise<void> => {
   }
 };
 
+const ensureAuthenticatedUser = (userId: string) => {
+  if (!auth?.currentUser || auth.currentUser.uid !== userId) {
+    throw new Error('Unauthorized: Operation only permitted for active user');
+  }
+};
+
+const sanitizeColleges = (colleges: any[]): any[] => {
+  if (!Array.isArray(colleges)) return [];
+  // Cap at max 100 colleges per list to prevent Firestore document overflow (1MB limit)
+  return colleges.slice(0, 100).map(c => ({
+    collegeName: String(c.collegeName || '').substring(0, 200),
+    branch: String(c.branch || '').substring(0, 100),
+    chance: ['Safe', 'Moderate', 'Reach'].includes(c.chance) ? c.chance : 'Moderate',
+    location: String(c.location || '').substring(0, 50),
+    cutoff2026: String(c.cutoff2026 || 'N/A').substring(0, 30),
+    cutoff2025: String(c.cutoff2025 || 'N/A').substring(0, 30),
+    cutoff2024: String(c.cutoff2024 || 'N/A').substring(0, 30),
+  }));
+};
+
 export const saveChatSession = async (
   userId: string, 
   session: Omit<ChatSession, 'id'>
 ): Promise<string> => {
   if (!db) throw new Error('Firebase not configured');
+  ensureAuthenticatedUser(userId);
   
   const sessionId = `session_${Date.now()}`;
   const userRef = doc(db, 'users', userId);
   
+  // Bound messages to last 50 entries and truncate oversized text
+  const cleanMessages = (session.messages || []).slice(-50).map(m => ({
+    role: ['user', 'agent', 'system'].includes(m.role) ? m.role : 'user',
+    text: String(m.text || '').substring(0, 2000),
+    timestamp: m.timestamp || new Date()
+  }));
+
+  const cleanSession = {
+    startedAt: session.startedAt || new Date(),
+    endedAt: session.endedAt || new Date(),
+    messages: cleanMessages,
+    searchParams: session.searchParams ? {
+      rank: typeof session.searchParams.rank === 'number' ? session.searchParams.rank : undefined,
+      category: String(session.searchParams.category || '').substring(0, 10),
+      course: String(session.searchParams.course || '').substring(0, 50),
+      location: String(session.searchParams.location || '').substring(0, 50),
+    } : undefined,
+    id: sessionId
+  };
+
   await updateDoc(userRef, {
-    chatHistory: arrayUnion({
-      ...session,
-      id: sessionId
-    }),
+    chatHistory: arrayUnion(cleanSession),
     totalSessions: (await getDoc(userRef)).data()?.totalSessions + 1 || 1,
     lastActive: serverTimestamp()
   });
@@ -254,6 +292,7 @@ export const saveChatSession = async (
 
 export const getUserChatHistory = async (userId: string): Promise<ChatSession[]> => {
   if (!db) return [];
+  ensureAuthenticatedUser(userId);
   
   const userRef = doc(db, 'users', userId);
   const userSnap = await getDoc(userRef);
@@ -272,13 +311,16 @@ export const saveUserList = async (
   colleges: any[]
 ): Promise<void> => {
   if (!db) throw new Error('Firebase not configured');
+  ensureAuthenticatedUser(userId);
   
   const userRef = doc(db, 'users', userId);
+  const cleanName = String(listName || 'My List').trim().substring(0, 60);
+  const cleanColleges = sanitizeColleges(colleges);
   
   await updateDoc(userRef, {
     savedLists: arrayUnion({
-      name: listName,
-      colleges,
+      name: cleanName,
+      colleges: cleanColleges,
       savedAt: new Date().toISOString()
     })
   });
@@ -286,6 +328,7 @@ export const saveUserList = async (
 
 export const getUserSavedLists = async (userId: string): Promise<any[]> => {
   if (!db) return [];
+  ensureAuthenticatedUser(userId);
   
   const userRef = doc(db, 'users', userId);
   const userSnap = await getDoc(userRef);
@@ -301,11 +344,13 @@ export const getUserSavedLists = async (userId: string): Promise<any[]> => {
 // Save current working list for a user
 export const saveCurrentList = async (userId: string, colleges: any[]): Promise<void> => {
   if (!db) throw new Error('Firebase not configured');
+  ensureAuthenticatedUser(userId);
   
   const userRef = doc(db, 'users', userId);
+  const cleanColleges = sanitizeColleges(colleges);
   
   await updateDoc(userRef, {
-    currentList: colleges,
+    currentList: cleanColleges,
     lastActive: serverTimestamp()
   });
 };
@@ -313,9 +358,18 @@ export const saveCurrentList = async (userId: string, colleges: any[]): Promise<
 // Get current working list for a user
 export const getCurrentList = async (userId: string): Promise<any[]> => {
   if (!db) return [];
+  ensureAuthenticatedUser(userId);
   
   const userRef = doc(db, 'users', userId);
   const userSnap = await getDoc(userRef);
+  
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    return data.currentList || [];
+  }
+  
+  return [];
+};
   
   if (userSnap.exists()) {
     const data = userSnap.data();

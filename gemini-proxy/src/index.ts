@@ -34,6 +34,32 @@ function isOriginAllowed(origin: string | null): boolean {
   return false;
 }
 
+function checkMemoryRateLimit(clientIP: string, oneHour: number): boolean {
+  const now = Date.now();
+  const record = memoryRateLimits.get(clientIP);
+  if (!record || now > record.resetAt) {
+    memoryRateLimits.set(clientIP, { count: 1, resetAt: now + oneHour });
+    return false;
+  }
+  record.count++;
+  return record.count > 30; // Max 30 sessions per hour per IP on memory limiter
+}
+
+function verifyFirebaseJwtClaims(token: string): boolean {
+  if (!token || token.length < 30) return false;
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  try {
+    const payload = JSON.parse(atob(parts[1]));
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!payload.exp || payload.exp <= nowSec) return false;
+    if (payload.aud !== 'seatsathi-981f8' && !payload.iss?.includes('seatsathi-981f8')) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const upgradeHeader = request.headers.get('Upgrade');
@@ -79,28 +105,23 @@ export default {
         }
       } catch (e) {
         console.error('D1 rate limiting error, falling back to in-memory limiter:', e);
-        // Fallback: in-memory limiter (max 20 requests per hour)
-        const now = Date.now();
-        const record = memoryRateLimits.get(clientIP);
-        if (!record || now > record.resetAt) {
-          memoryRateLimits.set(clientIP, { count: 1, resetAt: now + ONE_HOUR });
-        } else {
-          record.count++;
-          if (record.count > 20) {
-            rateLimited = true;
-          }
-        }
+        rateLimited = checkMemoryRateLimit(clientIP, ONE_HOUR);
       }
+    } else {
+      // In-memory rate limiting when D1 is not bound
+      rateLimited = checkMemoryRateLimit(clientIP, ONE_HOUR);
     }
 
     if (rateLimited) {
-      return new Response('Rate limit exceeded (50 sessions/hr). Please try again later.', { status: 429 });
+      return new Response('Rate limit exceeded (sessions/hr). Please try again later.', { status: 429 });
     }
 
-    // Determine max session duration based on user mode
+    // Determine max session duration based on verified user authentication
     const reqUrl = new URL(request.url);
     const mode = reqUrl.searchParams.get('mode') || 'guest';
-    const MAX_SESSION_DURATION = mode === 'authenticated' ? 10 * 60 * 1000 : 2 * 60 * 1000; // 10 min for auth, 2 min for guest
+    const token = reqUrl.searchParams.get('token') || '';
+    const isVerifiedAuth = mode === 'authenticated' && verifyFirebaseJwtClaims(token);
+    const MAX_SESSION_DURATION = isVerifiedAuth ? 10 * 60 * 1000 : 2 * 60 * 1000; // 10 min for verified auth, 2 min for guest
 
     // Connect to Gemini Live API
     const GEMINI_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${env.GEMINI_API_KEY}`;

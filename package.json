@@ -33,5 +33,8 @@
   "optionalDependencies": {
     "protobufjs": "^7.6.5",
     "ws": "^8.21.0"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.13.6"
   }
 }

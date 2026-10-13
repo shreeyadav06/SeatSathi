@@ -1116,22 +1116,45 @@ export const App: React.FC = () => {
 
       const isReconnect = isReconnectingRef.current;
 
-      // Proxy interceptor: route traffic through our secure Cloudflare Worker
-      const OriginalWebSocket = window.WebSocket;
-      window.WebSocket = function (url: string | URL, protocols?: string | string[]) {
-        const urlStr = url.toString();
+      // Retrieve verified Firebase ID token for authenticated sessions
+      let userToken = '';
+      if (user && !user.isGuest) {
         try {
-          if (urlStr.includes('generativelanguage.googleapis.com')) {
-            console.log("Proxying Gemini WebSocket connection...");
-            const parsedUrl = new URL(urlStr);
-            const proxyUrl = 'wss://seatsathi-proxy.seatsathi.workers.dev' + parsedUrl.pathname + parsedUrl.search;
-            return new OriginalWebSocket(proxyUrl, protocols);
+          const fb = await loadFirebase();
+          if (fb.auth?.currentUser) {
+            userToken = await fb.auth.currentUser.getIdToken();
           }
-        } catch {
-          // If URL parsing fails, fall back to original behavior.
+        } catch (e) {
+          console.warn("Failed to retrieve auth token for proxy:", e);
         }
-        return new OriginalWebSocket(url, protocols);
-      } as any;
+      }
+
+      // Configure proxy query parameters (mode and token)
+      const authParams = (user && !user.isGuest && userToken)
+        ? `&mode=authenticated&token=${encodeURIComponent(userToken)}`
+        : `&mode=guest`;
+      (window as any).__proxyAuthParams = authParams;
+
+      // Idempotent Proxy interceptor: route traffic through our secure Cloudflare Worker once
+      if (!(window as any).__wsProxyPatched) {
+        const OriginalWebSocket = window.WebSocket;
+        window.WebSocket = function (url: string | URL, protocols?: string | string[]) {
+          const urlStr = url.toString();
+          try {
+            if (urlStr.includes('generativelanguage.googleapis.com')) {
+              console.log("Proxying Gemini WebSocket connection...");
+              const parsedUrl = new URL(urlStr);
+              const extraParams = (window as any).__proxyAuthParams || '&mode=guest';
+              const proxyUrl = 'wss://seatsathi-proxy.seatsathi.workers.dev' + parsedUrl.pathname + parsedUrl.search + extraParams;
+              return new OriginalWebSocket(proxyUrl, protocols);
+            }
+          } catch {
+            // If URL parsing fails, fall back to original behavior.
+          }
+          return new OriginalWebSocket(url, protocols);
+        } as any;
+        (window as any).__wsProxyPatched = true;
+      }
 
       const sessionPromise = ai.live.connect({
         ...config,
