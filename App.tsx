@@ -328,20 +328,55 @@ const TypewriterCaption: React.FC<{text: string}> = ({ text }) => {
 export const App: React.FC = () => {
   const [view, setView] = useState<'landing' | 'app' | 'rank-predictor'>('landing');
 
+  const navigateTo = useCallback((path: string) => {
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+    }
+    if (path === '/rank-predictor') {
+      setView('rank-predictor');
+    } else if (path === '/app' || path === '/counseling') {
+      setView('app');
+    } else {
+      setView('landing');
+    }
+  }, []);
+
   useEffect(() => {
-    const handleHash = () => {
+    const handleLocation = () => {
       const hash = window.location.hash;
+      const pathname = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+
+      // Backward compatibility: Convert existing # links (e.g. /#/rank-predictor) to clean paths
       if (hash === '#/rank-predictor') {
+        window.history.replaceState({}, '', '/rank-predictor');
         setView('rank-predictor');
-      } else if (hash === '#/app') {
+        return;
+      } else if (hash === '#/app' || hash === '#/counseling') {
+        window.history.replaceState({}, '', '/app');
         setView('app');
-      } else if (hash === '#/' || hash === '' || hash === '#') {
+        return;
+      } else if (hash === '#/' || hash === '#') {
+        window.history.replaceState({}, '', '/');
+        setView('landing');
+        return;
+      }
+
+      if (pathname === '/rank-predictor') {
+        setView('rank-predictor');
+      } else if (pathname === '/app' || pathname === '/counseling') {
+        setView('app');
+      } else {
         setView('landing');
       }
     };
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+
+    handleLocation();
+    window.addEventListener('popstate', handleLocation);
+    window.addEventListener('hashchange', handleLocation);
+    return () => {
+      window.removeEventListener('popstate', handleLocation);
+      window.removeEventListener('hashchange', handleLocation);
+    };
   }, []);
   const [isConnected, setIsConnected] = useState(false);
   const [visualizerState, setVisualizerState] = useState<VisualizerState>('idle');
@@ -1027,8 +1062,7 @@ export const App: React.FC = () => {
     loadFirebase().then(firebase => {
       firebase.checkRedirectResult().then(redirectUser => {
         if (redirectUser) {
-          window.location.hash = '#/app';
-          setView('app');
+          navigateTo('/app');
         }
       }).catch(e => console.warn(e));
       unsubscribe = firebase.onAuthChange((authUser) => {
@@ -1154,9 +1188,8 @@ export const App: React.FC = () => {
     if (isConnected) {
       handleDisconnect();
     }
-    window.location.hash = '#/';
-    setView('landing');
-  }, [isConnected, handleDisconnect]);
+    navigateTo('/');
+  }, [isConnected, handleDisconnect, navigateTo]);
 
   const cleanData = (data: any): any => {
     return JSON.parse(JSON.stringify(data, (key, value) => value === undefined ? null : value));
@@ -2097,12 +2130,10 @@ export const App: React.FC = () => {
       <RankPredictorPage
         theme={theme}
         onNavigateHome={() => {
-          window.location.hash = '#/';
-          setView('landing');
+          navigateTo('/');
         }}
         onStartCounseling={(predictedRank, prefCategory) => {
-          window.location.hash = '#/app';
-          setView('app');
+          navigateTo('/app');
           if (predictedRank) {
             savedParamsRef.current.rank = predictedRank;
           }
@@ -2119,12 +2150,10 @@ export const App: React.FC = () => {
       <>
         <LandingPage
           onStart={() => {
-            window.location.hash = '#/app';
-            setView('app');
+            navigateTo('/app');
           }}
           onRankPredictorClick={() => {
-            window.location.hash = '#/rank-predictor';
-            setView('rank-predictor');
+            navigateTo('/rank-predictor');
           }}
           user={user}
           onLoginClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
@@ -2140,8 +2169,7 @@ export const App: React.FC = () => {
           onClose={() => setShowAuthModal(false)}
           onAuthSuccess={() => {
             setShowAuthModal(false);
-            window.location.hash = '#/app';
-            setView('app');
+            navigateTo('/app');
           }}
           initialMode={authModalMode}
           theme={theme}

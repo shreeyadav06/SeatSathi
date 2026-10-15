@@ -29,13 +29,18 @@ function isOriginAllowed(origin: string | null): boolean {
       return true;
     }
 
-    // Vercel deployment origins
-    if (host === 'seatsathi.vercel.app' || host.endsWith('.seatsathi.vercel.app')) {
+    // Vercel deployment origins (support both seatsathi and seat-sathi)
+    if (
+      host === 'seatsathi.vercel.app' || 
+      host === 'seat-sathi.vercel.app' || 
+      host.endsWith('.seatsathi.vercel.app') ||
+      host.endsWith('.seat-sathi.vercel.app')
+    ) {
       return true;
     }
 
     // Vercel preview branches for SeatSathi (*.vercel.app)
-    if (host.endsWith('.vercel.app') && (host.startsWith('seatsathi') || host.includes('seatsathi'))) {
+    if (host.endsWith('.vercel.app') && (host.includes('seatsathi') || host.includes('seat-sathi'))) {
       return true;
     }
   } catch {

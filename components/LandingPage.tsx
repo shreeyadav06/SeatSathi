@@ -35,7 +35,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
           <motion.button
             whileTap={{ scale: 0.95 }}
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            onClick={onRankPredictorClick || (() => { window.location.hash = '#/rank-predictor'; })}
+            onClick={onRankPredictorClick || (() => { window.history.pushState({}, '', '/rank-predictor'); window.dispatchEvent(new PopStateEvent('popstate')); })}
             className={`px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold rounded-full border transition-all whitespace-nowrap shrink-0 flex items-center ${theme === 'dark' ? 'border-[#3A3A3C] bg-[#1C1C1E] text-blue-400 hover:border-blue-500 hover:bg-[#25252A]' : 'border-slate-300 bg-white text-blue-600 hover:border-blue-400 shadow-sm'}`}
           >
             <span className="hidden sm:inline">Rank&nbsp;</span>
@@ -205,7 +205,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
         <div className="mt-12 w-full max-w-2xl mx-auto px-4">
           <motion.div 
             whileHover={{ y: -2 }}
-            onClick={onRankPredictorClick || (() => { window.location.hash = '#/rank-predictor'; })}
+            onClick={onRankPredictorClick || (() => { window.history.pushState({}, '', '/rank-predictor'); window.dispatchEvent(new PopStateEvent('popstate')); })}
             className={`p-6 sm:p-8 rounded-3xl border shadow-xl cursor-pointer transition-all flex flex-col sm:flex-row items-center justify-between gap-6 backdrop-blur-xl ${theme === 'dark' ? 'bg-gradient-to-r from-[#1C1C24] via-[#1E1E28] to-[#171720] border-[#323240] hover:border-blue-500/50' : 'bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/80 border-blue-200 hover:border-blue-400 shadow-blue-500/5'}`}
           >
             <div className="text-left space-y-2">
