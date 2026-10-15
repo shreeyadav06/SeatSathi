@@ -6,6 +6,11 @@ async function loadKCETData() {
   return lazyLoad();
 }
 
+async function loadComedkData() {
+  const { loadComedkData: lazyLoadComedk } = await import('../KCETcutoffdata/comedkDataLoader');
+  return lazyLoadComedk();
+}
+
 async function fetchCollegeMetadata() {
   const { loadCollegeMetadata } = await import('../KCETcutoffdata/metadataLoader');
   return loadCollegeMetadata();
@@ -22,38 +27,41 @@ export async function populateDatabase(): Promise<{ success: boolean; stats: { c
     await db.collegeMetadata.clear();
     
     // Lazily load college data & metadata concurrently
-    const [KCET_DATA, METADATA_JSON] = await Promise.all([
+    const [KCET_DATA, COMEDK_DATA, METADATA_JSON] = await Promise.all([
       loadKCETData(),
+      loadComedkData().catch(e => {
+        console.error("Failed to fetch COMEDK data", e);
+        return { colleges: {} };
+      }),
       fetchCollegeMetadata().catch(e => {
         console.error("Failed to fetch college metadata", e);
         return {};
       })
     ]);
     const data = KCET_DATA as KcetData;
+    const comedkColleges = COMEDK_DATA.colleges || {};
     
     const collegeRecords: CollegeRecord[] = [];
     const branchRecords: BranchRecord[] = [];
     const cutoffRecords: CutoffRecord[] = [];
     const metadataRecords: CollegeMetadataRecord[] = [];
     
-    // Process each college
+    // Process KCET colleges
     Object.entries(data.colleges).forEach(([code, college]) => {
       const location = extractLocation(college.name);
       const locationKeywords = getLocationKeywords(college.name);
       
-      // Add college record
       collegeRecords.push({
         code,
         name: college.name,
         location,
-        locationKeywords
+        locationKeywords,
+        examType: 'KCET'
       });
       
-      // Process each branch
       Object.entries(college?.branches || {}).forEach(([branchName, branchData]) => {
         const { normalized, category, isPure } = normalizeBranchName(branchName);
         
-        // Add branch record
         branchRecords.push({
           collegeCode: code,
           collegeName: college.name,
@@ -61,16 +69,14 @@ export async function populateDatabase(): Promise<{ success: boolean; stats: { c
           branchNormalized: normalized,
           branchCategory: category,
           isPure,
-          location
+          location,
+          examType: 'KCET'
         });
         
-        // Process each year
         Object.entries(branchData).forEach(([year, yearData]) => {
-          // Process each round
           Object.entries(yearData).forEach(([round, roundData]) => {
             if (!roundData) return;
             
-            // Process each category cutoff
             Object.entries(roundData).forEach(([cat, cutoffRank]) => {
               if (typeof cutoffRank !== 'number') return;
               
@@ -85,7 +91,63 @@ export async function populateDatabase(): Promise<{ success: boolean; stats: { c
                 year,
                 round,
                 category: cat,
-                cutoffRank
+                cutoffRank,
+                examType: 'KCET'
+              });
+            });
+          });
+        });
+      });
+    });
+
+    // Process COMEDK colleges
+    Object.entries(comedkColleges).forEach(([code, college]: [string, any]) => {
+      const location = extractLocation(college.name);
+      const locationKeywords = getLocationKeywords(college.name);
+      
+      collegeRecords.push({
+        code,
+        name: college.name,
+        location,
+        locationKeywords,
+        examType: 'COMEDK',
+        originalCode: college.originalCode || code.replace('COMEDK_', '')
+      });
+      
+      Object.entries(college?.branches || {}).forEach(([branchName, branchData]: [string, any]) => {
+        const { normalized, category, isPure } = normalizeBranchName(branchName);
+        
+        branchRecords.push({
+          collegeCode: code,
+          collegeName: college.name,
+          branchName,
+          branchNormalized: normalized,
+          branchCategory: category,
+          isPure,
+          location,
+          examType: 'COMEDK'
+        });
+        
+        Object.entries(branchData).forEach(([year, yearData]: [string, any]) => {
+          Object.entries(yearData).forEach(([round, roundData]: [string, any]) => {
+            if (!roundData) return;
+            
+            Object.entries(roundData).forEach(([cat, cutoffRank]: [string, any]) => {
+              if (typeof cutoffRank !== 'number') return;
+              
+              cutoffRecords.push({
+                collegeCode: code,
+                collegeName: college.name,
+                branchName,
+                branchNormalized: normalized,
+                branchCategory: category,
+                isPure,
+                location,
+                year,
+                round,
+                category: cat,
+                cutoffRank,
+                examType: 'COMEDK'
               });
             });
           });
@@ -131,9 +193,9 @@ export async function populateDatabase(): Promise<{ success: boolean; stats: { c
   }
 }
 
-// Data version - increment this when KCET_DATA changes significantly
+// Data version - increment this when KCET_DATA or COMEDK_DATA changes significantly
 // This forces a database repopulation on the client side
-const DATA_VERSION = 9; // Incremented: Added complete 2026 R1, R2, and R3 cutoffs across all colleges and branches
+const DATA_VERSION = 11; // Incremented: Added COMEDK 2024-2026 R1-R4 cutoffs and metadata
 const VERSION_KEY = 'kcet_data_version';
 
 /**

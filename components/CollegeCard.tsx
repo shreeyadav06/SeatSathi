@@ -73,9 +73,22 @@ const CollegeCard: React.FC<CollegeCardProps> = ({
           </h3>
           {/* Course and Location boxes */}
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {data.searchCategory && (
+            {data.examType && (
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${
+                data.examType === 'COMEDK'
+                  ? isDark 
+                    ? 'text-amber-400 bg-amber-500/15 border-amber-500/30 shadow-sm'
+                    : 'text-amber-700 bg-amber-50 border-amber-300 shadow-sm'
+                  : isDark
+                    ? 'text-indigo-400 bg-indigo-500/15 border-indigo-500/30 shadow-sm'
+                    : 'text-indigo-700 bg-indigo-50 border-indigo-300 shadow-sm'
+              }`}>
+                {data.examType}
+              </span>
+            )}
+            {(data.searchCategory || data.category) && (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-md border ${isDark ? 'text-[#BF5AF2] bg-[#BF5AF2]/10 border-[#BF5AF2]/20' : 'text-[#AF52DE] bg-[#AF52DE]/10 border-[#AF52DE]/20'}`}>
-                {data.searchCategory}
+                {data.searchCategory || data.category}
               </span>
             )}
             <span className={`text-xs font-medium px-2 py-0.5 rounded-md border ${isDark ? 'text-[#0A84FF] bg-[#0A84FF]/10 border-[#0A84FF]/20' : 'text-[#007AFF] bg-[#007AFF]/10 border-[#007AFF]/20'}`}>

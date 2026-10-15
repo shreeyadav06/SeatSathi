@@ -7,6 +7,8 @@ export interface CollegeRecord {
   name: string;
   location: string;
   locationKeywords: string[];
+  examType?: 'KCET' | 'COMEDK';
+  originalCode?: string;
 }
 
 export interface BranchRecord {
@@ -18,6 +20,7 @@ export interface BranchRecord {
   branchCategory: string;
   isPure: boolean;
   location: string;
+  examType?: 'KCET' | 'COMEDK';
 }
 
 export interface CutoffRecord {
@@ -33,6 +36,7 @@ export interface CutoffRecord {
   round: string;
   category: string;
   cutoffRank: number;
+  examType?: 'KCET' | 'COMEDK';
 }
 
 class SeatSathiDB extends Dexie {
@@ -43,6 +47,17 @@ class SeatSathiDB extends Dexie {
 
   constructor() {
     super('SeatSathiDB');
+
+    this.version(4).stores({
+      colleges: '++id, code, name, location, examType, *locationKeywords',
+      branches: '++id, collegeCode, branchNormalized, branchCategory, isPure, location, examType, [branchCategory+location], [branchCategory+isPure]',
+      cutoffs: '++id, collegeCode, branchNormalized, branchCategory, isPure, location, year, round, category, cutoffRank, examType, [branchCategory+location+category], [branchCategory+category+year], [location+branchCategory+category]',
+      collegeMetadata: '++id, code, shortName'
+    }).upgrade(async () => {
+      await this.colleges.clear();
+      await this.branches.clear();
+      await this.cutoffs.clear();
+    });
     
     this.version(3).stores({
       colleges: '++id, code, name, location, *locationKeywords',

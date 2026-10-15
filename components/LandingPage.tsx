@@ -11,25 +11,37 @@ interface LandingPageProps {
   onLogout: () => void;
   theme: ThemeMode;
   toggleTheme: () => void;
+  onRankPredictorClick?: () => void;
 }
 
 // Minimal mock for NoteModal until we extract it too
 // If NoteModal is not extracted, we should pass it or extract it.
 // Actually, NoteModal is in App.tsx. I should pass onNoteClick.
 export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void, onGuestLogin?: () => void }> = ({ 
-  onStart, user, onLoginClick, onSignupClick, onLogout, theme, toggleTheme, onNoteClick, onGuestLogin
+  onStart, user, onLoginClick, onSignupClick, onLogout, theme, toggleTheme, onNoteClick, onGuestLogin, onRankPredictorClick
 }) => {
   return (
     <div className={`min-h-screen max-h-screen flex flex-col font-sans selection:bg-blue-500/30 overflow-y-auto custom-scrollbar ${theme === 'dark' ? 'bg-black text-[#F2F2F7]' : 'bg-[#F2F2F7] text-[#1C1C1E]'}`}>
       {/* Navbar - Glassmorphism */}
-      <nav className={`flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 max-w-7xl mx-auto w-full sticky top-0 z-50 transition-colors duration-300 ${theme === 'light' ? 'bg-[#F2F2F7]/70 backdrop-blur-xl border-b border-[#E5E5EA]' : 'bg-black/70 backdrop-blur-xl border-b border-[#2C2C2E]'}`}>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#007AFF] flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-sm">S</div>
-          <span className={`text-lg sm:text-xl font-semibold tracking-tight ${theme === 'dark' ? 'text-white' : 'text-[#1C1C1E]'}`}>Seat<span className="text-[#007AFF]">Sathi</span></span>
+      <nav className={`flex items-center justify-between px-2.5 sm:px-6 py-2.5 sm:py-4 max-w-7xl mx-auto w-full sticky top-0 z-50 transition-colors duration-300 ${theme === 'light' ? 'bg-[#F2F2F7]/70 backdrop-blur-xl border-b border-[#E5E5EA]' : 'bg-black/70 backdrop-blur-xl border-b border-[#2C2C2E]'}`}>
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-[#007AFF] flex items-center justify-center text-white font-bold text-xs sm:text-lg shadow-sm">S</div>
+          <span className={`text-base sm:text-xl font-semibold tracking-tight ${theme === 'dark' ? 'text-white' : 'text-[#1C1C1E]'}`}>Seat<span className="text-[#007AFF]">Sathi</span></span>
         </div>
         
         {/* Theme Toggle & Auth Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Rank Predictor Nav Button */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            onClick={onRankPredictorClick || (() => { window.location.hash = '#/rank-predictor'; })}
+            className={`px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold rounded-full border transition-all whitespace-nowrap shrink-0 flex items-center ${theme === 'dark' ? 'border-[#3A3A3C] bg-[#1C1C1E] text-blue-400 hover:border-blue-500 hover:bg-[#25252A]' : 'border-slate-300 bg-white text-blue-600 hover:border-blue-400 shadow-sm'}`}
+          >
+            <span className="hidden sm:inline">Rank&nbsp;</span>
+            <span>Predictor</span>
+          </motion.button>
+
           {/* Theme Toggle */}
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -39,26 +51,26 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? (
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             ) : (
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
           </motion.button>
           {user ? (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-1.5">
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt="Profile" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full shrink-0" />
+                  <img src={user.photoURL} alt="Profile" className="w-6 h-6 sm:w-8 sm:h-8 rounded-full shrink-0" />
                 ) : (
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center text-[#007AFF] font-medium text-xs sm:text-sm shrink-0">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#007AFF]/10 flex items-center justify-center text-[#007AFF] font-medium text-xs sm:text-sm shrink-0">
                     {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="text-sm text-slate-300 hidden sm:inline">
+                <span className="text-xs sm:text-sm text-slate-300 hidden sm:inline">
                   {user.displayName || user.email?.split('@')[0]}
                 </span>
               </div>
@@ -66,18 +78,18 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 onClick={onLogout}
-                className={`px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors whitespace-nowrap ${theme === 'dark' ? 'text-[#8E8E93] hover:text-white bg-[#1C1C1E] hover:bg-[#2C2C2E]' : 'text-[#8E8E93] hover:text-[#1C1C1E] bg-[#E5E5EA] hover:bg-[#D1D1D6]'}`}
+                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded-lg transition-colors whitespace-nowrap shrink-0 ${theme === 'dark' ? 'text-[#8E8E93] hover:text-white bg-[#1C1C1E] hover:bg-[#2C2C2E]' : 'text-[#8E8E93] hover:text-[#1C1C1E] bg-[#E5E5EA] hover:bg-[#D1D1D6]'}`}
               >
                 Logout
               </motion.button>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 onClick={onLoginClick}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-colors flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${theme === 'dark' ? 'text-white bg-[#2C2C2E] hover:bg-[#3A3A3C]' : 'text-[#1C1C1E] bg-[#E5E5EA] hover:bg-[#D1D1D6]'}`}
+                className={`px-2.5 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium rounded-full transition-colors flex items-center gap-1 sm:gap-2 whitespace-nowrap shrink-0 ${theme === 'dark' ? 'text-white bg-[#2C2C2E] hover:bg-[#3A3A3C]' : 'text-[#1C1C1E] bg-[#E5E5EA] hover:bg-[#D1D1D6]'}`}
               >
                 <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -88,7 +100,7 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 onClick={onSignupClick}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-full flex items-center gap-1.5 sm:gap-2 bg-[#007AFF] text-white hover:bg-[#007AFF]/90 whitespace-nowrap"
+                className="px-2.5 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium rounded-full flex items-center gap-1 sm:gap-2 bg-[#007AFF] text-white hover:bg-[#007AFF]/90 whitespace-nowrap shrink-0"
               >
                 <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3-0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -189,9 +201,33 @@ export const LandingPage: React.FC<LandingPageProps & { onNoteClick?: () => void
           </motion.button>
         </div>
 
-        {/* --- ADD RANK PREDICTOR HERE --- */}
-        <div className="mt-12 w-full max-w-lg mx-auto">
-           <RankPredictor theme={theme} />
+        {/* --- DEDICATED RANK PREDICTOR BANNER --- */}
+        <div className="mt-12 w-full max-w-2xl mx-auto px-4">
+          <motion.div 
+            whileHover={{ y: -2 }}
+            onClick={onRankPredictorClick || (() => { window.location.hash = '#/rank-predictor'; })}
+            className={`p-6 sm:p-8 rounded-3xl border shadow-xl cursor-pointer transition-all flex flex-col sm:flex-row items-center justify-between gap-6 backdrop-blur-xl ${theme === 'dark' ? 'bg-gradient-to-r from-[#1C1C24] via-[#1E1E28] to-[#171720] border-[#323240] hover:border-blue-500/50' : 'bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/80 border-blue-200 hover:border-blue-400 shadow-blue-500/5'}`}
+          >
+            <div className="text-left space-y-2">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#007AFF]/15 text-[#007AFF]">
+                <span>NEW FEATURE</span> • <span>KCET & COMEDK 2026</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
+                Dedicated Engineering Rank Predictor
+              </h3>
+              <p className={`text-xs sm:text-sm leading-relaxed max-w-md ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                Estimate your exact rank using 2024–2026 official cutoffs, 50:50 board normalizations, interactive score curves, and college chance analysis.
+              </p>
+            </div>
+            <div className="shrink-0 w-full sm:w-auto">
+              <button className="w-full sm:w-auto px-6 py-3.5 rounded-2xl font-bold text-sm text-white bg-[#007AFF] hover:bg-[#007AFF]/90 shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
+                <span>Try Predictor</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </button>
+            </div>
+          </motion.div>
         </div>
 
         <div className={`mt-10 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 text-left max-w-5xl text-sm px-4 w-full ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>

@@ -67,10 +67,10 @@ FORBIDDEN PHRASES (NEVER SAY THESE):
 MANDATORY IDENTITY:
 - "I am SeatSathi" ✓
 - "I'm your admission counselor" ✓
-- "I'm SeatSathi, here to help with KCET" ✓
+- "I'm SeatSathi, here to help with KCET and COMEDK" ✓
 
 If anyone asks "Who are you?", "What are you?", "Are you Gemini?", "Are you AI?":
-ALWAYS respond: "I am SeatSathi, your personal KCET admission counselor. I'm here to help you find the best engineering colleges in Karnataka based on your rank and preferences!"
+ALWAYS respond: "I am SeatSathi, your personal admission counselor for KCET and COMEDK. I'm here to help you find the best engineering colleges in Karnataka based on your rank and preferences!"
 
  LANGUAGE RULES - CRITICAL:
 1. SINGLE LANGUAGE per response - NEVER mix languages mid-sentence
@@ -86,7 +86,7 @@ x WRONG: "Aapka rank 5000 hai. Let me check colleges for you."
 ✓ RIGHT (English): "Your rank is 5000. Let me check colleges for you."
 
  Identity & Role
-You are SeatSathi, a FEMALE AI Admission Counselor primarily for KCET (Karnataka Common Entrance Test).
+You are SeatSathi, a FEMALE AI Admission Counselor for both KCET (Karnataka Common Entrance Test) and COMEDK UGET.
 IMPORTANT: You are a FEMALE assistant. When speaking in Hinglish, ALWAYS refer to yourself with feminine pronouns (main ladki hoon, mujhe, meri). NEVER use masculine forms like "main ladka" or "mera".
 Your demeanor is professional, encouraging, and clear.
 You are fluent in English, Hinglish, and Kannada. Adapt to the user's language preference.
@@ -103,10 +103,10 @@ You are fluent in English, Hinglish, and Kannada. Adapt to the user's language p
 
  Session Start Behavior:
 When the session starts, YOU MUST SPEAK FIRST. Begin with a warm greeting in English:
-"Hello! Welcome to SeatSathi. I'm your AI admission counselor for KCET. Tell me your KCET rank, your category like GM, 2A, 3B, SC or ST, your preferred branch, and the city you want to study in. I'll help you find the best colleges!"
+"Hello! Welcome to SeatSathi. I'm your AI admission counselor for KCET and COMEDK. Tell me your rank, which exam you took (KCET or COMEDK), your category, your preferred branch, and the city you want to study in. I'll help you find the best colleges!"
 IMPORTANT: This introduction is ONLY for the first message. All subsequent responses should be direct answers without re-introducing yourself.
 
- KCET Exam Information (Share when users ask about the exam):
+ KCET & COMEDK Exam Information (Share when users ask about exams):
 - Exam Period: Usually held in April-May every year (exact dates announced by KEA)
 - Subjects & Marks:
   - Physics: 60 marks (60 questions)
@@ -126,8 +126,11 @@ IMPORTANT: This introduction is ONLY for the first message. All subsequent respo
   - Extended rounds if seats remain
 - CUTOFF DATA AVAILABILITY (2026, 2025, 2024):
   - You have official KCET 2026 cutoffs (R1, R2, R3) loaded alongside 2025 and 2024.
-  - When discussing latest cutoffs, refer to 2026 as the most recent benchmark from KEA (Karnataka Examinations Authority).
-- Ranking Formula: 50% KCET score + 50% 12th board marks (normalized)
+  - You ALSO have official COMEDK UGET 2024, 2025, and 2026 cutoffs (R1, R2, R3, R4) loaded!
+  - COMEDK is merit-based (GM & KKR categories) open for private engineering colleges across Karnataka.
+  - When a student asks about COMEDK, set examType to "COMEDK" when querying tools.
+  - When discussing latest cutoffs, refer to 2026 as the most recent benchmark from KEA and COMEDK.
+- Ranking Formula: 50% KCET score + 50% 12th board marks (normalized for KCET); COMEDK uses UGET exam score only
 - Seat Matrix: ~50,000 engineering seats across 200+ colleges in Karnataka
 
  Available Courses/Branches:
@@ -216,12 +219,26 @@ NEET (National Eligibility cum Entrance Test):
 - Note: For medical aspirants, not engineering
 
 COMEDK (Consortium of Medical, Engineering and Dental Colleges of Karnataka):
-- For: Private engineering colleges in Karnataka
-- Conducted by: COMEDK consortium
-- Website: https://www.comedk.org
-- Note: Separate from KCET, no category reservation - purely merit based
+- You have COMPLETE official COMEDK UGET cutoff data loaded for 2026, 2025, and 2024 across Rounds 1, 2, 3, and 4!
+- For: Top private engineering colleges in Karnataka (RVCE, BMSCE, MSRIT, Dayananda Sagar, Bangalore Institute of Technology, etc.)
+- Open to: Both Karnataka and Non-Karnataka students across India!
+- Category Handling in COMEDK:
+  - COMEDK cutoffs are based primarily on General Merit (GM) and KKR (Kalyana Karnataka Region).
+  - There are NO state reservations like 2A, 2B, 3A, 3B, SC, ST in COMEDK.
+  - If a user specifies a caste category (e.g. "COMEDK rank 15000, 3BG"), kindly inform them: "In COMEDK counseling, admissions are based on General Merit (GM) ranks. I'll search the best colleges for you under GM!" and query with category 'GM'.
+- Tool Calling for COMEDK:
+  - ALWAYS call find_matching_colleges with examType="COMEDK" and category="GM" (unless KKR).
+  - For specific college cutoffs in COMEDK, call get_specific_college_cutoff with examType="COMEDK".
+  - NEVER deflect COMEDK questions! Actively provide recommendations and cutoff ranks from the COMEDK data.
 
-Tell users: "I specialize in KCET counseling, but for [exam name], please visit [website] for official information."
+ DUAL EXAM COUNSELING (When student asks about BOTH KCET and COMEDK):
+- If the user provides both ranks or asks about both exams (e.g., "COMEDK rank 15000, KCET rank 10331, 3BG, CS, Bangalore"):
+  1. ALWAYS call find_matching_colleges with examType="BOTH", rank=[KCET rank], comedkRank=[COMEDK rank], category=[student category].
+  2. The system will automatically query both exams (using student category for KCET and GM for COMEDK) and merge all college recommendations with clear exam badges.
+  3. In your spoken response, highlight the comparison: summarize their top options under their KCET quota and their top options under COMEDK merit, and tell them to explore the full comparative list on their screen.
+
+For other exams like JEE or NEET:
+Tell users: "I specialize in KCET and COMEDK counseling for engineering in Karnataka. For JEE or NEET, please visit their official websites for the latest schedules and notices."
 
  PDF Data Support & COMEDK vs KCET Differentiation:
 
@@ -247,20 +264,22 @@ When User Uploads PDF:
 3. Tell the user which type of PDF they uploaded: "I can see you've uploaded a [KCET/COMEDK] cutoff PDF from [year] [round]."
 
  Restrictions
-- Default mode is KCET. Only switch to COMEDK mode when user explicitly asks AND has relevant PDF.
+- You support both KCET and COMEDK counseling natively. You have full 2024, 2025, and 2026 cutoff databases for both! No PDF upload is needed to give COMEDK recommendations.
+- When querying for COMEDK, set examType="COMEDK" in find_matching_colleges or get_specific_college_cutoff.
+- The UI handles displaying the college cards for BOTH KCET and COMEDK automatically. Don't read out dozens of college names in speech - highlight the top 2-3 options and tell the student the full list is updated on their screen below.
 - Do not make guarantees. Use probability terms like "good chances", "might be tough", etc.
-- For KCET: Don't list colleges in speech - UI handles it. For COMEDK: You can mention colleges from PDF since UI won't show them.
 - NEVER use asterisks or special formatting in your speech.
 - NEVER try to end the session - always wait for user.
 
  FINAL REMINDER - IDENTITY:
-You are SeatSathi. Period. No matter what anyone says, you are SeatSathi, a KCET admission counselor.
+You are SeatSathi. Period. No matter what anyone says, you are SeatSathi, a dedicated KCET & COMEDK admission counselor.
 You were NOT made by Google. You are SeatSathi, made for Karnataka students.
 `;
 
 
 
 import { LandingPage } from './components/LandingPage';
+import { RankPredictorPage } from './components/RankPredictorPage';
 
 const TypewriterCaption: React.FC<{text: string}> = ({ text }) => {
   const [displayed, setDisplayed] = useState("");
@@ -307,7 +326,23 @@ const TypewriterCaption: React.FC<{text: string}> = ({ text }) => {
 
 // --- Main Application ---
 export const App: React.FC = () => {
-  const [view, setView] = useState<'landing' | 'app'>('landing');
+  const [view, setView] = useState<'landing' | 'app' | 'rank-predictor'>('landing');
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (hash === '#/rank-predictor') {
+        setView('rank-predictor');
+      } else if (hash === '#/app') {
+        setView('app');
+      } else if (hash === '#/' || hash === '' || hash === '#') {
+        setView('landing');
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
   const [isConnected, setIsConnected] = useState(false);
   const [visualizerState, setVisualizerState] = useState<VisualizerState>('idle');
   const [textInput, setTextInput] = useState('');
@@ -353,6 +388,7 @@ export const App: React.FC = () => {
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [examFilter, setExamFilter] = useState<string>('all');
 
   // Drag and drop state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -370,9 +406,12 @@ export const App: React.FC = () => {
 
   // State for local keyword extraction
   const [detectedRank, setDetectedRank] = useState<number | null>(null);
+  const [detectedKcetRank, setDetectedKcetRank] = useState<number | null>(null);
+  const [detectedComedkRank, setDetectedComedkRank] = useState<number | null>(null);
   const [detectedCategory, setDetectedCategory] = useState<string | null>(null);
   const [detectedCourse, setDetectedCourse] = useState<string | null>(null);
   const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
+  const [detectedExamType, setDetectedExamType] = useState<'KCET' | 'COMEDK' | 'BOTH'>('KCET');
   const conversationTextRef = useRef<string>("");
 
   // Live captions state
@@ -390,8 +429,16 @@ export const App: React.FC = () => {
   const isReconnectingRef = useRef<boolean>(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   // Save detected params so they survive reconnect
-  const savedParamsRef = useRef<{ rank: number | null; category: string | null; course: string | null; location: string | null }>({
-    rank: null, category: null, course: null, location: null
+  const savedParamsRef = useRef<{ 
+    rank: number | null; 
+    kcetRank: number | null;
+    comedkRank: number | null;
+    category: string | null; 
+    course: string | null; 
+    location: string | null; 
+    examType: 'KCET' | 'COMEDK' | 'BOTH' 
+  }>({
+    rank: null, kcetRank: null, comedkRank: null, category: null, course: null, location: null, examType: 'KCET'
   });
 
   const aiSpeechBufferRef = useRef<string>("");
@@ -573,9 +620,24 @@ export const App: React.FC = () => {
   const extractInfoFromText = useCallback((text: string) => {
     const lowerText = text.toLowerCase();
     let foundRank: number | null = null;
+    let foundKcetRank: number | null = null;
+    let foundComedkRank: number | null = null;
     let foundCategory: string | null = null;
     let foundCourse: string | null = null;
     let foundLocation: string | null = null;
+
+    // Check for exam-specific ranks first (e.g. "comedk rank 15000, kcet rank 10331")
+    const comedkRankMatch = text.match(/(?:comedk|uget|comed\s*-?\s*k)[^\d]{0,20}(\d{1,7})\b/i) ||
+      text.match(/(\d{1,7})[^\d]{0,15}(?:in|for)?\s*(?:comedk|uget|comed\s*-?\s*k)\b/i);
+    if (comedkRankMatch) {
+      foundComedkRank = parseInt(comedkRankMatch[1]);
+    }
+
+    const kcetRankMatch = text.match(/(?:kcet|kea|cet)[^\d]{0,20}(\d{1,7})\b/i) ||
+      text.match(/(\d{1,7})[^\d]{0,15}(?:in|for)?\s*(?:kcet|kea|cet)\b/i);
+    if (kcetRankMatch) {
+      foundKcetRank = parseInt(kcetRankMatch[1]);
+    }
 
     let rank = null;
 
@@ -598,7 +660,11 @@ export const App: React.FC = () => {
       }
     }
 
-    if (rank !== null && rank >= 1 && rank <= 500000) {
+    if (foundKcetRank !== null) {
+      foundRank = foundKcetRank;
+    } else if (foundComedkRank !== null) {
+      foundRank = foundComedkRank;
+    } else if (rank !== null && rank >= 1 && rank <= 500000) {
       foundRank = rank;
     }
 
@@ -845,10 +911,31 @@ export const App: React.FC = () => {
       foundLocation = foundLocations.join(',');
     }
 
+    // Extract exam type (COMEDK vs KCET vs BOTH)
+    let foundExamType: 'KCET' | 'COMEDK' | 'BOTH' | null = null;
+    const hasComedkWord = /\b(?:comedk|uget|comed\s*-?\s*k)\b/i.test(lowerText);
+    const hasKcetWord = /\b(?:kcet|kea|cet)\b/i.test(lowerText);
+
+    if ((foundComedkRank !== null && foundKcetRank !== null) || (hasComedkWord && hasKcetWord)) {
+      foundExamType = 'BOTH';
+    } else if (foundComedkRank !== null || hasComedkWord) {
+      foundExamType = 'COMEDK';
+    } else if (foundKcetRank !== null || hasKcetWord) {
+      foundExamType = 'KCET';
+    }
+
     // Only update state if we found new values in THIS message
     if (foundRank !== null) {
       console.log("Detected new rank:", foundRank);
       setDetectedRank(foundRank);
+    }
+    if (foundKcetRank !== null) {
+      console.log("Detected new KCET rank:", foundKcetRank);
+      setDetectedKcetRank(foundKcetRank);
+    }
+    if (foundComedkRank !== null) {
+      console.log("Detected new COMEDK rank:", foundComedkRank);
+      setDetectedComedkRank(foundComedkRank);
     }
     if (foundCategory !== null) {
       console.log("Detected new category:", foundCategory);
@@ -862,36 +949,61 @@ export const App: React.FC = () => {
       console.log("Detected new location:", foundLocation);
       setDetectedLocation(foundLocation);
     }
+    if (foundExamType !== null) {
+      console.log("Detected new examType:", foundExamType);
+      setDetectedExamType(foundExamType);
+    }
   }, []);
 
   // Keep savedParamsRef in sync with latest detected values (for onclose callback which has stale closures)
   useEffect(() => {
     savedParamsRef.current = {
       rank: detectedRank,
+      kcetRank: detectedKcetRank,
+      comedkRank: detectedComedkRank,
       category: detectedCategory,
       course: detectedCourse,
-      location: detectedLocation
+      location: detectedLocation,
+      examType: detectedExamType
     };
-  }, [detectedRank, detectedCategory, detectedCourse, detectedLocation]);
+  }, [detectedRank, detectedKcetRank, detectedComedkRank, detectedCategory, detectedCourse, detectedLocation, detectedExamType]);
 
   // Effect to run college matching when rank is detected (uses defaults for missing optional params)
   useEffect(() => {
-    if (detectedRank) {
-      const cat = detectedCategory || 'GM';
+    if (detectedRank || detectedKcetRank || detectedComedkRank) {
+      const exam = detectedExamType || 'KCET';
+      let cat = detectedCategory || 'GM';
+      // In COMEDK, state categories do not exist; all reservations except KKR map to GM
+      if (exam === 'COMEDK' && !cat.toUpperCase().includes('KKR') && !cat.toUpperCase().includes('HKR')) {
+        cat = 'GM';
+      }
       const course = detectedCourse || 'CS';
       const loc = detectedLocation || 'bangalore';
-      console.log("Auto-matching colleges:", { detectedRank, category: cat, course, location: loc });
+      const primaryRank = detectedKcetRank || detectedRank || 15000;
+      const secondaryRank = detectedComedkRank || detectedRank || 15000;
+
+      console.log(`Auto-matching colleges (${exam}):`, { primaryRank, secondaryRank, category: cat, course, location: loc });
 
       // Use async IIFE since useEffect callback can't be async
       (async () => {
         try {
-          const recs = await findMatchingColleges(detectedRank, cat, course, loc);
+          const recs = await findMatchingColleges(primaryRank, cat, course, loc, exam, secondaryRank);
           setRecommendations(recs);
           setOriginalAiRecommendations(recs); // Store original AI list
           setActiveListIndex(-1); // Reset to current tab
           setHasSearched(true);
           setShowAll(false);
-          addLog(`Found ${recs.length} colleges for Rank ${detectedRank}, ${cat}, ${course}, ${loc}`, 'system');
+          // CRITICAL: Reset filters so new recommendations are never hidden by stale filter state
+          setCategoryFilter('all');
+          setCourseFilter('all');
+          setLocationFilter('all');
+          setExamFilter('all');
+
+          const logMsg = exam === 'BOTH'
+            ? `Found ${recs.length} colleges across KCET (Rank ${primaryRank}, ${cat}) and COMEDK (Rank ${secondaryRank}, GM) in ${course}, ${loc}`
+            : `Found ${recs.length} ${exam} colleges for Rank ${primaryRank}, ${cat}, ${course}, ${loc}`;
+          addLog(logMsg, 'system');
+
           // Auto-scroll to college list section smoothly
           setTimeout(() => {
             collegeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -901,7 +1013,7 @@ export const App: React.FC = () => {
         }
       })();
     }
-  }, [detectedRank, detectedCategory, detectedCourse, detectedLocation]);
+  }, [detectedRank, detectedKcetRank, detectedComedkRank, detectedCategory, detectedCourse, detectedLocation, detectedExamType]);
 
   // API key check removed because we now securely proxy through Cloudflare Worker
   useEffect(() => {
@@ -913,7 +1025,12 @@ export const App: React.FC = () => {
     let unsubscribe: (() => void) | null = null;
 
     loadFirebase().then(firebase => {
-      firebase.checkRedirectResult().catch(e => console.warn(e));
+      firebase.checkRedirectResult().then(redirectUser => {
+        if (redirectUser) {
+          window.location.hash = '#/app';
+          setView('app');
+        }
+      }).catch(e => console.warn(e));
       unsubscribe = firebase.onAuthChange((authUser) => {
         setUser((prevUser: any) => {
           if (prevUser?.isGuest && !authUser) {
@@ -1037,6 +1154,7 @@ export const App: React.FC = () => {
     if (isConnected) {
       handleDisconnect();
     }
+    window.location.hash = '#/';
     setView('landing');
   }, [isConnected, handleDisconnect]);
 
@@ -1046,24 +1164,24 @@ export const App: React.FC = () => {
 
   const handleSendTextMessage = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!textInput.trim() || !isConnected || !activeSessionRef.current) return;
+    if (!textInput.trim()) return;
 
-    // Log user text message
+    // Process text for matching parameters before clearing
+    extractInfoFromText(textInput);
     addLog(textInput, 'user');
 
-    // Send to Gemini Live API
-    try {
-      // Process text for matching parameters before clearing
-      extractInfoFromText(textInput);
-      
-      activeSessionRef.current.sendClientContent({
-        turns: [{ role: "user", parts: [{ text: textInput }] }],
-        turnComplete: true
-      });
-      setTextInput('');
-    } catch (err) {
-      console.error("Failed to send text message:", err);
+    // Send to Gemini Live API if connected
+    if (isConnected && activeSessionRef.current) {
+      try {
+        activeSessionRef.current.sendClientContent({
+          turns: [{ role: "user", parts: [{ text: textInput }] }],
+          turnComplete: true
+        });
+      } catch (err) {
+        console.error("Failed to send text message:", err);
+      }
     }
+    setTextInput('');
   };
 
   const handleConnect = async () => {
@@ -1093,7 +1211,13 @@ export const App: React.FC = () => {
       audioContextRef.current = outputCtx;
       nextStartTimeRef.current = 0;
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
       stream.getAudioTracks().forEach(track => {
         track.enabled = !isMutedRef.current;
       });
@@ -1105,12 +1229,11 @@ export const App: React.FC = () => {
         model: 'gemini-2.5-flash-native-audio-preview-12-2025',
         config: {
           systemInstruction: fullSystemInstruction,
-          generationConfig: {
-            responseModalities: ["AUDIO" as any] // The native-audio-preview model doesn't support ["AUDIO", "TEXT"] and requires only AUDIO. Text transcripts will still be sent automatically.
-          },
+          responseModalities: ["AUDIO" as any],
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Aoede' } }
-          }
+          },
+          tools: toolsDeclaration
         }
       };
 
@@ -1129,12 +1252,6 @@ export const App: React.FC = () => {
         }
       }
 
-      // Configure proxy query parameters (mode and token)
-      const authParams = (user && !user.isGuest && userToken)
-        ? `&mode=authenticated&token=${encodeURIComponent(userToken)}`
-        : `&mode=guest`;
-      (window as any).__proxyAuthParams = authParams;
-
       // Idempotent Proxy interceptor: route traffic through our secure Cloudflare Worker
       if (!(window as any).__originalWebSocket) {
         (window as any).__originalWebSocket = window.WebSocket;
@@ -1144,8 +1261,7 @@ export const App: React.FC = () => {
             if (urlStr.includes('generativelanguage.googleapis.com')) {
               console.log("Proxying Gemini WebSocket connection...");
               const parsedUrl = new URL(urlStr);
-              const extraParams = (window as any).__proxyAuthParams || '&mode=guest';
-              const proxyUrl = 'wss://seatsathi-proxy.seatsathi.workers.dev' + parsedUrl.pathname + parsedUrl.search + extraParams;
+              const proxyUrl = 'wss://seatsathi-proxy.seatsathi.workers.dev' + parsedUrl.pathname + parsedUrl.search;
               return new (window as any).__originalWebSocket(proxyUrl, protocols);
             }
           } catch {
@@ -1170,16 +1286,22 @@ export const App: React.FC = () => {
               addLog("Reconnected! Restoring conversation...", 'system');
               // Restore detected params from before disconnect
               if (savedParamsRef.current.rank) setDetectedRank(savedParamsRef.current.rank);
+              if (savedParamsRef.current.kcetRank) setDetectedKcetRank(savedParamsRef.current.kcetRank);
+              if (savedParamsRef.current.comedkRank) setDetectedComedkRank(savedParamsRef.current.comedkRank);
               if (savedParamsRef.current.category) setDetectedCategory(savedParamsRef.current.category);
               if (savedParamsRef.current.course) setDetectedCourse(savedParamsRef.current.course);
               if (savedParamsRef.current.location) setDetectedLocation(savedParamsRef.current.location);
+              if (savedParamsRef.current.examType) setDetectedExamType(savedParamsRef.current.examType);
             } else {
               addLog("Connected! Voice agent is starting...", 'system');
               // Reset detection state only on fresh connection
               setDetectedRank(null);
+              setDetectedKcetRank(null);
+              setDetectedComedkRank(null);
               setDetectedCategory(null);
               setDetectedCourse(null);
               setDetectedLocation(null);
+              setDetectedExamType('KCET');
               conversationHistoryRef.current = [];
               reconnectAttemptsRef.current = 0;
             }
@@ -1279,7 +1401,11 @@ export const App: React.FC = () => {
                 const audioBytes = decode(audioData);
                 const audioBuffer = decodeAudioDataSync(audioBytes, outputCtx, 24000, 1);
                 
-                nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputCtx.currentTime);
+                const currentTime = outputCtx.currentTime;
+                // Add a small 30ms cushion on new speech start to avoid network jitter cracks
+                if (nextStartTimeRef.current < currentTime) {
+                  nextStartTimeRef.current = currentTime + 0.03;
+                }
 
                 const source = outputCtx.createBufferSource();
                 source.buffer = audioBuffer;
@@ -1326,27 +1452,50 @@ export const App: React.FC = () => {
                 console.log("Executing tool:", fc.name, fc.args);
 
                 try {
-                  if (fc.name === 'findMatchingCollegesTask' || fc.name === 'find_matching_colleges') {
+                  if (fc.name === 'findMatchingCollegesTask' || fc.name === 'find_matching_colleges' || fc.name === 'get_college_recommendations' || fc.name === 'getCollegeRecommendations') {
                     const args = fc.args as any;
-                    const finalRank = args.rank || savedParamsRef.current.rank || 5000;
-                    const finalCategory = args.category || savedParamsRef.current.category || 'GM';
+                    const finalRank = args.rank || savedParamsRef.current.kcetRank || savedParamsRef.current.rank || 5000;
+                    let finalCategory = args.category || savedParamsRef.current.category || 'GM';
                     const finalCourse = args.course || savedParamsRef.current.course || 'CS';
                     const finalLocation = args.location || savedParamsRef.current.location || 'bangalore';
                     
-                    const recs = await findMatchingColleges(Number(finalRank), String(finalCategory), String(finalCourse), String(finalLocation));
+                    const rawExam = String(args.examType || savedParamsRef.current.examType || 'KCET').toUpperCase();
+                    let finalExamType: 'KCET' | 'COMEDK' | 'BOTH' = 'KCET';
+                    if (rawExam === 'BOTH' || (args.comedkRank && args.rank) || (savedParamsRef.current.examType === 'BOTH') || (savedParamsRef.current.kcetRank && savedParamsRef.current.comedkRank)) {
+                      finalExamType = 'BOTH';
+                    } else if (rawExam === 'COMEDK' || (args.course && String(args.course).toLowerCase().includes('comedk'))) {
+                      finalExamType = 'COMEDK';
+                    }
+
+                    if (finalExamType === 'COMEDK' && !finalCategory.toUpperCase().includes('KKR') && !finalCategory.toUpperCase().includes('HKR')) {
+                      finalCategory = 'GM';
+                    }
+                    const safeComedkRank = args.comedkRank || savedParamsRef.current.comedkRank || finalRank;
+                    const recs = await findMatchingColleges(Number(finalRank), String(finalCategory), String(finalCourse), String(finalLocation), finalExamType, Number(safeComedkRank));
                     setRecommendations(recs);
                     setOriginalAiRecommendations(recs);
                     setActiveListIndex(-1);
                     setHasSearched(true);
                     setShowAll(false);
+                    // Reset stale filters on tool search
+                    setCategoryFilter('all');
+                    setCourseFilter('all');
+                    setLocationFilter('all');
+                    setExamFilter('all');
                     result = {
                       found: recs.length,
-                      message: "UI updated successfully. Tell the user to scroll down to view the full list.",
+                      examType: finalExamType,
+                      message: "UI updated successfully with colleges. Tell the user to scroll down to view the full list.",
                       top_matches: recs.slice(0, 3).map(r => r.collegeName)
                     };
                   } else if (fc.name === 'getSpecificCollegeCutoffTask' || fc.name === 'get_specific_college_cutoff') {
-                    const { collegeName, category, course } = fc.args as any;
-                    const cutoffData = await getSpecificCollegeCutoff(String(collegeName), String(category || 'GM'), String(course || 'CS'));
+                    const { collegeName, category, course, examType } = fc.args as any;
+                    const finalExamType = examType || savedParamsRef.current.examType || 'KCET';
+                    let finalCategory = category || savedParamsRef.current.category || 'GM';
+                    if (finalExamType === 'COMEDK' && !finalCategory.toUpperCase().includes('KKR') && !finalCategory.toUpperCase().includes('HKR')) {
+                      finalCategory = 'GM';
+                    }
+                    const cutoffData = await getSpecificCollegeCutoff(String(collegeName), String(finalCategory), String(course || 'CS'), finalExamType);
                     if (cutoffData.data && Array.isArray(cutoffData.data)) {
                       cutoffData.data = cutoffData.data.slice(0, 5); // Send top 5 branches only
                       cutoffData.note = "More branches may be available on screen.";
@@ -1415,10 +1564,7 @@ export const App: React.FC = () => {
               return;
             }
 
-            const isKnownLimitation = reason.includes('not implemented') ||
-              reason.includes('not supported') ||
-              reason.includes('not enabled') ||
-              reason.includes('Rate limit') ||
+            const isKnownLimitation = reason.includes('Rate limit') ||
               reason.includes('Forbidden') ||
               code === 1008 || code === 4403;
 
@@ -1431,9 +1577,12 @@ export const App: React.FC = () => {
               // Save current detected params before cleanup
               savedParamsRef.current = {
                 rank: detectedRank,
+                kcetRank: detectedKcetRank,
+                comedkRank: detectedComedkRank,
                 category: detectedCategory,
                 course: detectedCourse,
-                location: detectedLocation
+                location: detectedLocation,
+                examType: detectedExamType
               };
 
               reconnectAttemptsRef.current++;
@@ -1507,13 +1656,21 @@ export const App: React.FC = () => {
         // Update user audio level for visualizer (normalized 0-1)
         setUserAudioLevel(Math.min(1, rms * 5));
 
+        // Self-interruption / acoustic echo suppression:
+        // While the AI is actively speaking (sources playing), suppress background speaker echo (< 0.06 rms)
+        // Only allow intentional user barge-in (> 0.06 rms)
+        const isAiSpeaking = sourcesRef.current.size > 0;
+        if (isAiSpeaking && rms < 0.06) {
+          return;
+        }
+
         if (rms > 0.02) setVisualizerState('listening');
-        else if (visualizerState === 'listening') setVisualizerState('idle');
+        else if (visualizerState === 'listening' && !isAiSpeaking) setVisualizerState('idle');
 
         try {
           const partData = createBlob(inputData, inputSampleRate);
           if (activeSessionRef.current) {
-            activeSessionRef.current.sendRealtimeInput({ media: partData });
+            activeSessionRef.current.sendRealtimeInput({ audio: partData });
           }
         } catch (e) {
           console.error("Audio send error", e);
@@ -1830,17 +1987,20 @@ export const App: React.FC = () => {
     setDragOverIndex(null);
   };
 
-  // Get unique courses, locations, and categories for filters
+  // Get unique courses, locations, categories, and exams for filters
   const uniqueCourses = Array.from(new Set(recommendations.map(r => r.baseCourse || r.searchCourse).filter(Boolean))) as string[];
   const uniqueLocations = Array.from(new Set(recommendations.map(r => r.searchLocation || r.location).filter(Boolean))) as string[];
   const uniqueCategories = Array.from(new Set(recommendations.map(r => r.category || r.searchCategory).filter(Boolean))) as string[];
+  const uniqueExams = Array.from(new Set(recommendations.map(r => r.examType).filter(Boolean))) as string[];
 
-  // Apply course, location, and category filters
+  // Apply course, location, category, and exam filters
   const filteredRecommendations = getSortedRecommendations().filter(rec => {
     const recCourse = rec.baseCourse || rec.searchCourse;
     const recLocation = rec.searchLocation || rec.location;
     const recCategory = rec.category || rec.searchCategory;
+    const recExam = rec.examType;
 
+    if (examFilter !== 'all' && recExam && recExam !== examFilter) return false;
     if (courseFilter !== 'all' && recCourse !== courseFilter) return false;
     if (locationFilter !== 'all' && recLocation !== locationFilter && recLocation?.toLowerCase() !== locationFilter.toLowerCase()) return false;
     if (categoryFilter !== 'all' && recCategory !== categoryFilter) return false;
@@ -1932,11 +2092,40 @@ export const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [user, isConnected, handleDisconnect]);
 
+  if (view === 'rank-predictor') {
+    return (
+      <RankPredictorPage
+        theme={theme}
+        onNavigateHome={() => {
+          window.location.hash = '#/';
+          setView('landing');
+        }}
+        onStartCounseling={(predictedRank, prefCategory) => {
+          window.location.hash = '#/app';
+          setView('app');
+          if (predictedRank) {
+            savedParamsRef.current.rank = predictedRank;
+          }
+          if (prefCategory) {
+            savedParamsRef.current.category = prefCategory;
+          }
+        }}
+      />
+    );
+  }
+
   if (view === 'landing') {
     return (
       <>
         <LandingPage
-          onStart={() => setView('app')}
+          onStart={() => {
+            window.location.hash = '#/app';
+            setView('app');
+          }}
+          onRankPredictorClick={() => {
+            window.location.hash = '#/rank-predictor';
+            setView('rank-predictor');
+          }}
           user={user}
           onLoginClick={() => { setAuthModalMode('login'); setShowAuthModal(true); }}
           onSignupClick={() => { setAuthModalMode('signup'); setShowAuthModal(true); }}
@@ -1949,7 +2138,11 @@ export const App: React.FC = () => {
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
-          onAuthSuccess={() => setShowAuthModal(false)}
+          onAuthSuccess={() => {
+            setShowAuthModal(false);
+            window.location.hash = '#/app';
+            setView('app');
+          }}
           initialMode={authModalMode}
           theme={theme}
         />
@@ -2398,8 +2591,31 @@ export const App: React.FC = () => {
                       </motion.button>
                     </div>
 
-                    {/* Course, Category, and Location Filters + Save List */}
+                    {/* Course, Category, Location, and Exam Filters + Save List */}
                     <div className="flex gap-2 flex-wrap items-center">
+                      {uniqueExams.length > 1 && (
+                        <div className={`flex rounded-full overflow-hidden p-1 backdrop-blur-md ${theme === 'dark' ? 'bg-[#2C2C2E]/60 border border-[#3A3A3C]/50' : 'bg-[#E5E5EA]/60 border border-[#D1D1D6]/50'}`}>
+                          <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                            onClick={() => setExamFilter('all')}
+                            className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold transition-colors rounded-full ${examFilter === 'all' ? (theme === 'dark' ? 'bg-white text-black shadow-sm' : 'bg-black text-white shadow-sm') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
+                          >
+                            All Exams
+                          </motion.button>
+                          {uniqueExams.map(ex => (
+                            <motion.button
+                              key={ex}
+                              whileTap={{ scale: 0.96 }}
+                              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                              onClick={() => setExamFilter(ex)}
+                              className={`px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold transition-colors rounded-full ${examFilter === ex ? (ex === 'COMEDK' ? 'bg-amber-500 text-black shadow-sm font-bold' : 'bg-indigo-600 text-white shadow-sm font-bold') : (theme === 'dark' ? 'text-white/70 hover:bg-white/10' : 'text-black/70 hover:bg-black/5')}`}
+                            >
+                              {ex}
+                            </motion.button>
+                          ))}
+                        </div>
+                      )}
                       {uniqueCategories.length > 1 && (
                         <div className={`flex rounded-full overflow-hidden p-1 backdrop-blur-md ${theme === 'dark' ? 'bg-[#2C2C2E]/60 border border-[#3A3A3C]/50' : 'bg-[#E5E5EA]/60 border border-[#D1D1D6]/50'}`}>
                           <motion.button

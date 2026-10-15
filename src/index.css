@@ -113,3 +113,48 @@ html.light ::-webkit-scrollbar-thumb:hover {
   50% { bottom: 100%; right: 45%; }
   70% { bottom: 100%; right: 25%; }
 }
+
+/* --- Apple Design Fluid Scrollbar --- */
+.apple-scrollbar {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.apple-scrollbar::-webkit-scrollbar {
+  width: 7px;
+}
+
+.apple-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+
+.apple-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.apple-scrollbar::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.apple-scrollbar-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.apple-scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.apple-scrollbar-light::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 0, 0, 0.6);
+}

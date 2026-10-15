@@ -1,4 +1,4 @@
-import { db, normalizeCategory, mapCourseToCategory, CutoffRecord } from './database';
+import { db, normalizeCategory, mapCourseToCategory, CutoffRecord, extractLocation } from './database';
 import { CollegeRecommendation } from '../types';
 import { CollegeMetadataRecord } from '../KCETcutoffdata/types';
 
@@ -12,14 +12,31 @@ export async function findMatchingCollegesFast(
   rank: number,
   category: string,
   course: string,
-  location: string
+  location: string,
+  examType: 'KCET' | 'COMEDK' = 'KCET'
 ): Promise<QueryResult> {
   const startTime = performance.now();
   
-  // Split category string by comma and normalize each
-  const categories = category.split(',').map(c => normalizeCategory(c.trim())).filter(Boolean);
-  const courseCategories = mapCourseToCategory(course);
-  const normLocs = location.split(',').map(l => l.toLowerCase().trim()).filter(Boolean);
+  // Sanitize and split inputs (bounded to avoid memory or regex exhaustion)
+  const cleanCategory = String(category || '').substring(0, 100);
+  const cleanCourse = String(course || '').substring(0, 100);
+  const cleanLocation = String(location || '').substring(0, 100);
+
+  const categories = cleanCategory.split(',').map(c => normalizeCategory(c.trim())).filter(Boolean).slice(0, 5);
+  const courseCategories = mapCourseToCategory(cleanCourse);
+  const rawLocs = cleanLocation.split(',').map(l => l.toLowerCase().trim()).filter(Boolean).slice(0, 5);
+
+  // Canonicalize locations: 'bengaluru' -> 'bangalore', 'belagavi' -> 'belgaum', 'mysuru' -> 'mysore'
+  const normLocs: string[] = [];
+  rawLocs.forEach(l => {
+    const canonical = extractLocation(l);
+    if (canonical && canonical !== 'karnataka' && !normLocs.includes(canonical)) {
+      normLocs.push(canonical);
+    }
+    if (!normLocs.includes(l)) {
+      normLocs.push(l);
+    }
+  });
   
   // Build query based on filters
   let query = db.cutoffs.where('branchCategory').anyOf(courseCategories);
@@ -37,6 +54,7 @@ export async function findMatchingCollegesFast(
     cutoffs = await db.cutoffs
       .where('branchCategory')
       .anyOf(courseCategories)
+      .and((record: CutoffRecord) => (record.examType || 'KCET') === examType)
       .and((record: CutoffRecord) => normLocs.some(loc => record.location === loc || record.location.includes(loc) || loc.includes(record.location)))
       .and((record: CutoffRecord) => categories.includes(record.category))
       .toArray();
@@ -45,6 +63,7 @@ export async function findMatchingCollegesFast(
     cutoffs = await db.cutoffs
       .where('branchCategory')
       .anyOf(courseCategories)
+      .and((record: CutoffRecord) => (record.examType || 'KCET') === examType)
       .and((record: CutoffRecord) => categories.includes(record.category))
       .toArray();
   }
@@ -164,7 +183,8 @@ export async function findMatchingCollegesFast(
       category: data.category,
       baseCourse: data.baseCourse,
       isPure: data.isPure,
-      collegeCode: data.collegeName.match(/\((E\d+)\)/)?.[1] || undefined
+      collegeCode: data.collegeName.match(/\((E\d+)\)/)?.[1] || undefined,
+      examType
     });
   });
   
@@ -199,7 +219,8 @@ export async function findMatchingCollegesFast(
 export async function getSpecificCollegeCutoffFast(
   collegeName: string,
   category: string,
-  course: string
+  course: string,
+  examType?: 'KCET' | 'COMEDK'
 ): Promise<any> {
   const startTime = performance.now();
   
@@ -211,6 +232,7 @@ export async function getSpecificCollegeCutoffFast(
   const cutoffs = await db.cutoffs
     .where('branchCategory')
     .anyOf(courseCategories)
+    .and((record: CutoffRecord) => !examType || (record.examType || 'KCET') === examType)
     .and((record: CutoffRecord) => record.collegeName.toLowerCase().includes(searchName))
     .and((record: CutoffRecord) => record.category === normCat)
     .toArray();

@@ -16,6 +16,7 @@ export interface CollegeRecommendation {
   // Optional fields for additional data
   isPure?: boolean;
   collegeCode?: string;
+  examType?: 'KCET' | 'COMEDK';
 }
 
 export type VisualizerState = 'idle' | 'listening' | 'speaking' | 'processing';
