@@ -269,16 +269,42 @@ export const findMatchingColleges = async (
   rank: number,
   category: string,
   course: string,
-  location: string
+  location: string,
+  examType: 'KCET' | 'COMEDK' | 'BOTH' = 'KCET',
+  comedkRank?: number
 ): Promise<CollegeRecommendation[]> => {
   const startTime = performance.now();
   
-  // Parse multiple courses, locations, and categories
-  const categories = category.split(',').map(c => c.trim()).filter(c => c.length > 0);
-  const courses = course.split(',').map(c => c.trim()).filter(c => c.length > 0);
-  const locations = location.split(',').map(l => l.trim()).filter(l => l.length > 0);
+  // If user requested BOTH exams, run KCET and COMEDK in parallel and merge
+  if (examType === 'BOTH') {
+    const safeComedkRank = comedkRank || rank;
+    console.log(`[Dual Search] Querying KCET (Rank: ${rank}, Category: ${category}) and COMEDK (Rank: ${safeComedkRank}, Category: GM)`);
+    const [kcetRecs, comedkRecs] = await Promise.all([
+      findMatchingColleges(rank, category, course, location, 'KCET'),
+      findMatchingColleges(safeComedkRank, 'GM', course, location, 'COMEDK')
+    ]);
+
+    const taggedKcet = kcetRecs.map(r => ({ ...r, examType: 'KCET' as const }));
+    const taggedComedk = comedkRecs.map(r => ({ ...r, examType: 'COMEDK' as const }));
+
+    // Return combined results: interleaved or concatenated
+    const combined = [...taggedKcet, ...taggedComedk];
+    console.log(`[Dual Search Complete] Total merged results: ${combined.length} (${taggedKcet.length} KCET + ${taggedComedk.length} COMEDK) in ${(performance.now() - startTime).toFixed(1)}ms`);
+    return combined;
+  }
+
+  // Sanitize and bound parameters against DoS loop explosion
+  const cleanCategory = String(category || '').substring(0, 100);
+  const cleanCourse = String(course || '').substring(0, 100);
+  const cleanLocation = String(location || '').substring(0, 100);
+  const safeRank = Math.max(1, Math.min(1000000, Number(rank) || 50000));
+
+  // Parse multiple courses, locations, and categories (capped at max 5 each to prevent O(N^3) explosion)
+  const categories = cleanCategory.split(',').map(c => c.trim()).filter(c => c.length > 0).slice(0, 5);
+  const courses = cleanCourse.split(',').map(c => c.trim()).filter(c => c.length > 0).slice(0, 5);
+  const locations = cleanLocation.split(',').map(l => l.trim()).filter(l => l.length > 0).slice(0, 5);
   
-  console.log(`Searching for categories: [${categories.join(', ')}], courses: [${courses.join(', ')}] in locations: [${locations.join(', ')}]`);
+  console.log(`Searching (${examType}) for categories: [${categories.join(', ')}], courses: [${courses.join(', ')}] in locations: [${locations.join(', ')}]`);
   
   // Collect results from all category/course/location combinations
   const allResults: CollegeRecommendation[] = [];
@@ -292,7 +318,7 @@ export const findMatchingColleges = async (
         // Try to use database for fast queries
         if (useDatabase) {
           try {
-            const result = await findMatchingCollegesFast(rank, singleCategory, singleCourse, singleLocation);
+            const result = await findMatchingCollegesFast(rank, singleCategory, singleCourse, singleLocation, examType);
             console.log(`[DB Query] Found ${result.recommendations.length} colleges for ${singleCategory}/${singleCourse}/${singleLocation} in ${result.queryTimeMs}ms`);
             results = result.recommendations;
           } catch (error) {
@@ -508,11 +534,11 @@ const findMatchingCollegesLegacy = async (
 /**
  * Get specific college cutoff - uses IndexedDB for fast queries when available
  */
-export const getSpecificCollegeCutoff = async (collegeName: string, category: string, course: string): Promise<any> => {
+export const getSpecificCollegeCutoff = async (collegeName: string, category: string, course: string, examType?: 'KCET' | 'COMEDK'): Promise<any> => {
     // Try database first
     if (useDatabase) {
       try {
-        const result = await getSpecificCollegeCutoffFast(collegeName, category, course);
+        const result = await getSpecificCollegeCutoffFast(collegeName, category, course, examType);
         if (!result.error) {
           console.log(`[DB Query] College cutoff found in ${result.queryTimeMs}ms`);
           return result;
@@ -595,26 +621,44 @@ export const toolsDeclaration: any[] = [
       },
       {
         name: "find_matching_colleges",
-        description: "ONLY call this tool when user EXPLICITLY asks for college recommendations/list. Finds colleges based on official KEA 2026, 2025, and 2024 cutoffs matching rank, category, course and location. ONLY provide parameters that the user has explicitly stated. If a user hasn't mentioned a new rank/category/etc, DO NOT provide it in the arguments (leave it undefined) and the system will use their previously established values.",
+        description: "Finds engineering colleges based on official cutoffs (2026, 2025, 2024) matching rank, category, course and location. Works for KCET, COMEDK, or BOTH counseling systems simultaneously. When user provides both KCET and COMEDK ranks, set examType to 'BOTH' and provide comedkRank.",
         parameters: {
           type: "OBJECT",
           properties: {
-            rank: { type: "NUMBER", description: "Student's KCET rank - ONLY use when user provides a specific rank" },
-            category: { type: "STRING", description: "Student's category (e.g., GM, 2AG, 3BG)" },
+            rank: { type: "NUMBER", description: "Student's entrance rank (KCET rank or general rank) - ONLY use when user provides a specific rank" },
+            comedkRank: { type: "NUMBER", description: "Optional COMEDK entrance rank if student provided both KCET and COMEDK ranks" },
+            category: { type: "STRING", description: "Student's category (e.g. GM, 2AG, 3BG for KCET; GM or KKR for COMEDK)" },
             course: { type: "STRING", description: "Preferred branch codes or names, comma-separated for multiple (e.g. 'CS' or 'CS,ME,AIML' for multiple courses)" },
-            location: { type: "STRING", description: "Preferred locations, comma-separated for multiple (e.g., 'Bangalore' or 'Bangalore,Mysore')" }
+            location: { type: "STRING", description: "Preferred locations, comma-separated for multiple (e.g., 'Bangalore' or 'Bangalore,Mysore')" },
+            examType: { type: "STRING", description: "Counseling system: 'KCET', 'COMEDK', or 'BOTH'. If user mentions both exams or both ranks, set this to 'BOTH'. Default is 'KCET'." }
+          }
+        }
+      },
+      {
+        name: "get_college_recommendations",
+        description: "Recommends colleges matching student's rank, preferred branch, location, and exam type (KCET, COMEDK, or BOTH). Updates the UI college cards list.",
+        parameters: {
+          type: "OBJECT",
+          properties: {
+            rank: { type: "NUMBER", description: "Entrance rank (KCET rank or general rank)" },
+            comedkRank: { type: "NUMBER", description: "Optional COMEDK entrance rank if student provided both KCET and COMEDK ranks" },
+            category: { type: "STRING", description: "Category code (e.g. '3BG', '2A', or 'GM')" },
+            course: { type: "STRING", description: "Branch code or name (e.g. 'CS')" },
+            location: { type: "STRING", description: "City or location (e.g. 'Bangalore')" },
+            examType: { type: "STRING", description: "Counseling system: 'KCET', 'COMEDK', or 'BOTH'. Default is 'KCET'." }
           }
         }
       },
       {
         name: "get_specific_college_cutoff",
-        description: "Gets official cutoff information (including 2026, 2025, and 2024) for a SPECIFIC college. Use this when user asks about a particular college like 'tell me about RV College', 'what is the cutoff for BMS', 'can I get into PES with my rank'. This does NOT update the college list UI.",
+        description: "Gets official cutoff information (including 2026, 2025, and 2024) for a SPECIFIC college across KCET or COMEDK. Use this when user asks about a particular college like 'tell me about RV College', 'what is the cutoff for BMS', 'can I get into PES with my rank'. This does NOT update the college list UI.",
         parameters: {
           type: "OBJECT",
           properties: {
             collegeName: { type: "STRING", description: "Name of the college (e.g., 'RV College', 'BMS', 'PES University')" },
-            category: { type: "STRING", description: "Student category" },
-            course: { type: "STRING", description: "Course branch" }
+            category: { type: "STRING", description: "Student category (GM, 2A, etc.)" },
+            course: { type: "STRING", description: "Course branch" },
+            examType: { type: "STRING", description: "Counseling system: 'KCET' or 'COMEDK'. Default is 'KCET'." }
           },
           required: ["collegeName", "category", "course"]
         }
@@ -625,7 +669,7 @@ export const toolsDeclaration: any[] = [
         parameters: {
           type: "OBJECT",
           properties: {
-            collegeName: { type: "STRING", description: "Name or KCET code of the college (e.g., 'RVCE', 'BMS College', 'E005')" }
+            collegeName: { type: "STRING", description: "Name or code of the college (e.g., 'RVCE', 'BMS College', 'E005', 'COMEDK_E001')" }
           },
           required: ["collegeName"]
         }

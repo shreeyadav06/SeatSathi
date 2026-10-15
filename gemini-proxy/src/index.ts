@@ -11,10 +11,11 @@ function isOriginAllowed(origin: string | null): boolean {
   
   try {
     const url = new URL(origin);
+    const hostname = url.hostname.toLowerCase();
     const host = url.host.toLowerCase();
     
-    // Local dev origins
-    if (host === 'localhost:5173' || host === '127.0.0.1:5173' || host === 'localhost:4173' || host === '127.0.0.1:4173') {
+    // Local dev origins (any localhost / loopback port)
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
       return true;
     }
     
@@ -27,6 +28,16 @@ function isOriginAllowed(origin: string | null): boolean {
     if (host.endsWith('.seatsathi.pages.dev')) {
       return true;
     }
+
+    // Vercel deployment origins
+    if (host === 'seatsathi.vercel.app' || host.endsWith('.seatsathi.vercel.app')) {
+      return true;
+    }
+
+    // Vercel preview branches for SeatSathi (*.vercel.app)
+    if (host.endsWith('.vercel.app') && (host.startsWith('seatsathi') || host.includes('seatsathi'))) {
+      return true;
+    }
   } catch {
     return false;
   }
@@ -36,6 +47,16 @@ function isOriginAllowed(origin: string | null): boolean {
 
 function checkMemoryRateLimit(clientIP: string, oneHour: number): boolean {
   const now = Date.now();
+  
+  // Prune expired records to prevent unbounded memory growth
+  if (memoryRateLimits.size > 1000) {
+    for (const [ip, rec] of memoryRateLimits.entries()) {
+      if (now > rec.resetAt) {
+        memoryRateLimits.delete(ip);
+      }
+    }
+  }
+
   const record = memoryRateLimits.get(clientIP);
   if (!record || now > record.resetAt) {
     memoryRateLimits.set(clientIP, { count: 1, resetAt: now + oneHour });
@@ -50,9 +71,13 @@ function verifyFirebaseJwtClaims(token: string): boolean {
   const parts = token.split('.');
   if (parts.length !== 3) return false;
   try {
+    const header = JSON.parse(atob(parts[0]));
+    if (header.alg !== 'RS256') return false;
+
     const payload = JSON.parse(atob(parts[1]));
     const nowSec = Math.floor(Date.now() / 1000);
     if (!payload.exp || payload.exp <= nowSec) return false;
+    if (!payload.sub || typeof payload.sub !== 'string') return false;
     if (payload.aud !== 'seatsathi-981f8' && !payload.iss?.includes('seatsathi-981f8')) return false;
     return true;
   } catch {
@@ -151,6 +176,18 @@ export default {
     // Pipe Browser -> Gemini with flood protection
     const messageQueue: Array<string | ArrayBuffer> = [];
     serverWs.addEventListener('message', (event) => {
+      // Reject oversized frames (> 512KB) to prevent worker memory exhaustion
+      const frameSize = typeof event.data === 'string' 
+        ? event.data.length 
+        : (event.data instanceof ArrayBuffer ? event.data.byteLength : 0);
+      if (frameSize > 512 * 1024) {
+        console.warn(`Client IP ${clientIP} sent oversized frame (${frameSize} bytes)`);
+        serverWs.close(1009, "Message too big");
+        geminiWs.close(1009, "Message too big");
+        clearTimeout(sessionTimer);
+        return;
+      }
+
       const now = Date.now();
       if (now - lastFrameReset > 1000) {
         frameCount = 0;

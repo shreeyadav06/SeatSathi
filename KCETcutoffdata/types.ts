@@ -7,6 +7,7 @@ export interface CollegeRecommendation {
   cutoff2024: string; // Changed to string
   chance: 'High' | 'Medium' | 'Low';
   location: string;
+  examType?: 'KCET' | 'COMEDK';
 }
 
 export type VisualizerState = 'idle' | 'listening' | 'speaking' | 'processing';
